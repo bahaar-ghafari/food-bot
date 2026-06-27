@@ -36,6 +36,16 @@ public final class IngredientTranslations {
         addPair("honey", "عسل");
         addPair("yogurt", "ماست");
         addPair("water", "آب");
+        addPair("turmeric", "زردچوبه");
+        addPair("saffron", "زعفران");
+        addPair("parsley", "جعفری");
+        addPair("leek", "تره");
+        addPair("fenugreek", "شنبلیله");
+        addPair("walnut", "گردو");
+        addPair("pomegranate", "انار");
+        addPair("mint", "نعنا");
+        addPair("barberries", "زرشک");
+        addPair("kidney beans", "لوبیا قرمز");
     }
 
     private static void addPair(String en, String fa) {

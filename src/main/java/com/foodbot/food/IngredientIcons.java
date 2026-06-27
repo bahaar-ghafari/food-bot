@@ -79,6 +79,22 @@ public final class IngredientIcons {
         ICONS.put("flour", "🌾");
         ICONS.put("water", "💧");
         ICONS.put("آب", "💧");
+        ICONS.put("parsley", "🌿");
+        ICONS.put("جعفری", "🌿");
+        ICONS.put("leek", "🌿");
+        ICONS.put("تره", "🌿");
+        ICONS.put("fenugreek", "🌿");
+        ICONS.put("شنبلیله", "🌿");
+        ICONS.put("mint", "🌿");
+        ICONS.put("نعنا", "🌿");
+        ICONS.put("walnut", "🌰");
+        ICONS.put("گردو", "🌰");
+        ICONS.put("pomegranate", "🔴");
+        ICONS.put("انار", "🔴");
+        ICONS.put("barberries", "🔴");
+        ICONS.put("زرشک", "🔴");
+        ICONS.put("kidney beans", "🫘");
+        ICONS.put("لوبیا قرمز", "🫘");
     }
 
     public static String iconFor(String ingredient) {

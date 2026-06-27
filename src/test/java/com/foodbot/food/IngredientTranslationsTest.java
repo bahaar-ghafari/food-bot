@@ -21,4 +21,11 @@ class IngredientTranslationsTest {
     void unknownIngredientPassesThroughUnchanged() {
         assertEquals("dragonfruit", IngredientTranslations.translate("dragonfruit", Lang.FA));
     }
+
+    @Test
+    void translatesPersianCuisineStaples() {
+        assertEquals("زعفران", IngredientTranslations.translate("saffron", Lang.FA));
+        assertEquals("walnut", IngredientTranslations.translate("گردو", Lang.EN));
+        assertEquals("barberries", IngredientTranslations.translate("زرشک", Lang.EN));
+    }
 }
