@@ -4,34 +4,52 @@ A minimal Telegram bot project.
 
 ## Setup
 
-1. Add your Telegram bot token:
-   - `src/main/resources/application.properties`
-   - or set `TELEGRAM_BOT_TOKEN` in your environment
+1. Add your Telegram bot token and (optionally) your superadmin chat ID:
+   - `.env` (see `.env.example`) — recommended
+   - or `src/main/resources/application.properties`
+   - or `TELEGRAM_BOT_TOKEN` / `SUPERADMIN_CHAT_ID` environment variables
 
 2. Build the project:
    ```bash
    mvn package
    ```
 
-3. Run the bot:
+3. Run the tests:
+   ```bash
+   mvn test
+   ```
+
+4. Run the bot:
    ```bash
    java -jar target/food-bot-0.0.1-SNAPSHOT.jar
    ```
 
 ## Configuration
 
-- `telegram.bot.token` in `application.properties`
-- `telegram.bot.username` in `application.properties`
+- `telegram.bot.token` / `TELEGRAM_BOT_TOKEN` — the bot token.
+- `telegram.bot.username` / `TELEGRAM_BOT_USERNAME` — the bot's Telegram username.
+- `superadmin.chat.id` / `SUPERADMIN_CHAT_ID` — chat ID that can edit/delete any food, regardless of who added it. Use `/whoami` to find your own chat ID.
 
-If `telegram.bot.token` is empty, the code will use `TELEGRAM_BOT_TOKEN` from the environment.
+If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` from the environment.
 
 ## Bot commands
 
-- `/addfood` - starts a guided flow to add a food (asks for name, prep time in minutes, then ingredients).
-- `/menu` - lists all saved foods.
-- `/cancel` - cancels an in-progress `/addfood` flow.
+- First message — asks you to pick a language (English / فارسی) before anything else. Once chosen, the bot only accepts typed names/ingredients in that script.
+- `/lang` (or the "🌐 Language" button) — change the language at any time.
+- `/help` (or the "❓ Help" button) — explains everything the bot can do.
+- `/whoami` — replies with your chat ID (useful for configuring `SUPERADMIN_CHAT_ID`).
+- `/start` — shows the main menu buttons.
+- `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients via tappable buttons, or type a new ingredient name if it's not listed yet. Tap "✅ Done" to save.
+- `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then lists those foods. Foods you can edit/delete show "✏️" and "🗑️" buttons next to them — that's the food's creator, or the superadmin.
+- "🥗 All ingredients" button — lists every distinct ingredient used across your list and the global list, each with an icon.
+- `/cook` (or the "🍳 What can I cook?" button) — asks how many minutes you have, then which ingredients you currently have (tap to select), whether you can go shopping for anything missing, and a category filter (or Any). Replies with what you can cook right now, and separately what you could cook if you buy a few missing things. Considers both your list and the global list.
+- `/cancel` — cancels an in-progress `/addfood`, `/cook`, or edit flow.
 
-Saved foods are persisted to `foods.json` in the working directory.
+Saved foods are persisted to `foods.json`, and each chat's language choice to `languages.json`, both in the working directory. The ingredient buttons shown are built from ingredients already used in foods visible to you, so the list grows as you add more.
+
+## Tests
+
+Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
 
 ## Notes
 

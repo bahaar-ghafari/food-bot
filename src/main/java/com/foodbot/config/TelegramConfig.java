@@ -48,4 +48,18 @@ public class TelegramConfig {
         }
         return username;
     }
+
+    public Long getSuperAdminChatId() {
+        String value = dotenv.get("SUPERADMIN_CHAT_ID");
+        if (value == null || value.isBlank()) {
+            value = properties.getProperty("superadmin.chat.id");
+        }
+        if (value == null || value.isBlank()) {
+            value = System.getenv("SUPERADMIN_CHAT_ID");
+        }
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return Long.parseLong(value.trim());
+    }
 }

@@ -10,10 +10,11 @@ public class FoodBotApplication {
 
         String token = config.getBotToken();
         String username = config.getBotUsername();
+        Long superAdminChatId = config.getSuperAdminChatId();
 
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new FoodBot(token, username));
+            botsApi.registerBot(new FoodBot(token, username, superAdminChatId));
             System.out.println("FoodBot started as " + username);
         } catch (Exception e) {
             e.printStackTrace();
