@@ -5,13 +5,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class EditFoodSession {
+public class EditFoodSession implements IngredientPickerState {
     public enum Step { CHOOSING_FIELD, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS }
 
     private final String foodId;
     private Step step = Step.CHOOSING_FIELD;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
+    private String ingredientFilter = "";
     private Integer keyboardMessageId;
 
     public EditFoodSession(String foodId) {
@@ -36,6 +37,14 @@ public class EditFoodSession {
 
     public Set<String> getSelectedIngredients() {
         return selectedIngredients;
+    }
+
+    public String getIngredientFilter() {
+        return ingredientFilter;
+    }
+
+    public void setIngredientFilter(String ingredientFilter) {
+        this.ingredientFilter = ingredientFilter;
     }
 
     public Integer getKeyboardMessageId() {

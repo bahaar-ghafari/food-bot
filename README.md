@@ -39,17 +39,26 @@ If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` fr
 - `/help` (or the "❓ Help" button) — explains everything the bot can do.
 - `/whoami` — replies with your chat ID (useful for configuring `SUPERADMIN_CHAT_ID`).
 - `/start` — shows the main menu buttons.
-- `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients via tappable buttons, or type a new ingredient name if it's not listed yet. Tap "✅ Done" to save.
+- `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients. Tap "✅ Done" to save.
 - `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then lists those foods. Foods you can edit/delete show "✏️" and "🗑️" buttons next to them — that's the food's creator, or the superadmin.
 - "🥗 All ingredients" button — lists every distinct ingredient used across your list and the global list, each with an icon.
-- `/cook` (or the "🍳 What can I cook?" button) — asks how many minutes you have, then which ingredients you currently have (tap to select), whether you can go shopping for anything missing, and a category filter (or Any). Replies with what you can cook right now, and separately what you could cook if you buy a few missing things. Considers both your list and the global list.
+- `/cook` (or the "🍳 What can I cook?" button) — asks how many minutes you have, then which ingredients you currently have, whether you can go shopping for anything missing, and a category filter (or Any). Replies with what you can cook right now, and separately what you could cook if you buy a few missing things. Considers both your list and the global list.
 - `/cancel` — cancels an in-progress `/addfood`, `/cook`, or edit flow.
+
+### Ingredient picker
+
+Whenever you're asked to pick ingredients (adding/editing a food, or telling `/cook` what you have), tap an existing one to toggle it, or type:
+- A few letters — filters the buttons down to matches (shown with a "🔍" search chip and a "❌" to clear it). Selected ingredients always stay visible even while filtered.
+- An exact existing name — toggles that ingredient directly.
+- A name that matches nothing — adds it as a brand-new ingredient and selects it.
+
+The button list is capped at 24 visible at once so it stays usable even with 100+ ingredients in the system; typing narrows the search across the full list regardless of the cap.
 
 Saved foods are persisted to `foods.json`, and each chat's language choice to `languages.json`, both in the working directory. The ingredient buttons shown are built from ingredients already used in foods visible to you, so the list grows as you add more.
 
 ## Tests
 
-Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
+Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `IngredientSearch` (the filter/cap logic behind the ingredient picker), `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
 
 ## Notes
 

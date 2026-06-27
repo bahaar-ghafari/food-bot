@@ -19,7 +19,7 @@ public final class Messages {
         put("btn.help", "❓ Help", "❓ راهنما");
         put("help.text",
                 "🍽️ FoodBot helps you track recipes and decide what to cook.\n\n"
-                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, then ingredients (tap existing ones or type new ones).\n"
+                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, then ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it).\n"
                         + "📋 All foods — view your list or the global list.\n"
                         + "🥗 All ingredients — every ingredient used so far.\n"
                         + "🍳 What can I cook? — tell it your time, what you have, and whether you can shop, and it suggests recipes.\n"
@@ -29,7 +29,7 @@ public final class Messages {
                         + "/cancel — cancel whatever you're doing.\n"
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
-                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی و سپس مواد اولیه (روی موادِ موجود بزنید یا مورد جدید تایپ کنید).\n"
+                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی و سپس مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود).\n"
                         + "📋 همه غذاها — لیست خودتان یا لیست عمومی را ببینید.\n"
                         + "🥗 همه مواد اولیه — هر ماده اولیه‌ای که تا الان استفاده شده.\n"
                         + "🍳 چی می‌تونم بپزم؟ — زمان، مواد اولیه‌ای که دارید و اینکه می‌توانید خرید کنید یا نه را بگویید تا پیشنهاد بگیرید.\n"
@@ -38,7 +38,8 @@ public final class Messages {
                         + "/whoami — شناسه چت شما را نشان می‌دهد.\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n"
                         + "/help — نشان دادن همین پیام.");
-        put("whoami.reply", "Your chat ID is: %s", "شناسه چت شما: %s");
+        put("whoami.reply", "Your chat ID is: %s\nTelegram username: %s", "شناسه چت شما: %s\nنام کاربری تلگرام: %s");
+        put("whoami.no_username", "(not set)", "(تنظیم نشده)");
         put("permission.denied",
                 "Only the person who added this, or the admin, can do that.",
                 "فقط کسی که این را اضافه کرده یا ادمین می‌تواند این کار را انجام دهد.");
@@ -64,8 +65,8 @@ public final class Messages {
                 "Please tap one of the category buttons above.",
                 "لطفاً یکی از دکمه‌های دسته‌بندی بالا را بزنید.");
         put("addfood.ingredient_prompt",
-                "Tap ingredients to add or remove them, or type a new ingredient name. Tap Done when you're finished.",
-                "روی مواد اولیه بزنید تا اضافه یا حذف شوند، یا اسم یک ماده جدید را تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
+                "Tap ingredients to add or remove them, or type to search the list or add a new one. Tap Done when you're finished.",
+                "روی مواد اولیه بزنید تا اضافه یا حذف شوند، یا برای جستجو یا افزودن ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
         put("addfood.select_at_least_one",
                 "Select at least one ingredient first.",
                 "اول حداقل یک ماده اولیه را انتخاب کنید.");
@@ -82,8 +83,8 @@ public final class Messages {
                 "That doesn't look like a number. How many minutes do you have?",
                 "این عدد نیست. چند دقیقه وقت دارید؟");
         put("cook.ingredient_prompt",
-                "What ingredients do you have right now? Tap to select, or type a new one. Tap Done when you're finished.",
-                "الان چه مواد اولیه‌ای دارید؟ برای انتخاب لمس کنید یا یک ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
+                "What ingredients do you have right now? Tap to select, or type to search the list or add a new one. Tap Done when you're finished.",
+                "الان چه مواد اولیه‌ای دارید؟ برای انتخاب لمس کنید یا برای جستجو یا افزودن ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
         put("cook.ask_shopping",
                 "Can you go shopping for missing ingredients?",
                 "می‌توانید برای مواد کم‌شده برید خرید؟");
@@ -137,8 +138,8 @@ public final class Messages {
         put("edit.ask_time", "What's the new prep time in minutes?", "زمان آماده‌سازی جدید چند دقیقه است؟");
         put("edit.ask_category", "Pick the new category.", "دسته‌بندی جدید را انتخاب کنید.");
         put("edit.ingredient_prompt",
-                "Tap to add or remove ingredients, or type a new one. Tap Done when you're finished.",
-                "برای اضافه یا حذف کردن مواد اولیه لمس کنید، یا یک ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
+                "Tap to add or remove ingredients, or type to search the list or add a new one. Tap Done when you're finished.",
+                "برای اضافه یا حذف کردن مواد اولیه لمس کنید، یا برای جستجو یا افزودن ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
         put("edit.saved", "Updated: %s", "به‌روزرسانی شد: %s");
 
         put("delete.confirm", "Delete %s? This can't be undone.", "%s حذف شود؟ این کار قابل بازگشت نیست.");
