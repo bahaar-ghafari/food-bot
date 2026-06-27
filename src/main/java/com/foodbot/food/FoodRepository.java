@@ -116,7 +116,8 @@ public class FoodRepository {
         for (Food food : loaded) {
             if (food.getId() == null) {
                 result.add(new Food(UUID.randomUUID().toString(), food.getName(), food.getPrepTimeMinutes(),
-                        food.getCategory(), food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId()));
+                        food.getCategory(), food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(),
+                        food.getRecipe()));
                 changed = true;
             } else {
                 result.add(food);

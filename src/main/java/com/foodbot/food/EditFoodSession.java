@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Set;
 
 public class EditFoodSession implements IngredientPickerState {
-    public enum Step { CHOOSING_FIELD, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS }
+    public enum Step {
+        CHOOSING_FIELD, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS, EDITING_RECIPE
+    }
 
     private final String foodId;
     private Step step = Step.CHOOSING_FIELD;

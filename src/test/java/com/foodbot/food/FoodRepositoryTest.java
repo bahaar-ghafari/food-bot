@@ -21,7 +21,7 @@ class FoodRepositoryTest {
     @Test
     void addedFoodIsFoundByIdAndVisibleToCreator(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
-        Food food = new Food("id-1", "Omelette", 10, "Breakfast", List.of("egg", "cheese"), 111L, 111L);
+        Food food = new Food("id-1", "Omelette", 10, "Breakfast", List.of("egg", "cheese"), 111L, 111L, null);
         repo.add(food);
 
         Optional<Food> found = repo.findById("id-1");
@@ -35,7 +35,7 @@ class FoodRepositoryTest {
     @Test
     void globalFoodIsVisibleToEveryone(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
-        Food food = new Food("id-2", "Soup", 20, "MainCourse", List.of("water", "salt"), null, 111L);
+        Food food = new Food("id-2", "Soup", 20, "MainCourse", List.of("water", "salt"), null, 111L, null);
         repo.add(food);
 
         assertTrue(repo.findGlobal().contains(food));
@@ -46,10 +46,10 @@ class FoodRepositoryTest {
     @Test
     void updateReplacesFoodWithMatchingId(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
-        Food original = new Food("id-3", "Pasta", 15, "MainCourse", List.of("pasta"), null, 111L);
+        Food original = new Food("id-3", "Pasta", 15, "MainCourse", List.of("pasta"), null, 111L, null);
         repo.add(original);
 
-        Food updated = new Food("id-3", "Pasta Bolognese", 25, "MainCourse", List.of("pasta", "beef"), null, 111L);
+        Food updated = new Food("id-3", "Pasta Bolognese", 25, "MainCourse", List.of("pasta", "beef"), null, 111L, null);
         repo.update(updated);
 
         Optional<Food> found = repo.findById("id-3");
@@ -62,7 +62,7 @@ class FoodRepositoryTest {
     @Test
     void deleteRemovesFoodById(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
-        repo.add(new Food("id-4", "Salad", 5, "Snack", List.of("lettuce"), null, 111L));
+        repo.add(new Food("id-4", "Salad", 5, "Snack", List.of("lettuce"), null, 111L, null));
 
         repo.delete("id-4");
 
@@ -73,8 +73,8 @@ class FoodRepositoryTest {
     @Test
     void findAllIngredientsAggregatesAcrossVisibleFoodsCaseInsensitively(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
-        repo.add(new Food("id-5", "Omelette", 10, "Breakfast", List.of("Egg", "cheese"), null, 111L));
-        repo.add(new Food("id-6", "Scramble", 8, "Breakfast", List.of("egg", "milk"), 222L, 222L));
+        repo.add(new Food("id-5", "Omelette", 10, "Breakfast", List.of("Egg", "cheese"), null, 111L, null));
+        repo.add(new Food("id-6", "Scramble", 8, "Breakfast", List.of("egg", "milk"), 222L, 222L, null));
 
         List<String> visibleToOwner = repo.findAllIngredients(222L);
         assertEquals(3, visibleToOwner.size());
@@ -88,11 +88,23 @@ class FoodRepositoryTest {
     void dataPersistsAcrossRepositoryInstances(@TempDir Path tempDir) {
         Path file = tempDir.resolve("foods.json");
         FoodRepository repo = new FoodRepository(file);
-        repo.add(new Food("id-7", "Burger", 12, "MainCourse", List.of("beef", "bun"), null, 111L));
+        repo.add(new Food("id-7", "Burger", 12, "MainCourse", List.of("beef", "bun"), null, 111L, null));
 
         FoodRepository reloaded = new FoodRepository(file);
         assertEquals(1, reloaded.findGlobal().size());
         assertEquals("Burger", reloaded.findGlobal().get(0).getName());
+    }
+
+    @Test
+    void recipeFieldPersistsAcrossRepositoryInstances(@TempDir Path tempDir) {
+        Path file = tempDir.resolve("foods.json");
+        FoodRepository repo = new FoodRepository(file);
+        repo.add(new Food("id-8", "Soup", 20, "MainCourse", List.of("water"), null, 111L, "Boil water, add salt."));
+
+        FoodRepository reloaded = new FoodRepository(file);
+        Optional<Food> found = reloaded.findById("id-8");
+        assertTrue(found.isPresent());
+        assertEquals("Boil water, add salt.", found.get().getRecipe());
     }
 
     @Test

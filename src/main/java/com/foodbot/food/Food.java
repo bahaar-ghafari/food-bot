@@ -10,9 +10,10 @@ public class Food {
     private final List<String> ingredients;
     private final Long ownerChatId;
     private final Long createdByChatId;
+    private final String recipe;
 
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
-                Long ownerChatId, Long createdByChatId) {
+                Long ownerChatId, Long createdByChatId, String recipe) {
         this.id = id;
         this.name = name;
         this.prepTimeMinutes = prepTimeMinutes;
@@ -20,6 +21,7 @@ public class Food {
         this.ingredients = ingredients;
         this.ownerChatId = ownerChatId;
         this.createdByChatId = createdByChatId;
+        this.recipe = recipe;
     }
 
     public String getId() {
@@ -48,6 +50,10 @@ public class Food {
 
     public Long getCreatedByChatId() {
         return createdByChatId;
+    }
+
+    public String getRecipe() {
+        return recipe;
     }
 
     @Override

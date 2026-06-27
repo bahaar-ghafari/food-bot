@@ -39,8 +39,8 @@ If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` fr
 - `/help` (or the "❓ Help" button) — explains everything the bot can do.
 - `/whoami` — replies with your chat ID (useful for configuring `SUPERADMIN_CHAT_ID`).
 - `/start` — shows the main menu buttons.
-- `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients. Tap "✅ Done" to save.
-- `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then lists those foods. Foods you can edit/delete show "✏️" and "🗑️" buttons next to them — that's the food's creator, or the superadmin.
+- `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients → an optional recipe (tap "⏭ Skip" to leave it blank). Tap "✅ Done" after ingredients to move on.
+- `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then shows food names as tappable buttons. Tap one to see its category, prep time, ingredients, and recipe. If you added that food (or you're the superadmin), a "⚙️ Settings" button appears on the detail view — tap it to reveal "✏️ Edit" / "🗑️ Delete".
 - "🥗 All ingredients" button — lists every distinct ingredient used across your list and the global list, each with an icon.
 - `/cook` (or the "🍳 What can I cook?" button) — asks how many minutes you have, then which ingredients you currently have, whether you can go shopping for anything missing, and a category filter (or Any). Replies with what you can cook right now, and separately what you could cook if you buy a few missing things. Considers both your list and the global list.
 - `/cancel` — cancels an in-progress `/addfood`, `/cook`, or edit flow.
@@ -54,7 +54,11 @@ Whenever you're asked to pick ingredients (adding/editing a food, or telling `/c
 
 The button list is capped at 24 visible at once so it stays usable even with 100+ ingredients in the system; typing narrows the search across the full list regardless of the cap.
 
-Saved foods are persisted to `foods.json`, and each chat's language choice to `languages.json`, both in the working directory. The ingredient buttons shown are built from ingredients already used in foods visible to you, so the list grows as you add more.
+### Editing
+
+From a food's detail view → "⚙️ Settings" → "✏️ Edit", you can change name, prep time, category, ingredients, or recipe independently. Clearing a recipe is done from the recipe-edit prompt's "🗑️ Clear recipe" button rather than typing.
+
+Saved foods (name, category, prep time, ingredients, and an optional recipe) are persisted to `foods.json`, and each chat's language choice to `languages.json`, both in the working directory. The ingredient buttons shown are built from ingredients already used in foods visible to you, so the list grows as you add more.
 
 ## Tests
 

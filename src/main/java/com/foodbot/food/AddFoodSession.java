@@ -6,13 +6,16 @@ import java.util.List;
 import java.util.Set;
 
 public class AddFoodSession implements IngredientPickerState {
-    public enum Step { ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS }
+    public enum Step {
+        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_RECIPE
+    }
 
     private Step step = Step.ASK_SCOPE;
     private String name;
     private int prepTimeMinutes;
     private String category;
     private Long ownerChatId;
+    private String recipe;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
@@ -56,6 +59,14 @@ public class AddFoodSession implements IngredientPickerState {
 
     public void setOwnerChatId(Long ownerChatId) {
         this.ownerChatId = ownerChatId;
+    }
+
+    public String getRecipe() {
+        return recipe;
+    }
+
+    public void setRecipe(String recipe) {
+        this.recipe = recipe;
     }
 
     public List<String> getCandidateIngredients() {
