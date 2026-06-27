@@ -25,6 +25,14 @@ A minimal Telegram bot project.
 
 If `telegram.bot.token` is empty, the code will use `TELEGRAM_BOT_TOKEN` from the environment.
 
+## Bot commands
+
+- `/addfood` - starts a guided flow to add a food (asks for name, prep time in minutes, then ingredients).
+- `/menu` - lists all saved foods.
+- `/cancel` - cancels an in-progress `/addfood` flow.
+
+Saved foods are persisted to `foods.json` in the working directory.
+
 ## Notes
 
 - Do not commit a real bot token.
