@@ -40,8 +40,7 @@ If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` fr
 - `/whoami` — replies with your chat ID (useful for configuring `SUPERADMIN_CHAT_ID`).
 - `/start` — shows the main menu buttons.
 - `/addfood` (or the "➕ Add food" button) — guided flow: pick your personal list or the global list → name → prep time in minutes → category (tap one) → ingredients → an optional recipe (tap "⏭ Skip" to leave it blank). Tap "✅ Done" after ingredients to move on.
-- `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then shows food names as tappable buttons. Tap one to see its category, prep time, ingredients, and recipe. If you added that food (or you're the superadmin), a "⚙️ Settings" button appears on the detail view — tap it to reveal "✏️ Edit" / "🗑️ Delete".
-- "🥗 All ingredients" button — lists every distinct ingredient used across your list and the global list, each with an icon.
+- `/menu` (or the "📋 All foods" button) — asks which list to view (yours or global), then shows food names as tappable buttons, 10 per page with "◀️"/"▶️" navigation if there are more. Tap a food to see its category, prep time, ingredients, and recipe. If you added that food (or you're the superadmin), a "⚙️ Settings" button appears on the detail view — tap it to reveal "✏️ Edit" / "🗑️ Delete".
 - `/cook` (or the "🍳 What can I cook?" button) — asks how many minutes you have, then which ingredients you currently have, whether you can go shopping for anything missing, and a category filter (or Any). Replies with what you can cook right now, and separately what you could cook if you buy a few missing things. Considers both your list and the global list.
 - `/cancel` — cancels an in-progress `/addfood`, `/cook`, or edit flow.
 
@@ -62,7 +61,7 @@ Saved foods (name, category, prep time, ingredients, and an optional recipe) are
 
 ## Tests
 
-Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `IngredientSearch` (the filter/cap logic behind the ingredient picker), `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
+Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `FoodNameTranslations`, `IngredientSearch` (the filter/cap logic behind the ingredient picker), `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
 
 ## Notes
 

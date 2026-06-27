@@ -13,7 +13,6 @@ public final class Messages {
                 "به فودبات خوش آمدید! از دکمه‌های زیر استفاده کنید.");
         put("btn.add_food", "➕ Add food", "➕ افزودن غذا");
         put("btn.all_foods", "📋 All foods", "📋 همه غذاها");
-        put("btn.all_ingredients", "🥗 All ingredients", "🥗 همه مواد اولیه");
         put("btn.what_can_cook", "🍳 What can I cook?", "🍳 چی می‌تونم بپزم؟");
         put("btn.change_lang", "🌐 Language", "🌐 زبان");
         put("btn.help", "❓ Help", "❓ راهنما");
@@ -27,7 +26,6 @@ public final class Messages {
                         + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n"
                         + "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe.\n"
                         + "⚙️ Settings — shown on a food's detail view if you added it or you're the admin; tap it for ✏️ Edit / 🗑️ Delete.\n"
-                        + "🥗 All ingredients — every ingredient used so far.\n"
                         + "🍳 What can I cook? — tell it your time, what you have, and whether you can shop, and it suggests recipes.\n"
                         + "🌐 Language — switch between English and Persian anytime.\n"
                         + "/whoami — shows your chat ID.\n"
@@ -37,7 +35,6 @@ public final class Messages {
                         + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n"
                         + "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید.\n"
                         + "⚙️ تنظیمات — در صفحه جزئیات غذایی که خودتان اضافه کرده‌اید یا برای ادمین نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.\n"
-                        + "🥗 همه مواد اولیه — هر ماده اولیه‌ای که تا الان استفاده شده.\n"
                         + "🍳 چی می‌تونم بپزم؟ — زمان، مواد اولیه‌ای که دارید و اینکه می‌توانید خرید کنید یا نه را بگویید تا پیشنهاد بگیرید.\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n"
                         + "/whoami — شناسه چت شما را نشان می‌دهد.\n"
@@ -132,8 +129,6 @@ public final class Messages {
         put("food.detail_ingredients", "Ingredients: %s", "مواد اولیه: %s");
         put("food.detail_recipe", "Recipe: %s", "دستور پخت: %s");
         put("food.no_recipe", "(no recipe added yet)", "(هنوز دستور پختی اضافه نشده)");
-        put("ingredients.none", "No ingredients saved yet.", "هنوز مواد اولیه‌ای ذخیره نشده.");
-        put("ingredients.header", "Ingredients:", "مواد اولیه:");
         put("min_unit", "min", "دقیقه");
         put("done_button", "✅ Done (%d selected)", "✅ تمام (%d انتخاب شده)");
 
