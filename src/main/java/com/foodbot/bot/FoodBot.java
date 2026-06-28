@@ -62,7 +62,9 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_COOK_RESULT_PAGE = "ckrp:";
     private static final String GROUP_READY = "ready";
     private static final String GROUP_SHOP = "shop";
-    private static final int[] COOK_TIME_PRESETS = {10, 15, 20, 30, 45, 60, 90, 120};
+    private static final String[] COOK_TIME_PRESET_KEYS =
+            {"cook.time.fast", "cook.time.2h", "cook.time.5h", "cook.time.1day", "cook.time.any"};
+    private static final int[] COOK_TIME_PRESET_MINUTES = {30, 120, 300, 1440, Integer.MAX_VALUE};
     private static final String CATEGORY_ANY = "ANY";
     private static final String CB_ADDFOOD_SCOPE_MINE = "afs:mine";
     private static final String CB_ADDFOOD_SCOPE_GLOBAL = "afs:global";
@@ -1112,11 +1114,11 @@ public class FoodBot extends TelegramLongPollingBot {
     private void sendCookTimePrompt(long chatId, Lang lang) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> currentRow = new ArrayList<>();
-        for (int minutes : COOK_TIME_PRESETS) {
-            InlineKeyboardButton button = new InlineKeyboardButton("⏱️ " + minutes);
-            button.setCallbackData(CB_COOK_TIME_PRESET + minutes);
+        for (int i = 0; i < COOK_TIME_PRESET_KEYS.length; i++) {
+            InlineKeyboardButton button = new InlineKeyboardButton(Messages.get(lang, COOK_TIME_PRESET_KEYS[i]));
+            button.setCallbackData(CB_COOK_TIME_PRESET + COOK_TIME_PRESET_MINUTES[i]);
             currentRow.add(button);
-            if (currentRow.size() == 4) {
+            if (currentRow.size() == 2) {
                 rows.add(currentRow);
                 currentRow = new ArrayList<>();
             }

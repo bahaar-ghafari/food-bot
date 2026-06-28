@@ -83,8 +83,13 @@ public final class Messages {
         put("tap_button_above", "Please tap one of the buttons above.", "لطفاً یکی از دکمه‌های بالا را بزنید.");
 
         put("cook.ask_time",
-                "How many minutes do you have to cook? Tap a preset below or type your own number.",
-                "چند دقیقه وقت دارید برای پختن؟ یکی از گزینه‌های زیر را بزنید یا عدد خودتان را تایپ کنید.");
+                "How much time do you have to cook? Tap an option below, or type an exact number of minutes.",
+                "چقدر وقت دارید برای پختن؟ یکی از گزینه‌های زیر را بزنید یا تعداد دقیقه دقیق را تایپ کنید.");
+        put("cook.time.fast", "⚡ Fast (~30m)", "⚡ سریع (~30 دقیقه)");
+        put("cook.time.2h", "🕐 ~2 hours", "🕐 حدود 2 ساعت");
+        put("cook.time.5h", "🕔 ~5 hours", "🕔 حدود 5 ساعت");
+        put("cook.time.1day", "📅 ~1 day", "📅 حدود 1 روز");
+        put("cook.time.any", "♾️ Any amount of time", "♾️ هر مقدار زمان");
         put("cook.invalid_time",
                 "That doesn't look like a number. How many minutes do you have?",
                 "این عدد نیست. چند دقیقه وقت دارید؟");
