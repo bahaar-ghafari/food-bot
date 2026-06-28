@@ -1,7 +1,8 @@
 # Production stack for FoodBot. Lives on the VPS at
 # /opt/foodbot/docker-compose.yml.
 # Requires a sibling .env with TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME,
-# and SUPERADMIN_CHAT_ID (never committed).
+# and SUPERADMIN_CHAT_ID (never committed). foods.json/languages.json
+# persist under ./data, which can be seeded or backed up directly.
 services:
   bot:
     build: .
@@ -10,7 +11,7 @@ services:
     environment:
       HEALTH_ADDR: ":8080"
     volumes:
-      - botdata:/data
+      - ./data:/data
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
       interval: 30s
@@ -29,6 +30,3 @@ services:
       AUTOHEAL_CONTAINER_LABEL: autoheal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
-volumes:
-  botdata:
