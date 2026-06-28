@@ -17,6 +17,7 @@ public final class Messages {
         put("btn.change_lang", "🌐 Language", "🌐 زبان");
         put("btn.help", "❓ Help", "❓ راهنما");
         put("btn.settings", "⚙️ Settings", "⚙️ تنظیمات");
+        put("btn.back", "🔙 Back", "🔙 بازگشت");
         put("btn.edit", "✏️ Edit", "✏️ ویرایش");
         put("btn.delete", "🗑️ Delete", "🗑️ حذف");
         put("btn.done_recipe", "✅ Done", "✅ تمام");
@@ -170,7 +171,6 @@ public final class Messages {
         put("delete.confirm_yes", "🗑️ Yes, delete", "🗑️ بله، حذف کن");
         put("delete.confirm_no", "🚫 Cancel", "🚫 لغو");
         put("delete.done", "🗑️ Poof! Deleted: %s", "🗑️ پاک شد! حذف شد: %s");
-        put("delete.cancelled", "Delete cancelled.", "حذف لغو شد.");
 
         put("category.Breakfast", "Breakfast", "صبحانه");
         put("category.MainCourse", "Main Course", "غذای اصلی");
