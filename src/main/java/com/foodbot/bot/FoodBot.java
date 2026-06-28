@@ -124,7 +124,11 @@ public class FoodBot extends TelegramLongPollingBot {
         if (text.equalsIgnoreCase("/start")) {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
-            sendWithMainMenu(chatId, lang, Messages.get(lang, "help.text"));
+            String helpText = Messages.get(lang, "help.text");
+            if (isSuperAdmin(chatId)) {
+                helpText += "\n" + Messages.get(lang, "help.text.admin");
+            }
+            sendWithMainMenu(chatId, lang, helpText);
         } else if (text.equalsIgnoreCase("/whoami")) {
             String handle = update.getMessage().getFrom().getUserName();
             String displayHandle = (handle != null && !handle.isBlank())
@@ -143,7 +147,8 @@ public class FoodBot extends TelegramLongPollingBot {
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
-        } else if (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods"))) {
+        } else if (isSuperAdmin(chatId)
+                && (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods")))) {
             sendViewFoodsPrompt(chatId, lang);
         } else if (text.equalsIgnoreCase("/cook") || text.equals(Messages.get(lang, "btn.what_can_cook"))) {
             addFoodSessions.remove(chatId);
@@ -1294,10 +1299,12 @@ public class FoodBot extends TelegramLongPollingBot {
         }
     }
 
-    private ReplyKeyboardMarkup mainMenuKeyboard(Lang lang) {
+    private ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.add_food"));
-        row1.add(Messages.get(lang, "btn.all_foods"));
+        if (isSuperAdmin(chatId)) {
+            row1.add(Messages.get(lang, "btn.all_foods"));
+        }
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.what_can_cook"));
         row2.add(Messages.get(lang, "btn.change_lang"));
@@ -1310,7 +1317,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
     private void sendWithMainMenu(long chatId, Lang lang, String text) {
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setReplyMarkup(mainMenuKeyboard(lang));
+        message.setReplyMarkup(mainMenuKeyboard(lang, chatId));
         try {
             execute(message);
         } catch (TelegramApiException e) {

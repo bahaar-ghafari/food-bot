@@ -24,8 +24,6 @@ public final class Messages {
         put("help.text",
                 "🍽️ FoodBot helps you track recipes and decide what to cook.\n\n"
                         + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n"
-                        + "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe.\n"
-                        + "⚙️ Settings — shown on a food's detail view if you added it or you're the admin; tap it for ✏️ Edit / 🗑️ Delete.\n"
                         + "🍳 What can I cook? — tell it your time, what you have, and whether you can shop, and it suggests recipes.\n"
                         + "🌐 Language — switch between English and Persian anytime.\n"
                         + "/whoami — shows your chat ID.\n"
@@ -33,13 +31,16 @@ public final class Messages {
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
                         + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n"
-                        + "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید.\n"
-                        + "⚙️ تنظیمات — در صفحه جزئیات غذایی که خودتان اضافه کرده‌اید یا برای ادمین نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.\n"
                         + "🍳 چی می‌تونم بپزم؟ — زمان، مواد اولیه‌ای که دارید و اینکه می‌توانید خرید کنید یا نه را بگویید تا پیشنهاد بگیرید.\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n"
                         + "/whoami — شناسه چت شما را نشان می‌دهد.\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n"
                         + "/help — نشان دادن همین پیام.");
+        put("help.text.admin",
+                "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. (Admin only.)\n"
+                        + "⚙️ Settings — shown on a food's detail view if you added it or you're the admin; tap it for ✏️ Edit / 🗑️ Delete.",
+                "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. (فقط ادمین.)\n"
+                        + "⚙️ تنظیمات — در صفحه جزئیات غذایی که خودتان اضافه کرده‌اید یا برای ادمین نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.");
         put("whoami.reply", "Your chat ID is: %s\nTelegram username: %s", "شناسه چت شما: %s\nنام کاربری تلگرام: %s");
         put("whoami.no_username", "(not set)", "(تنظیم نشده)");
         put("permission.denied",
