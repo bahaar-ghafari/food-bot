@@ -56,6 +56,29 @@ public final class IngredientTranslations {
         addPair("tequila", "تکیلا");
         addPair("pineapple", "آناناس");
         addPair("coconut milk", "شیر نارگیل");
+        addPair("eggplant", "بادمجان");
+        addPair("cabbage", "کلم");
+        addPair("cinnamon", "دارچین");
+        addPair("chickpeas", "نخود");
+        addPair("tahini", "ارده");
+        addPair("tamarind", "تمبر هندی");
+        addPair("dried lime", "لیمو عمانی");
+        addPair("celery", "کرفس");
+        addPair("raisins", "کشمش");
+        addPair("rosewater", "گلاب");
+        addPair("vanilla", "وانیل");
+        addPair("chocolate", "شکلات");
+        addPair("cocoa powder", "پودر کاکائو");
+        addPair("salmon", "ماهی سالمون");
+        addPair("dried plums", "آلو");
+        addPair("dried apricot", "قیسی");
+        addPair("split peas", "لپه");
+        addPair("grape leaves", "برگ مو");
+        addPair("oats", "جو");
+        addPair("tortilla", "تورتیلا");
+        addPair("coffee", "قهوه");
+        addPair("oil", "روغن");
+        addPair("pepper", "فلفل");
     }
 
     private static void addPair(String en, String fa) {

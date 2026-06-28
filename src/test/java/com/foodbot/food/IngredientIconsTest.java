@@ -40,6 +40,16 @@ class IngredientIconsTest {
     }
 
     @Test
+    void persianStapleIngredientsAddedForExpandedMenuHaveIcons() {
+        assertEquals("🍆", IngredientIcons.iconFor("eggplant"));
+        assertEquals("🍆", IngredientIcons.iconFor("بادمجان"));
+        assertEquals("🟡", IngredientIcons.iconFor("turmeric"));
+        assertEquals("🌼", IngredientIcons.iconFor("saffron"));
+        assertEquals("🫛", IngredientIcons.iconFor("chickpeas"));
+        assertEquals("🍫", IngredientIcons.iconFor("chocolate"));
+    }
+
+    @Test
     void lookupIsCaseInsensitive() {
         assertEquals(IngredientIcons.iconFor("egg"), IngredientIcons.iconFor("EGG"));
     }

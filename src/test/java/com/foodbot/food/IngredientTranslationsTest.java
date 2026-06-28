@@ -36,4 +36,12 @@ class IngredientTranslationsTest {
         assertEquals("کره", IngredientTranslations.translate("butter", Lang.FA));
         assertEquals("نمک", IngredientTranslations.translate("salt", Lang.FA));
     }
+
+    @Test
+    void translatesIngredientsAddedForExpandedMenu() {
+        assertEquals("بادمجان", IngredientTranslations.translate("eggplant", Lang.FA));
+        assertEquals("chickpeas", IngredientTranslations.translate("نخود", Lang.EN));
+        assertEquals("تمبر هندی", IngredientTranslations.translate("tamarind", Lang.FA));
+        assertEquals("salmon", IngredientTranslations.translate("ماهی سالمون", Lang.EN));
+    }
 }
