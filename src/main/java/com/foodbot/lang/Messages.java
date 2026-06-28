@@ -19,33 +19,29 @@ public final class Messages {
         put("btn.settings", "⚙️ Settings", "⚙️ تنظیمات");
         put("btn.edit", "✏️ Edit", "✏️ ویرایش");
         put("btn.delete", "🗑️ Delete", "🗑️ حذف");
-        put("btn.skip", "⏭ Skip", "⏭ رد کردن");
+        put("btn.done_recipe", "✅ Done", "✅ تمام");
         put("btn.clear_recipe", "🗑️ Clear recipe", "🗑️ حذف دستور پخت");
         put("help.text",
                 "🍽️ FoodBot helps you track recipes and decide what to cook.\n\n"
-                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n"
-                        + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n"
-                        + "🌐 Language — switch between English and Persian anytime.\n"
-                        + "/whoami — shows your chat ID.\n"
-                        + "/cancel — cancel whatever you're doing.\n"
+                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n\n"
+                        + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n\n"
+                        + "🌐 Language — switch between English and Persian anytime.\n\n"
+                        + "/cancel — cancel whatever you're doing.\n\n"
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
-                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n"
-                        + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n"
-                        + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n"
-                        + "/whoami — شناسه چت شما را نشان می‌دهد.\n"
-                        + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n"
+                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n\n"
+                        + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n\n"
+                        + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n\n"
+                        + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n\n"
                         + "/help — نشان دادن همین پیام.");
         put("help.text.admin",
-                "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. (Admin only.)\n"
-                        + "⚙️ Settings — shown on a food's detail view if you added it or you're the admin; tap it for ✏️ Edit / 🗑️ Delete.",
-                "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. (فقط ادمین.)\n"
-                        + "⚙️ تنظیمات — در صفحه جزئیات غذایی که خودتان اضافه کرده‌اید یا برای ادمین نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.");
-        put("whoami.reply", "Your chat ID is: %s\nTelegram username: %s", "شناسه چت شما: %s\nنام کاربری تلگرام: %s");
-        put("whoami.no_username", "(not set)", "(تنظیم نشده)");
+                "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. (Admin only.)\n\n"
+                        + "⚙️ Settings — shown only to you on any food's detail view; tap it for ✏️ Edit / 🗑️ Delete.",
+                "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. (فقط ادمین.)\n\n"
+                        + "⚙️ تنظیمات — فقط برای شما، روی صفحه جزئیات هر غذایی نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.");
         put("permission.denied",
-                "Only the person who added this, or the admin, can do that.",
-                "فقط کسی که این را اضافه کرده یا ادمین می‌تواند این کار را انجام دهد.");
+                "Only the admin can do that.",
+                "فقط ادمین می‌تواند این کار را انجام دهد.");
 
         put("addfood.ask_scope",
                 "Add this to your personal list or the global list?",
@@ -73,11 +69,14 @@ public final class Messages {
         put("addfood.select_at_least_one",
                 "Select at least one ingredient first.",
                 "اول حداقل یک ماده اولیه را انتخاب کنید.");
-        put("addfood.ask_recipe",
-                "What's the recipe (cooking steps)? Tap Skip to leave it blank.",
-                "دستور پخت (مراحل پختن) چیست؟ برای خالی گذاشتن روی «رد کردن» بزنید.");
+        put("addfood.ask_recipe_step",
+                "📝 Step %d — describe it in %d characters or less. Tap Done if there are no more steps.",
+                "📝 مرحله %d — آن را در %d کاراکتر یا کمتر توضیح دهید. اگر مرحله دیگری نیست روی «تمام» بزنید.");
+        put("recipe.step_too_long",
+                "That's %d characters — please keep each step to %d characters or less.",
+                "این %d کاراکتر است — لطفاً هر مرحله را در %d کاراکتر یا کمتر بنویسید.");
         put("addfood.saved_toast", "Saved!", "ذخیره شد!");
-        put("addfood.saved_message", "Saved: %s", "ذخیره شد: %s");
+        put("addfood.saved_message", "🎉 Saved: %s", "🎉 ذخیره شد: %s");
 
         put("selection_expired", "This selection has expired.", "این انتخاب منقضی شده است.");
         put("tap_button_above", "Please tap one of the buttons above.", "لطفاً یکی از دکمه‌های بالا را بزنید.");
@@ -106,8 +105,11 @@ public final class Messages {
                 "بر اساس دسته‌بندی فیلتر کنید، یا «همه» را انتخاب کنید.");
         put("category.any", "Any", "همه");
         put("cook.nothing_matches",
-                "Nothing matches right now. Try more time, different ingredients, or add more foods with /addfood.",
-                "الان چیزی پیدا نشد. زمان بیشتر، مواد اولیه دیگر، یا با /addfood غذای بیشتری اضافه کنید.");
+                "Hmm, nothing on the menu fits that. 🤔 Try more time, different ingredients, or add more foods with /addfood.",
+                "هوم، هیچی با این شرایط جور نشد. 🤔 زمان بیشتر، مواد اولیه دیگر، یا با /addfood غذای بیشتری اضافه کنید.");
+        put("cook.nothing_matches_no_shop",
+                "Nothing fits, and shopping's off the table... looks like a fresh-air dinner tonight! 🌬️🍽️ Try more time, different ingredients, or add a food with /addfood.",
+                "هیچی جور نشد و رفتن خرید هم گزینه نیست... امشب باید با هوای تازه سیر شوید! 🌬️🍽️ زمان بیشتر، مواد اولیه دیگر، یا با /addfood یک غذا اضافه کنید.");
         put("cook.ready_header", "✅ You can cook right now — tap one for details:",
                 "✅ همین الان می‌توانید این‌ها را بپزید — برای جزئیات روی یکی بزنید:");
         put("cook.shopping_header",
@@ -128,8 +130,8 @@ public final class Messages {
                 "Which list do you want to see?",
                 "کدوم لیست رو می‌خواید ببینید؟");
         put("foods.none",
-                "No foods saved yet. Use /addfood to add one.",
-                "هنوز غذایی ذخیره نشده. با /addfood یکی اضافه کنید.");
+                "The cupboard's empty! 📭 Use /addfood to stock it up.",
+                "قفسه خالیه! 📭 با /addfood یکی اضافه کنید.");
         put("foods.header.mine", "👤 Your foods, tap one for details:", "👤 غذاهای شما، برای جزئیات روی یکی بزنید:");
         put("foods.header.global", "🌍 Global foods, tap one for details:", "🌍 غذاهای عمومی، برای جزئیات روی یکی بزنید:");
         put("settings.choose_action", "What do you want to do?", "چه کاری می‌خواهید انجام دهید؟");
@@ -159,15 +161,15 @@ public final class Messages {
         put("edit.ingredient_prompt",
                 "Tap to add or remove ingredients, or type to search the list or add a new one. Tap Done when you're finished.",
                 "برای اضافه یا حذف کردن مواد اولیه لمس کنید، یا برای جستجو یا افزودن ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
-        put("edit.ask_recipe",
-                "What's the new recipe? Tap Clear to remove it instead.",
-                "دستور پخت جدید چیست؟ برای حذف آن روی «حذف دستور پخت» بزنید.");
+        put("edit.ask_recipe_step",
+                "📝 New step %d — describe it in %d characters or less. Tap Done when finished, or Clear recipe to remove it entirely.",
+                "📝 مرحله جدید %d — آن را در %d کاراکتر یا کمتر توضیح دهید. وقتی تمام شد روی «تمام» بزنید، یا برای حذف کامل دستور پخت روی «حذف دستور پخت» بزنید.");
         put("edit.saved", "Updated: %s", "به‌روزرسانی شد: %s");
 
         put("delete.confirm", "Delete %s? This can't be undone.", "%s حذف شود؟ این کار قابل بازگشت نیست.");
         put("delete.confirm_yes", "🗑️ Yes, delete", "🗑️ بله، حذف کن");
         put("delete.confirm_no", "🚫 Cancel", "🚫 لغو");
-        put("delete.done", "Deleted: %s", "حذف شد: %s");
+        put("delete.done", "🗑️ Poof! Deleted: %s", "🗑️ پاک شد! حذف شد: %s");
         put("delete.cancelled", "Delete cancelled.", "حذف لغو شد.");
 
         put("category.Breakfast", "Breakfast", "صبحانه");

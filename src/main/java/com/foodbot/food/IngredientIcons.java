@@ -104,6 +104,15 @@ public final class IngredientIcons {
         ICONS.put("شیوید", "🌿");
         ICONS.put("basil", "🌿");
         ICONS.put("ریحان", "🌿");
+        ICONS.put("rum", "🥃");
+        ICONS.put("رام", "🥃");
+        ICONS.put("tequila", "🌵");
+        ICONS.put("تکیلا", "🌵");
+        ICONS.put("lime", "🍋");
+        ICONS.put("pineapple", "🍍");
+        ICONS.put("آناناس", "🍍");
+        ICONS.put("coconut milk", "🥥");
+        ICONS.put("شیر نارگیل", "🥥");
     }
 
     public static String iconFor(String ingredient) {

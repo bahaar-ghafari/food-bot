@@ -12,6 +12,7 @@ public class EditFoodSession implements IngredientPickerState {
 
     private final String foodId;
     private Step step = Step.CHOOSING_FIELD;
+    private final List<String> recipeSteps = new ArrayList<>();
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
@@ -32,6 +33,10 @@ public class EditFoodSession implements IngredientPickerState {
 
     public void setStep(Step step) {
         this.step = step;
+    }
+
+    public List<String> getRecipeSteps() {
+        return recipeSteps;
     }
 
     public List<String> getCandidateIngredients() {

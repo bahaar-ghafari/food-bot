@@ -32,6 +32,14 @@ class IngredientIconsTest {
     }
 
     @Test
+    void cocktailIngredientsHaveIcons() {
+        assertEquals("🥃", IngredientIcons.iconFor("rum"));
+        assertEquals("🌵", IngredientIcons.iconFor("tequila"));
+        assertEquals("🍍", IngredientIcons.iconFor("pineapple"));
+        assertEquals("🥥", IngredientIcons.iconFor("coconut milk"));
+    }
+
+    @Test
     void lookupIsCaseInsensitive() {
         assertEquals(IngredientIcons.iconFor("egg"), IngredientIcons.iconFor("EGG"));
     }

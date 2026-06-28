@@ -15,7 +15,7 @@ public class AddFoodSession implements IngredientPickerState {
     private int prepTimeMinutes;
     private String category;
     private Long ownerChatId;
-    private String recipe;
+    private final List<String> recipeSteps = new ArrayList<>();
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
@@ -62,12 +62,8 @@ public class AddFoodSession implements IngredientPickerState {
         this.ownerChatId = ownerChatId;
     }
 
-    public String getRecipe() {
-        return recipe;
-    }
-
-    public void setRecipe(String recipe) {
-        this.recipe = recipe;
+    public List<String> getRecipeSteps() {
+        return recipeSteps;
     }
 
     public List<String> getCandidateIngredients() {

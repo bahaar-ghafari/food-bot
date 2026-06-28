@@ -52,6 +52,10 @@ public final class IngredientTranslations {
         addPair("salt", "نمک");
         addPair("basil", "ریحان");
         addPair("dill", "شیوید");
+        addPair("rum", "رام");
+        addPair("tequila", "تکیلا");
+        addPair("pineapple", "آناناس");
+        addPair("coconut milk", "شیر نارگیل");
     }
 
     private static void addPair(String en, String fa) {
