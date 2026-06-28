@@ -43,14 +43,14 @@ docker compose up -d --build
 
 - `telegram.bot.token` / `TELEGRAM_BOT_TOKEN` — the bot token.
 - `telegram.bot.username` / `TELEGRAM_BOT_USERNAME` — the bot's Telegram username.
-- `superadmin.chat.id` / `SUPERADMIN_CHAT_ID` — the chat ID that can edit/delete *any* food (personal or global). Regular users can still edit/delete the foods on their own personal list. Find your numeric Telegram chat ID via a service like `@userinfobot`, or by sending `/chatid` to the bot.
-- `feedback.chat.id` / `FEEDBACK_CHAT_ID` — where `/feedback` submissions are sent. Defaults to `SUPERADMIN_CHAT_ID` if unset. Can be a group's chat ID (negative number) if the bot has been added to a group — send `/chatid` in that group to find it.
+- `superadmin.chat.id` / `SUPERADMIN_CHAT_ID` — the chat ID that can edit/delete *any* food (personal or global). Regular users can still edit/delete the foods on their own personal list. Find your numeric Telegram chat ID via a service like `@userinfobot`.
+- `feedback.chat.id` / `FEEDBACK_CHAT_ID` — where `/feedback` submissions are sent. Defaults to `SUPERADMIN_CHAT_ID` if unset. Can be a group's chat ID (negative number) if the bot has been added to a group.
 
 If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` from the environment.
 
 ## Bot commands
 
-- First message — asks you to pick a language (English / فارسی, shown with a 🦁☀️ symbol — Unicode has no dedicated Iranian flag emoji for this, so a lion-and-sun pair stands in for it) before anything else. Once chosen, the bot only accepts typed names/ingredients in that script.
+- First message — asks you to pick a language (فارسی shown first, with a 🦁☀️ symbol since Unicode has no dedicated Iranian flag emoji / English) before anything else. Once chosen, the bot only accepts typed names/ingredients in that script. Persian is the default wherever a language can't be determined (e.g. a feedback group that's never run `/lang`).
 - `/lang` (or the "🌐 Language" button) — change the language at any time.
 - `/help` (or the "❓ Help" button) — explains everything the bot can do.
 - `/start` — shows the main menu buttons.
@@ -58,7 +58,6 @@ If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` fr
 - `/menu` (or the "📋 All foods" button) — pick your list or the global list, then shows food names as tappable buttons, 10 per page with "◀️"/"▶️" navigation if there are more. Tap a food to see "🍽️" its name, "🏷️" category, "⏱️" prep time, "🧾" ingredients, and "📝" recipe. On a food from *your own* personal list, you'll also see a "⚙️ Settings" button (→ "✏️ Edit" / "🗑️ Delete") to manage it yourself. The superadmin sees Settings on *every* food, including other people's and the global list; global foods can only be edited/deleted by the superadmin once added. A "🔙 Back" button is always available to retrace your steps (list → detail → settings → edit-field choice) by editing the same message in place, rather than piling up new ones.
 - `/cook` (or the "🍳 What can I cook?" button) — asks how much time you have (tap "⚡ Fast (~30m)", "🕐 ~2 hours", "🕔 ~5 hours", "📅 ~1 day", "♾️ Any", or type an exact number of minutes), then which ingredients you currently have (water and salt aren't asked about — everyone's assumed to have those already), whether you can go shopping for anything missing, and a category filter (or Any). Replies with two tappable, paginated lists: "✅ ready now" and "🍽️ could cook if you shop". Tap any food to see a clean breakdown — what you already have, what you need to buy, and its recipe, with a "🔙 Back" button to return to that same result list. Considers both your list and the global list. If literally nothing fits and shopping isn't an option, the bot will (gently) roast you for it.
 - `/feedback` (or the "💬 Feedback" button) — asks you to type a message, then forwards it straight to the feedback chat (`FEEDBACK_CHAT_ID`, a group or the superadmin's DM — see Configuration) with the sender's chat ID/username attached, and confirms it was sent. This includes the superadmin's own test submissions, so the round-trip is always visible.
-- `/chatid` — replies with the current chat's numeric ID. Works in groups too (useful for finding the right `FEEDBACK_CHAT_ID`).
 - `/cancel` — cancels an in-progress `/addfood`, `/cook`, edit, or feedback flow.
 
 ### Ingredient picker

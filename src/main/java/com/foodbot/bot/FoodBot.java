@@ -136,11 +136,6 @@ public class FoodBot extends TelegramLongPollingBot {
         long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
 
-        if (text.equalsIgnoreCase("/chatid") || text.toLowerCase().startsWith("/chatid@")) {
-            send(chatId, "Chat ID: " + chatId);
-            return;
-        }
-
         if (text.equalsIgnoreCase("/lang")) {
             sendLanguagePrompt(chatId);
             return;
@@ -216,7 +211,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
     private Lang lang(long chatId) {
         Lang lang = languageRepository.get(chatId);
-        return lang != null ? lang : Lang.EN;
+        return lang != null ? lang : Lang.FA;
     }
 
     private boolean isSuperAdmin(long chatId) {
@@ -228,12 +223,12 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendLanguagePrompt(long chatId) {
-        InlineKeyboardButton en = new InlineKeyboardButton("🇬🇧 English");
-        en.setCallbackData(CB_LANG + Lang.EN.name());
         InlineKeyboardButton fa = new InlineKeyboardButton("🦁☀️ فارسی");
         fa.setCallbackData(CB_LANG + Lang.FA.name());
-        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(Lang.EN, "lang.prompt"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(en, fa))));
+        InlineKeyboardButton en = new InlineKeyboardButton("🇬🇧 English");
+        en.setCallbackData(CB_LANG + Lang.EN.name());
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(Lang.FA, "lang.prompt"));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(fa, en))));
         try {
             execute(message);
         } catch (TelegramApiException e) {
