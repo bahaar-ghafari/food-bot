@@ -55,9 +55,9 @@ class IngredientIconsTest {
     }
 
     @Test
-    void unknownIngredientFallsBackToDefaultIcon() {
+    void unknownIngredientHasNoIcon() {
         String icon = IngredientIcons.iconFor("some-made-up-ingredient-xyz");
         assertNotNull(icon);
-        assertEquals("🧂", icon);
+        assertEquals("", icon);
     }
 }

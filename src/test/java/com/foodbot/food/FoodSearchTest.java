@@ -4,6 +4,7 @@ import com.foodbot.lang.Lang;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,5 +52,29 @@ class FoodSearchTest {
     void searchByIngredientIsCaseInsensitive() {
         Food dish = food("Stew", List.of("Beef", "Potato"));
         assertEquals(List.of(dish), FoodSearch.searchByIngredient(List.of(dish), "beef"));
+    }
+
+    @Test
+    void fuzzyNameMatchSuggestsClosestNameWithMissingTrailingLetter() {
+        Food dish = food("sibtokhm", List.of("apple", "egg"));
+        assertEquals(Optional.of(dish), FoodSearch.fuzzyNameMatch(List.of(dish), "sibtokh"));
+    }
+
+    @Test
+    void fuzzyNameMatchSuggestsClosestNameWithMissingMiddleLetter() {
+        Food dish = food("sibtokhm", List.of("apple", "egg"));
+        assertEquals(Optional.of(dish), FoodSearch.fuzzyNameMatch(List.of(dish), "sibtokm"));
+    }
+
+    @Test
+    void fuzzyNameMatchIgnoresExactMatches() {
+        Food dish = food("Soup", List.of("carrot"));
+        assertEquals(Optional.empty(), FoodSearch.fuzzyNameMatch(List.of(dish), "soup"));
+    }
+
+    @Test
+    void fuzzyNameMatchRejectsTooDifferentNames() {
+        Food dish = food("Pasta", List.of("pasta"));
+        assertEquals(Optional.empty(), FoodSearch.fuzzyNameMatch(List.of(dish), "pineapple"));
     }
 }

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public final class IngredientIcons {
-    private static final String DEFAULT_ICON = "🧂";
+    private static final String DEFAULT_ICON = "";
     private static final Map<String, String> ICONS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     static {
