@@ -24,14 +24,14 @@ public final class Messages {
         put("help.text",
                 "🍽️ FoodBot helps you track recipes and decide what to cook.\n\n"
                         + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n"
-                        + "🍳 What can I cook? — tell it your time, what you have, and whether you can shop, and it suggests recipes.\n"
+                        + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n"
                         + "🌐 Language — switch between English and Persian anytime.\n"
                         + "/whoami — shows your chat ID.\n"
                         + "/cancel — cancel whatever you're doing.\n"
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
                         + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n"
-                        + "🍳 چی می‌تونم بپزم؟ — زمان، مواد اولیه‌ای که دارید و اینکه می‌توانید خرید کنید یا نه را بگویید تا پیشنهاد بگیرید.\n"
+                        + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n"
                         + "/whoami — شناسه چت شما را نشان می‌دهد.\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n"
@@ -83,8 +83,8 @@ public final class Messages {
         put("tap_button_above", "Please tap one of the buttons above.", "لطفاً یکی از دکمه‌های بالا را بزنید.");
 
         put("cook.ask_time",
-                "How many minutes do you have to cook?",
-                "چند دقیقه وقت دارید برای پختن؟");
+                "How many minutes do you have to cook? Tap a preset below or type your own number.",
+                "چند دقیقه وقت دارید برای پختن؟ یکی از گزینه‌های زیر را بزنید یا عدد خودتان را تایپ کنید.");
         put("cook.invalid_time",
                 "That doesn't look like a number. How many minutes do you have?",
                 "این عدد نیست. چند دقیقه وقت دارید؟");
@@ -103,11 +103,14 @@ public final class Messages {
         put("cook.nothing_matches",
                 "Nothing matches right now. Try more time, different ingredients, or add more foods with /addfood.",
                 "الان چیزی پیدا نشد. زمان بیشتر، مواد اولیه دیگر، یا با /addfood غذای بیشتری اضافه کنید.");
-        put("cook.ready_header", "✅ You can cook right now:", "✅ همین الان می‌توانید این‌ها را بپزید:");
+        put("cook.ready_header", "✅ You can cook right now — tap one for details:",
+                "✅ همین الان می‌توانید این‌ها را بپزید — برای جزئیات روی یکی بزنید:");
         put("cook.shopping_header",
-                "🛒 You could cook these if you grab a few things:",
-                "🛒 اگر چند چیز بخرید می‌توانید این‌ها را هم بپزید:");
-        put("cook.missing_label", "missing", "کم دارید");
+                "🛒 You could cook these if you grab a few things — tap one for details:",
+                "🛒 اگر چند چیز بخرید می‌توانید این‌ها را هم بپزید — برای جزئیات روی یکی بزنید:");
+        put("cook.detail_have", "✅ You already have:", "✅ این‌ها را از قبل دارید:");
+        put("cook.detail_need", "🛒 You need to buy:", "🛒 این‌ها را باید بخرید:");
+        put("cook.detail_have_everything", "🎉 You have everything for this!", "🎉 همه چیز برای این غذا را دارید!");
 
         put("removed", "Removed %s", "%s حذف شد");
         put("added", "Added %s", "%s اضافه شد");

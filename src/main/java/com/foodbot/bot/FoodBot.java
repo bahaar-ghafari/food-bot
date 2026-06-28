@@ -1,6 +1,7 @@
 package com.foodbot.bot;
 
 import com.foodbot.food.AddFoodSession;
+import com.foodbot.food.CookResultContext;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.EditFoodSession;
 import com.foodbot.food.Food;
@@ -29,7 +30,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +57,12 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_COOK_SHOP_YES = "cks:yes";
     private static final String CB_COOK_SHOP_NO = "cks:no";
     private static final String CB_COOK_CATEGORY = "ckc:";
+    private static final String CB_COOK_TIME_PRESET = "ckt:";
+    private static final String CB_COOK_VIEW = "cv:";
+    private static final String CB_COOK_RESULT_PAGE = "ckrp:";
+    private static final String GROUP_READY = "ready";
+    private static final String GROUP_SHOP = "shop";
+    private static final int[] COOK_TIME_PRESETS = {10, 15, 20, 30, 45, 60, 90, 120};
     private static final String CATEGORY_ANY = "ANY";
     private static final String CB_ADDFOOD_SCOPE_MINE = "afs:mine";
     private static final String CB_ADDFOOD_SCOPE_GLOBAL = "afs:global";
@@ -86,6 +92,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
     private final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     private final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
+    private final Map<Long, CookResultContext> lastCookResults = new ConcurrentHashMap<>();
 
     public FoodBot(String token, String username, Long superAdminChatId) {
         this.token = token;
@@ -155,7 +162,7 @@ public class FoodBot extends TelegramLongPollingBot {
             addFoodSessions.remove(chatId);
             editSessions.remove(chatId);
             cookSessions.put(chatId, new CookSession());
-            send(chatId, Messages.get(lang, "cook.ask_time"));
+            sendCookTimePrompt(chatId, lang);
         } else if (addFoodSessions.containsKey(chatId)) {
             handleAddFoodText(chatId, text, lang);
         } else if (cookSessions.containsKey(chatId)) {
@@ -491,12 +498,18 @@ public class FoodBot extends TelegramLongPollingBot {
             handleAddFoodRecipeSkipCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_CATEGORY)) {
             handleAddFoodCategoryCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_COOK_TIME_PRESET)) {
+            handleCookTimePresetCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_COOK_INGREDIENT)) {
             handleCookIngredientCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_COOK_SHOP_YES) || data.equals(CB_COOK_SHOP_NO)) {
             handleCookShopCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_COOK_CATEGORY)) {
             handleCookCategoryCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_COOK_RESULT_PAGE)) {
+            handleCookResultPageCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_COOK_VIEW)) {
+            handleCookViewCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_FIELD)) {
             handleEditFieldCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_CATEGORY)) {
@@ -659,10 +672,183 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         int index = Integer.parseInt(data.substring(CB_COOK_CATEGORY.length()));
         String chosen = cookCategoryKeys().get(index);
-        session.setCategory(chosen.equals(CATEGORY_ANY) ? null : chosen);
+        String category = chosen.equals(CATEGORY_ANY) ? null : chosen;
         cookSessions.remove(chatId);
         answerCallback(callbackQuery.getId(), categoryLabel(chosen, lang), false);
-        sendWithMainMenu(chatId, lang, buildCookSuggestions(session, lang, chatId));
+
+        CookResultContext ctx = new CookResultContext(session.getTimeMinutes(), session.getHaveIngredients(),
+                session.isCanShop(), category);
+        lastCookResults.put(chatId, ctx);
+        sendCookResults(chatId, lang, ctx);
+    }
+
+    private List<Food> computeCookMatches(long chatId, CookResultContext ctx, boolean needsShopping) {
+        List<Food> result = new ArrayList<>();
+        for (Food food : foodRepository.findVisibleTo(chatId)) {
+            if (food.getPrepTimeMinutes() > ctx.getTimeMinutes()) {
+                continue;
+            }
+            if (ctx.getCategory() != null && !ctx.getCategory().equalsIgnoreCase(food.getCategory())) {
+                continue;
+            }
+            boolean hasEverything = food.getIngredients().stream()
+                    .allMatch(ing -> ctx.getHaveIngredients().stream().anyMatch(h -> h.equalsIgnoreCase(ing)));
+            if (needsShopping) {
+                if (!hasEverything && ctx.isCanShop()) {
+                    result.add(food);
+                }
+            } else if (hasEverything) {
+                result.add(food);
+            }
+        }
+        return result;
+    }
+
+    private void sendCookResults(long chatId, Lang lang, CookResultContext ctx) {
+        List<Food> ready = computeCookMatches(chatId, ctx, false);
+        List<Food> shoppingNeeded = computeCookMatches(chatId, ctx, true);
+
+        if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches"));
+            return;
+        }
+        if (!ready.isEmpty()) {
+            sendCookResultPage(chatId, lang, GROUP_READY, 0, null);
+        }
+        if (!shoppingNeeded.isEmpty()) {
+            sendCookResultPage(chatId, lang, GROUP_SHOP, 0, null);
+        }
+    }
+
+    private void sendCookResultPage(long chatId, Lang lang, String group, int page, Integer editMessageId) {
+        CookResultContext ctx = lastCookResults.get(chatId);
+        if (ctx == null) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "selection_expired"));
+            return;
+        }
+        List<Food> matches = computeCookMatches(chatId, ctx, group.equals(GROUP_SHOP));
+        if (matches.isEmpty()) {
+            return;
+        }
+        String headerKey = group.equals(GROUP_SHOP) ? "cook.shopping_header" : "cook.ready_header";
+        String icon = group.equals(GROUP_SHOP) ? "🛒" : "✅";
+
+        int totalPages = Paginator.totalPages(matches.size(), FOODS_PER_PAGE);
+        int clampedPage = Paginator.clampPage(page, totalPages);
+        List<Food> pageItems = Paginator.pageSlice(matches, clampedPage, FOODS_PER_PAGE);
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (Food food : pageItems) {
+            String label = icon + " " + FoodNameTranslations.translate(food.getName(), lang) + " ("
+                    + food.getPrepTimeMinutes() + " " + Messages.get(lang, "min_unit") + ")";
+            InlineKeyboardButton button = new InlineKeyboardButton(label);
+            button.setCallbackData(CB_COOK_VIEW + food.getId());
+            rows.add(List.of(button));
+        }
+
+        if (totalPages > 1) {
+            List<InlineKeyboardButton> navRow = new ArrayList<>();
+            if (clampedPage > 0) {
+                InlineKeyboardButton prev = new InlineKeyboardButton("◀️");
+                prev.setCallbackData(CB_COOK_RESULT_PAGE + group + ":" + (clampedPage - 1));
+                navRow.add(prev);
+            }
+            InlineKeyboardButton indicator = new InlineKeyboardButton((clampedPage + 1) + "/" + totalPages);
+            indicator.setCallbackData("noop");
+            navRow.add(indicator);
+            if (clampedPage < totalPages - 1) {
+                InlineKeyboardButton next = new InlineKeyboardButton("▶️");
+                next.setCallbackData(CB_COOK_RESULT_PAGE + group + ":" + (clampedPage + 1));
+                navRow.add(next);
+            }
+            rows.add(navRow);
+        }
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
+
+        if (editMessageId != null) {
+            EditMessageReplyMarkup edit = new EditMessageReplyMarkup();
+            edit.setChatId(String.valueOf(chatId));
+            edit.setMessageId(editMessageId);
+            edit.setReplyMarkup(markup);
+            try {
+                execute(edit);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, headerKey));
+        message.setReplyMarkup(markup);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleCookResultPageCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        String remainder = data.substring(CB_COOK_RESULT_PAGE.length());
+        int separatorIndex = remainder.lastIndexOf(':');
+        String group = remainder.substring(0, separatorIndex);
+        int page = Integer.parseInt(remainder.substring(separatorIndex + 1));
+        answerCallback(callbackQuery.getId(), null, false);
+        sendCookResultPage(chatId, lang, group, page, callbackQuery.getMessage().getMessageId());
+    }
+
+    private void handleCookViewCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        String foodId = data.substring(CB_COOK_VIEW.length());
+        Optional<Food> foodOpt = foodRepository.findById(foodId);
+        CookResultContext ctx = lastCookResults.get(chatId);
+        if (foodOpt.isEmpty() || ctx == null) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        answerCallback(callbackQuery.getId(), null, false);
+        send(chatId, formatCookFoodDetail(foodOpt.get(), ctx, lang));
+    }
+
+    private String formatCookFoodDetail(Food food, CookResultContext ctx, Lang lang) {
+        List<String> have = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+        for (String ingredient : food.getIngredients()) {
+            boolean hasIt = ctx.getHaveIngredients().stream().anyMatch(h -> h.equalsIgnoreCase(ingredient));
+            String formatted = IngredientIcons.iconFor(ingredient) + " " + IngredientTranslations.translate(ingredient, lang);
+            if (hasIt) {
+                have.add(formatted);
+            } else {
+                missing.add(formatted);
+            }
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("🍽️ ").append(FoodNameTranslations.translate(food.getName(), lang)).append("\n");
+        builder.append("🏷️ ").append(categoryLabel(food.getCategory(), lang)).append("\n");
+        builder.append("⏱️ ").append(food.getPrepTimeMinutes()).append(" ").append(Messages.get(lang, "min_unit"))
+                .append("\n\n");
+
+        if (missing.isEmpty()) {
+            builder.append(Messages.get(lang, "cook.detail_have_everything")).append("\n");
+        } else {
+            builder.append(Messages.get(lang, "cook.detail_have")).append("\n");
+            for (String item : have) {
+                builder.append("- ").append(item).append("\n");
+            }
+            builder.append("\n").append(Messages.get(lang, "cook.detail_need")).append("\n");
+            for (String item : missing) {
+                builder.append("- ").append(item).append("\n");
+            }
+        }
+
+        String recipeText = (food.getRecipe() == null || food.getRecipe().isBlank())
+                ? Messages.get(lang, "food.no_recipe")
+                : food.getRecipe();
+        builder.append("\n📝 ").append(Messages.get(lang, "food.detail_recipe", recipeText));
+
+        return builder.toString().trim();
     }
 
     private void handleEditStartCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -923,63 +1109,43 @@ public class FoodBot extends TelegramLongPollingBot {
                 + "] (" + food.getPrepTimeMinutes() + " " + Messages.get(lang, "min_unit") + ") - " + ingredients;
     }
 
-    private String buildCookSuggestions(CookSession session, Lang lang, long chatId) {
-        List<Food> ready = new ArrayList<>();
-        List<Food> shoppingNeeded = new ArrayList<>();
-        Map<Food, List<String>> missingByFood = new HashMap<>();
+    private void sendCookTimePrompt(long chatId, Lang lang) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> currentRow = new ArrayList<>();
+        for (int minutes : COOK_TIME_PRESETS) {
+            InlineKeyboardButton button = new InlineKeyboardButton("⏱️ " + minutes);
+            button.setCallbackData(CB_COOK_TIME_PRESET + minutes);
+            currentRow.add(button);
+            if (currentRow.size() == 4) {
+                rows.add(currentRow);
+                currentRow = new ArrayList<>();
+            }
+        }
+        if (!currentRow.isEmpty()) {
+            rows.add(currentRow);
+        }
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "cook.ask_time"));
+        message.setReplyMarkup(new InlineKeyboardMarkup(rows));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
-        for (Food food : foodRepository.findVisibleTo(chatId)) {
-            if (food.getPrepTimeMinutes() > session.getTimeMinutes()) {
-                continue;
-            }
-            if (session.getCategory() != null && !session.getCategory().equalsIgnoreCase(food.getCategory())) {
-                continue;
-            }
-            List<String> missing = new ArrayList<>();
-            for (String ingredient : food.getIngredients()) {
-                boolean have = session.getHaveIngredients().stream().anyMatch(h -> h.equalsIgnoreCase(ingredient));
-                if (!have) {
-                    missing.add(ingredient);
-                }
-            }
-            if (missing.isEmpty()) {
-                ready.add(food);
-            } else if (session.isCanShop()) {
-                shoppingNeeded.add(food);
-                missingByFood.put(food, missing);
-            }
+    private void handleCookTimePresetCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        CookSession session = cookSessions.get(chatId);
+        if (session == null || session.getStep() != CookSession.Step.AWAITING_TIME) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
         }
-
-        if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
-            return Messages.get(lang, "cook.nothing_matches");
-        }
-
-        StringBuilder builder = new StringBuilder();
-        if (!ready.isEmpty()) {
-            builder.append(Messages.get(lang, "cook.ready_header")).append("\n");
-            for (Food food : ready) {
-                builder.append("- ").append(formatFood(food, lang)).append("\n");
-            }
-        }
-        if (!shoppingNeeded.isEmpty()) {
-            if (builder.length() > 0) {
-                builder.append("\n");
-            }
-            builder.append(Messages.get(lang, "cook.shopping_header")).append("\n");
-            String missingLabel = Messages.get(lang, "cook.missing_label");
-            for (Food food : shoppingNeeded) {
-                String missingText = missingByFood.get(food).stream()
-                        .map(i -> IngredientIcons.iconFor(i) + " " + IngredientTranslations.translate(i, lang))
-                        .collect(Collectors.joining(", "));
-                builder.append("- ").append(FoodNameTranslations.translate(food.getName(), lang))
-                        .append(" [").append(categoryLabel(food.getCategory(), lang)).append("] (")
-                        .append(food.getPrepTimeMinutes()).append(" ").append(Messages.get(lang, "min_unit"))
-                        .append(") - ").append(missingLabel).append(": ")
-                        .append(missingText)
-                        .append("\n");
-            }
-        }
-        return builder.toString().trim();
+        int minutes = Integer.parseInt(data.substring(CB_COOK_TIME_PRESET.length()));
+        session.setTimeMinutes(minutes);
+        session.setStep(CookSession.Step.SELECTING_INGREDIENTS);
+        session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId));
+        answerCallback(callbackQuery.getId(), null, false);
+        sendCookIngredientKeyboard(chatId, session, lang);
     }
 
     private void sendShoppingPrompt(long chatId, Lang lang) {
