@@ -24,6 +24,14 @@ class IngredientIconsTest {
     }
 
     @Test
+    void persianNamedIngredientsAddedForSeedDishesHaveIcons() {
+        assertEquals("🍜", IngredientIcons.iconFor("رشته"));
+        assertEquals("🌾", IngredientIcons.iconFor("آرد"));
+        assertEquals("🧈", IngredientIcons.iconFor("کره"));
+        assertEquals("🧂", IngredientIcons.iconFor("نمک"));
+    }
+
+    @Test
     void lookupIsCaseInsensitive() {
         assertEquals(IngredientIcons.iconFor("egg"), IngredientIcons.iconFor("EGG"));
     }

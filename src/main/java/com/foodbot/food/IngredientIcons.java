@@ -19,6 +19,7 @@ public final class IngredientIcons {
         ICONS.put("tuna", "🐟");
         ICONS.put("fish", "🐟");
         ICONS.put("ماهی تن", "🐟");
+        ICONS.put("تن ماهی", "🐟");
         ICONS.put("ماهی", "🐟");
         ICONS.put("beef", "🥩");
         ICONS.put("meat", "🥩");
@@ -95,6 +96,14 @@ public final class IngredientIcons {
         ICONS.put("زرشک", "🔴");
         ICONS.put("kidney beans", "🫘");
         ICONS.put("لوبیا قرمز", "🫘");
+        ICONS.put("رشته", "🍜");
+        ICONS.put("آرد", "🌾");
+        ICONS.put("کره", "🧈");
+        ICONS.put("نمک", "🧂");
+        ICONS.put("dill", "🌿");
+        ICONS.put("شیوید", "🌿");
+        ICONS.put("basil", "🌿");
+        ICONS.put("ریحان", "🌿");
     }
 
     public static String iconFor(String ingredient) {

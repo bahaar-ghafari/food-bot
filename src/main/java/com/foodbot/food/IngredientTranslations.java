@@ -46,6 +46,12 @@ public final class IngredientTranslations {
         addPair("mint", "نعنا");
         addPair("barberries", "زرشک");
         addPair("kidney beans", "لوبیا قرمز");
+        addPair("noodle", "رشته");
+        addPair("flour", "آرد");
+        addPair("butter", "کره");
+        addPair("salt", "نمک");
+        addPair("basil", "ریحان");
+        addPair("dill", "شیوید");
     }
 
     private static void addPair(String en, String fa) {

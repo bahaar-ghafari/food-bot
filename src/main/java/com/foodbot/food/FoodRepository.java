@@ -1,5 +1,6 @@
 package com.foodbot.food;
 
+import com.foodbot.lang.Lang;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -15,7 +16,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 public class FoodRepository {
-    private static final Path DEFAULT_dataFile = Path.of("foods.json");
+    private static final Path DEFAULT_DATA_FILE = Path.of("foods.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type FOOD_LIST_TYPE = new TypeToken<ArrayList<Food>>() {}.getType();
 
@@ -23,7 +24,7 @@ public class FoodRepository {
     private final List<Food> foods;
 
     public FoodRepository() {
-        this(DEFAULT_dataFile);
+        this(DEFAULT_DATA_FILE);
     }
 
     public FoodRepository(Path dataFile) {
@@ -56,39 +57,39 @@ public class FoodRepository {
         }
     }
 
-    public synchronized List<Food> findVisibleTo(long chatId) {
+    public synchronized List<Food> findVisibleTo(long chatId, Lang lang) {
         List<Food> result = new ArrayList<>();
         for (Food food : foods) {
-            if (food.getOwnerChatId() == null || food.getOwnerChatId() == chatId) {
+            if (food.getLanguage() == lang && (food.getOwnerChatId() == null || food.getOwnerChatId() == chatId)) {
                 result.add(food);
             }
         }
         return result;
     }
 
-    public synchronized List<Food> findGlobal() {
+    public synchronized List<Food> findGlobal(Lang lang) {
         List<Food> result = new ArrayList<>();
         for (Food food : foods) {
-            if (food.getOwnerChatId() == null) {
+            if (food.getLanguage() == lang && food.getOwnerChatId() == null) {
                 result.add(food);
             }
         }
         return result;
     }
 
-    public synchronized List<Food> findOwnedBy(long chatId) {
+    public synchronized List<Food> findOwnedBy(long chatId, Lang lang) {
         List<Food> result = new ArrayList<>();
         for (Food food : foods) {
-            if (food.getOwnerChatId() != null && food.getOwnerChatId() == chatId) {
+            if (food.getLanguage() == lang && food.getOwnerChatId() != null && food.getOwnerChatId() == chatId) {
                 result.add(food);
             }
         }
         return result;
     }
 
-    public synchronized List<String> findAllIngredients(long chatId) {
+    public synchronized List<String> findAllIngredients(long chatId, Lang lang) {
         TreeSet<String> ingredients = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (Food food : findVisibleTo(chatId)) {
+        for (Food food : findVisibleTo(chatId, lang)) {
             ingredients.addAll(food.getIngredients());
         }
         return new ArrayList<>(ingredients);
@@ -104,20 +105,24 @@ public class FoodRepository {
             if (loaded == null) {
                 return new ArrayList<>();
             }
-            return backfillMissingIds(loaded);
+            return backfillMissingFields(loaded);
         } catch (IOException e) {
             throw new RuntimeException("Unable to load " + dataFile, e);
         }
     }
 
-    private List<Food> backfillMissingIds(List<Food> loaded) {
+    private List<Food> backfillMissingFields(List<Food> loaded) {
         List<Food> result = new ArrayList<>();
         boolean changed = false;
         for (Food food : loaded) {
-            if (food.getId() == null) {
-                result.add(new Food(UUID.randomUUID().toString(), food.getName(), food.getPrepTimeMinutes(),
-                        food.getCategory(), food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(),
-                        food.getRecipe()));
+            String id = food.getId();
+            Lang language = food.getLanguage();
+            if (id == null || language == null) {
+                id = (id == null) ? UUID.randomUUID().toString() : id;
+                language = (language == null) ? inferLanguage(food.getName()) : language;
+                result.add(new Food(id, food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
+                        food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
+                        language));
                 changed = true;
             } else {
                 result.add(food);
@@ -127,6 +132,11 @@ public class FoodRepository {
             saveSnapshot(result);
         }
         return result;
+    }
+
+    private Lang inferLanguage(String name) {
+        boolean hasPersian = name != null && name.codePoints().anyMatch(cp -> cp >= 0x0600 && cp <= 0x06FF);
+        return hasPersian ? Lang.FA : Lang.EN;
     }
 
     private void saveSnapshot(List<Food> snapshot) {

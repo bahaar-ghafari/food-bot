@@ -28,4 +28,12 @@ class IngredientTranslationsTest {
         assertEquals("walnut", IngredientTranslations.translate("گردو", Lang.EN));
         assertEquals("barberries", IngredientTranslations.translate("زرشک", Lang.EN));
     }
+
+    @Test
+    void translatesNoodleFlourButterAndSalt() {
+        assertEquals("رشته", IngredientTranslations.translate("noodle", Lang.FA));
+        assertEquals("آرد", IngredientTranslations.translate("flour", Lang.FA));
+        assertEquals("کره", IngredientTranslations.translate("butter", Lang.FA));
+        assertEquals("نمک", IngredientTranslations.translate("salt", Lang.FA));
+    }
 }

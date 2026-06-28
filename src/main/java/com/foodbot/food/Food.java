@@ -1,5 +1,7 @@
 package com.foodbot.food;
 
+import com.foodbot.lang.Lang;
+
 import java.util.List;
 
 public class Food {
@@ -11,9 +13,10 @@ public class Food {
     private final Long ownerChatId;
     private final Long createdByChatId;
     private final String recipe;
+    private final Lang language;
 
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
-                Long ownerChatId, Long createdByChatId, String recipe) {
+                Long ownerChatId, Long createdByChatId, String recipe, Lang language) {
         this.id = id;
         this.name = name;
         this.prepTimeMinutes = prepTimeMinutes;
@@ -22,6 +25,7 @@ public class Food {
         this.ownerChatId = ownerChatId;
         this.createdByChatId = createdByChatId;
         this.recipe = recipe;
+        this.language = language;
     }
 
     public String getId() {
@@ -54,6 +58,10 @@ public class Food {
 
     public String getRecipe() {
         return recipe;
+    }
+
+    public Lang getLanguage() {
+        return language;
     }
 
     @Override

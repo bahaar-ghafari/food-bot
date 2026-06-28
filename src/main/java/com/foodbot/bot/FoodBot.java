@@ -340,7 +340,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 }
                 session.setTimeMinutes(minutes);
                 session.setStep(CookSession.Step.SELECTING_INGREDIENTS);
-                session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId));
+                session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId, lang));
                 sendCookIngredientKeyboard(chatId, session, lang);
                 break;
 
@@ -376,7 +376,8 @@ public class FoodBot extends TelegramLongPollingBot {
                     return;
                 }
                 Food updatedName = new Food(food.getId(), text, food.getPrepTimeMinutes(), food.getCategory(),
-                        food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe());
+                        food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
+                        food.getLanguage());
                 foodRepository.update(updatedName);
                 editSessions.remove(chatId);
                 sendWithMainMenu(chatId, lang, Messages.get(lang, "edit.saved", formatFood(updatedName, lang)));
@@ -389,7 +390,8 @@ public class FoodBot extends TelegramLongPollingBot {
                     return;
                 }
                 Food updatedTime = new Food(food.getId(), food.getName(), minutes, food.getCategory(),
-                        food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe());
+                        food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
+                        food.getLanguage());
                 foodRepository.update(updatedTime);
                 editSessions.remove(chatId);
                 sendWithMainMenu(chatId, lang, Messages.get(lang, "edit.saved", formatFood(updatedTime, lang)));
@@ -411,7 +413,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 }
                 Food updatedRecipe = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(),
                         food.getCategory(), food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(),
-                        text);
+                        text, food.getLanguage());
                 foodRepository.update(updatedRecipe);
                 editSessions.remove(chatId);
                 sendWithMainMenu(chatId, lang, Messages.get(lang, "edit.saved", formatFood(updatedRecipe, lang)));
@@ -583,7 +585,7 @@ public class FoodBot extends TelegramLongPollingBot {
         String category = FoodCategories.ALL.get(index);
         session.setCategory(category);
         session.setStep(AddFoodSession.Step.SELECTING_INGREDIENTS);
-        session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId));
+        session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId, lang));
         answerCallback(callbackQuery.getId(), categoryLabel(category, lang), false);
         sendAddFoodIngredientKeyboard(chatId, session, lang);
     }
@@ -614,7 +616,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private void finalizeNewFood(long chatId, AddFoodSession session, Lang lang) {
         Food food = new Food(UUID.randomUUID().toString(), session.getName(), session.getPrepTimeMinutes(),
                 session.getCategory(), new ArrayList<>(session.getSelectedIngredients()), session.getOwnerChatId(),
-                chatId, session.getRecipe());
+                chatId, session.getRecipe(), lang);
         foodRepository.add(food);
         addFoodSessions.remove(chatId);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "addfood.saved_message", formatFood(food, lang)));
@@ -684,9 +686,9 @@ public class FoodBot extends TelegramLongPollingBot {
         sendCookResults(chatId, lang, ctx);
     }
 
-    private List<Food> computeCookMatches(long chatId, CookResultContext ctx, boolean needsShopping) {
+    private List<Food> computeCookMatches(long chatId, Lang lang, CookResultContext ctx, boolean needsShopping) {
         List<Food> result = new ArrayList<>();
-        for (Food food : foodRepository.findVisibleTo(chatId)) {
+        for (Food food : foodRepository.findVisibleTo(chatId, lang)) {
             if (food.getPrepTimeMinutes() > ctx.getTimeMinutes()) {
                 continue;
             }
@@ -707,8 +709,8 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendCookResults(long chatId, Lang lang, CookResultContext ctx) {
-        List<Food> ready = computeCookMatches(chatId, ctx, false);
-        List<Food> shoppingNeeded = computeCookMatches(chatId, ctx, true);
+        List<Food> ready = computeCookMatches(chatId, lang, ctx, false);
+        List<Food> shoppingNeeded = computeCookMatches(chatId, lang, ctx, true);
 
         if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches"));
@@ -728,7 +730,7 @@ public class FoodBot extends TelegramLongPollingBot {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "selection_expired"));
             return;
         }
-        List<Food> matches = computeCookMatches(chatId, ctx, group.equals(GROUP_SHOP));
+        List<Food> matches = computeCookMatches(chatId, lang, ctx, group.equals(GROUP_SHOP));
         if (matches.isEmpty()) {
             return;
         }
@@ -848,9 +850,9 @@ public class FoodBot extends TelegramLongPollingBot {
         String recipeText = (food.getRecipe() == null || food.getRecipe().isBlank())
                 ? Messages.get(lang, "food.no_recipe")
                 : food.getRecipe();
-        builder.append("\n📝 ").append(Messages.get(lang, "food.detail_recipe", recipeText));
+        builder.append("\n📝 ").append(Messages.get(lang, "food.detail_recipe", recipeText)).append("\n");
 
-        return builder.toString().trim();
+        return builder.toString();
     }
 
     private void handleEditStartCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -921,7 +923,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 break;
             case "ingredients":
                 session.setStep(EditFoodSession.Step.EDITING_INGREDIENTS);
-                session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId));
+                session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId, lang));
                 for (String ingredient : food.getIngredients()) {
                     boolean exists = session.getCandidateIngredients().stream()
                             .anyMatch(i -> i.equalsIgnoreCase(ingredient));
@@ -968,7 +970,7 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         Food food = foodOpt.get();
         Food updated = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
-                food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), null);
+                food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), null, food.getLanguage());
         foodRepository.update(updated);
         editSessions.remove(chatId);
         answerCallback(callbackQuery.getId(), null, false);
@@ -992,7 +994,8 @@ public class FoodBot extends TelegramLongPollingBot {
         String category = FoodCategories.ALL.get(index);
         Food food = foodOpt.get();
         Food updated = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(), category,
-                food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe());
+                food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
+                food.getLanguage());
         foodRepository.update(updated);
         editSessions.remove(chatId);
         answerCallback(callbackQuery.getId(), categoryLabel(category, lang), false);
@@ -1020,7 +1023,7 @@ public class FoodBot extends TelegramLongPollingBot {
             Food food = foodOpt.get();
             Food updated = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
                     new ArrayList<>(session.getSelectedIngredients()), food.getOwnerChatId(), food.getCreatedByChatId(),
-                    food.getRecipe());
+                    food.getRecipe(), food.getLanguage());
             foodRepository.update(updated);
             editSessions.remove(chatId);
             answerCallback(callbackQuery.getId(), Messages.get(lang, "addfood.saved_toast"), false);
@@ -1145,7 +1148,7 @@ public class FoodBot extends TelegramLongPollingBot {
         int minutes = Integer.parseInt(data.substring(CB_COOK_TIME_PRESET.length()));
         session.setTimeMinutes(minutes);
         session.setStep(CookSession.Step.SELECTING_INGREDIENTS);
-        session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId));
+        session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId, lang));
         answerCallback(callbackQuery.getId(), null, false);
         sendCookIngredientKeyboard(chatId, session, lang);
     }
@@ -1342,7 +1345,9 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendFoodListPage(long chatId, Lang lang, String scope, int page, Integer editMessageId) {
-        List<Food> foods = scope.equals(SCOPE_MINE) ? foodRepository.findOwnedBy(chatId) : foodRepository.findGlobal();
+        List<Food> foods = scope.equals(SCOPE_MINE)
+                ? foodRepository.findOwnedBy(chatId, lang)
+                : foodRepository.findGlobal(lang);
         String headerKey = scope.equals(SCOPE_MINE) ? "foods.header.mine" : "foods.header.global";
 
         if (foods.isEmpty()) {
@@ -1416,8 +1421,8 @@ public class FoodBot extends TelegramLongPollingBot {
         return FoodNameTranslations.translate(food.getName(), lang) + "\n"
                 + Messages.get(lang, "food.detail_category", categoryLabel(food.getCategory(), lang)) + "\n"
                 + Messages.get(lang, "food.detail_time", timeText) + "\n"
-                + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n"
-                + Messages.get(lang, "food.detail_recipe", recipeText);
+                + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
+                + Messages.get(lang, "food.detail_recipe", recipeText) + "\n";
     }
 
     private void handleFoodViewCallback(CallbackQuery callbackQuery, long chatId, String data) {
