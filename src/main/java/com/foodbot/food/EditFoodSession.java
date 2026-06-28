@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class EditFoodSession implements IngredientPickerState {
+public class EditFoodSession implements IngredientPickerState, RecipeStepEditorState {
     public enum Step {
         CHOOSING_FIELD, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS, EDITING_RECIPE
     }
@@ -13,6 +13,7 @@ public class EditFoodSession implements IngredientPickerState {
     private final String foodId;
     private Step step = Step.CHOOSING_FIELD;
     private final List<String> recipeSteps = new ArrayList<>();
+    private Integer editingRecipeStepIndex;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
@@ -37,6 +38,14 @@ public class EditFoodSession implements IngredientPickerState {
 
     public List<String> getRecipeSteps() {
         return recipeSteps;
+    }
+
+    public Integer getEditingRecipeStepIndex() {
+        return editingRecipeStepIndex;
+    }
+
+    public void setEditingRecipeStepIndex(Integer editingRecipeStepIndex) {
+        this.editingRecipeStepIndex = editingRecipeStepIndex;
     }
 
     public List<String> getCandidateIngredients() {

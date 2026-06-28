@@ -14,6 +14,8 @@ import com.foodbot.food.IngredientSearch;
 import com.foodbot.food.IngredientTranslations;
 import com.foodbot.food.Paginator;
 import com.foodbot.food.PantryStaples;
+import com.foodbot.food.RecipeStepEditorState;
+import com.foodbot.food.RecipeSteps;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
@@ -83,12 +85,16 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_FOOD_EDIT_INGREDIENT_CLEAR = "fei:clear";
     private static final String CB_FOOD_EDIT_RECIPE_CLEAR = "ferclear";
     private static final String CB_FOOD_EDIT_RECIPE_DONE = "ferdone";
+    private static final String CB_FOOD_EDIT_RECIPE_STEP = "fers:";
     private static final String CB_FOOD_DELETE_START = "fd:";
     private static final String CB_FOOD_DELETE_CONFIRM_YES = "fdy:";
     private static final String CB_FOOD_DELETE_CONFIRM_NO = "fdn:";
     private static final String CB_ADDFOOD_RECIPE_DONE = "afrdone";
+    private static final String CB_ADDFOOD_RECIPE_STEP = "afrs:";
     private static final String CB_ADDFOOD_BACK = "afback";
     private static final String CB_ADDFOOD_CANCEL = "afcancel";
+    private static final String CB_ADDFOOD_REVIEW_EDIT = "afrv:";
+    private static final String CB_ADDFOOD_CONFIRM = "afconfirm";
     private static final String CB_FOOD_VIEW = "fv:";
     private static final String CB_FOOD_SETTINGS = "fset:";
     private static final int RECIPE_STEP_CHAR_LIMIT = 150;
@@ -96,6 +102,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private final String token;
     private final String username;
     private final Long superAdminChatId;
+    private final Long feedbackChatId;
     private final FoodRepository foodRepository = new FoodRepository();
     private final LanguageRepository languageRepository = new LanguageRepository();
     private final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
@@ -104,10 +111,11 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, CookResultContext> lastCookResults = new ConcurrentHashMap<>();
     private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
 
-    public FoodBot(String token, String username, Long superAdminChatId) {
+    public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId) {
         this.token = token;
         this.username = username;
         this.superAdminChatId = superAdminChatId;
+        this.feedbackChatId = feedbackChatId;
     }
 
     @Override
@@ -127,6 +135,11 @@ public class FoodBot extends TelegramLongPollingBot {
 
         long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
+
+        if (text.equalsIgnoreCase("/chatid") || text.toLowerCase().startsWith("/chatid@")) {
+            send(chatId, "Chat ID: " + chatId);
+            return;
+        }
 
         if (text.equalsIgnoreCase("/lang")) {
             sendLanguagePrompt(chatId);
@@ -164,8 +177,7 @@ public class FoodBot extends TelegramLongPollingBot {
             editSessions.remove(chatId);
             awaitingFeedback.remove(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
-        } else if (isSuperAdmin(chatId)
-                && (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods")))) {
+        } else if (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods"))) {
             sendViewFoodsPrompt(chatId, lang);
         } else if (text.equalsIgnoreCase("/cook") || text.equals(Messages.get(lang, "btn.what_can_cook"))) {
             addFoodSessions.remove(chatId);
@@ -193,11 +205,11 @@ public class FoodBot extends TelegramLongPollingBot {
 
     private void handleFeedbackText(long chatId, String text, Lang lang, User from) {
         awaitingFeedback.remove(chatId);
-        if (superAdminChatId != null) {
+        if (feedbackChatId != null) {
             String who = (from != null && from.getUserName() != null) ? "@" + from.getUserName()
                     : (from != null && from.getFirstName() != null) ? from.getFirstName() : String.valueOf(chatId);
-            Lang adminLang = lang(superAdminChatId);
-            send(superAdminChatId, Messages.get(adminLang, "feedback.notify_admin", who, chatId, text));
+            Lang feedbackLang = lang(feedbackChatId);
+            send(feedbackChatId, Messages.get(feedbackLang, "feedback.notify_admin", who, chatId, text));
         }
         sendWithMainMenu(chatId, lang, Messages.get(lang, "feedback.sent"));
     }
@@ -212,7 +224,7 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private boolean canModify(Food food, long chatId) {
-        return isSuperAdmin(chatId);
+        return isSuperAdmin(chatId) || (food.getOwnerChatId() != null && food.getOwnerChatId() == chatId);
     }
 
     private void sendLanguagePrompt(long chatId) {
@@ -307,6 +319,12 @@ public class FoodBot extends TelegramLongPollingBot {
             return;
         }
         answerCallback(callbackQuery.getId(), null, false);
+        if (session.isReturnToReview()) {
+            session.setReturnToReview(false);
+            session.setStep(AddFoodSession.Step.REVIEW);
+            renderAddFoodReview(chatId, session, lang);
+            return;
+        }
         switch (session.getStep()) {
             case AWAITING_NAME:
                 session.setStep(AddFoodSession.Step.ASK_SCOPE);
@@ -326,7 +344,12 @@ public class FoodBot extends TelegramLongPollingBot {
                 break;
             case AWAITING_RECIPE:
                 session.setStep(AddFoodSession.Step.SELECTING_INGREDIENTS);
+                session.setEditingRecipeStepIndex(null);
                 renderAddFoodIngredientKeyboard(chatId, session, lang);
+                break;
+            case REVIEW:
+                session.setStep(AddFoodSession.Step.AWAITING_RECIPE);
+                renderAddFoodRecipeManager(chatId, session, lang);
                 break;
             default:
                 break;
@@ -377,8 +400,14 @@ public class FoodBot extends TelegramLongPollingBot {
                     return;
                 }
                 session.setName(text);
-                session.setStep(AddFoodSession.Step.AWAITING_PREP_TIME);
-                sendAddFoodTimePrompt(chatId, session, lang);
+                if (session.isReturnToReview()) {
+                    session.setReturnToReview(false);
+                    session.setStep(AddFoodSession.Step.REVIEW);
+                    renderAddFoodReview(chatId, session, lang);
+                } else {
+                    session.setStep(AddFoodSession.Step.AWAITING_PREP_TIME);
+                    sendAddFoodTimePrompt(chatId, session, lang);
+                }
                 break;
 
             case AWAITING_PREP_TIME:
@@ -388,8 +417,14 @@ public class FoodBot extends TelegramLongPollingBot {
                     return;
                 }
                 session.setPrepTimeMinutes(minutes);
-                session.setStep(AddFoodSession.Step.SELECTING_CATEGORY);
-                sendAddFoodCategoryPrompt(chatId, session, lang);
+                if (session.isReturnToReview()) {
+                    session.setReturnToReview(false);
+                    session.setStep(AddFoodSession.Step.REVIEW);
+                    renderAddFoodReview(chatId, session, lang);
+                } else {
+                    session.setStep(AddFoodSession.Step.SELECTING_CATEGORY);
+                    sendAddFoodCategoryPrompt(chatId, session, lang);
+                }
                 break;
 
             case SELECTING_CATEGORY:
@@ -414,8 +449,17 @@ public class FoodBot extends TelegramLongPollingBot {
                     send(chatId, Messages.get(lang, "recipe.step_too_long", text.length(), RECIPE_STEP_CHAR_LIMIT));
                     return;
                 }
-                session.getRecipeSteps().add(text);
-                sendAddFoodRecipeStepPrompt(chatId, session, lang, session.getRecipeSteps().size() + 1);
+                if (session.getEditingRecipeStepIndex() != null) {
+                    session.getRecipeSteps().set(session.getEditingRecipeStepIndex(), text);
+                    session.setEditingRecipeStepIndex(null);
+                } else {
+                    session.getRecipeSteps().add(text);
+                }
+                renderAddFoodRecipeManager(chatId, session, lang);
+                break;
+
+            case REVIEW:
+                send(chatId, Messages.get(lang, "tap_button_above"));
                 break;
         }
     }
@@ -506,8 +550,13 @@ public class FoodBot extends TelegramLongPollingBot {
                     send(chatId, Messages.get(lang, "recipe.step_too_long", text.length(), RECIPE_STEP_CHAR_LIMIT));
                     return;
                 }
-                session.getRecipeSteps().add(text);
-                sendEditRecipeStepPrompt(chatId, lang, session.getRecipeSteps().size() + 1);
+                if (session.getEditingRecipeStepIndex() != null) {
+                    session.getRecipeSteps().set(session.getEditingRecipeStepIndex(), text);
+                    session.setEditingRecipeStepIndex(null);
+                } else {
+                    session.getRecipeSteps().add(text);
+                }
+                renderEditRecipeManager(chatId, session, lang);
                 break;
 
             case CHOOSING_FIELD:
@@ -633,6 +682,95 @@ public class FoodBot extends TelegramLongPollingBot {
         }
     }
 
+    private void sendOrEditEditFood(long chatId, EditFoodSession session, String text, InlineKeyboardMarkup markup) {
+        Integer messageId = session.getKeyboardMessageId();
+        if (messageId != null) {
+            editMessageTextAndMarkup(chatId, messageId, text, markup);
+            return;
+        }
+        SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setReplyMarkup(markup);
+        try {
+            Message sent = execute(message);
+            session.setKeyboardMessageId(sent.getMessageId());
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private InlineKeyboardMarkup buildRecipeStepKeyboard(List<String> steps, String actionPrefix,
+                                                          String doneCallback, InlineKeyboardButton extraButton,
+                                                          Lang lang) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (int i = 0; i < steps.size(); i++) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            InlineKeyboardButton edit = new InlineKeyboardButton("✏️ " + (i + 1));
+            edit.setCallbackData(actionPrefix + "edit:" + i);
+            row.add(edit);
+            if (i > 0) {
+                InlineKeyboardButton up = new InlineKeyboardButton("⬆️ " + (i + 1));
+                up.setCallbackData(actionPrefix + "up:" + i);
+                row.add(up);
+            }
+            if (i < steps.size() - 1) {
+                InlineKeyboardButton down = new InlineKeyboardButton("⬇️ " + (i + 1));
+                down.setCallbackData(actionPrefix + "down:" + i);
+                row.add(down);
+            }
+            InlineKeyboardButton delete = new InlineKeyboardButton("🗑️ " + (i + 1));
+            delete.setCallbackData(actionPrefix + "del:" + i);
+            row.add(delete);
+            rows.add(row);
+        }
+        InlineKeyboardButton done = new InlineKeyboardButton(Messages.get(lang, "btn.done_recipe"));
+        done.setCallbackData(doneCallback);
+        rows.add(extraButton != null ? List.of(done, extraButton) : List.of(done));
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    private String recipeStepManagerText(List<String> steps, Integer editingIndex, Lang lang) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(Messages.get(lang, "recipe.manager.header")).append("\n");
+        if (steps.isEmpty()) {
+            builder.append(Messages.get(lang, "recipe.manager.empty"));
+        } else {
+            for (int i = 0; i < steps.size(); i++) {
+                builder.append(i + 1).append(". ").append(steps.get(i)).append("\n");
+            }
+        }
+        builder.append("\n");
+        if (editingIndex != null) {
+            builder.append(Messages.get(lang, "recipe.manager.editing_step", editingIndex + 1, RECIPE_STEP_CHAR_LIMIT));
+        } else {
+            builder.append(Messages.get(lang, "recipe.manager.prompt", RECIPE_STEP_CHAR_LIMIT));
+        }
+        return builder.toString();
+    }
+
+    private void applyRecipeStepAction(RecipeStepEditorState state, String verb, int index) {
+        List<String> steps = state.getRecipeSteps();
+        Integer editing = state.getEditingRecipeStepIndex();
+        switch (verb) {
+            case "edit":
+                state.setEditingRecipeStepIndex(index);
+                break;
+            case "up":
+                RecipeSteps.moveUp(steps, index);
+                state.setEditingRecipeStepIndex(RecipeSteps.editingIndexAfterMoveUp(index, editing));
+                break;
+            case "down":
+                RecipeSteps.moveDown(steps, index);
+                state.setEditingRecipeStepIndex(RecipeSteps.editingIndexAfterMoveDown(index, editing));
+                break;
+            case "del":
+                steps.remove(index);
+                state.setEditingRecipeStepIndex(RecipeSteps.editingIndexAfterDelete(index, editing));
+                break;
+            default:
+                break;
+        }
+    }
+
     private void handleCallback(CallbackQuery callbackQuery) {
         String data = callbackQuery.getData();
         long chatId = callbackQuery.getMessage().getChatId();
@@ -651,6 +789,12 @@ public class FoodBot extends TelegramLongPollingBot {
             handleAddFoodIngredientCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_ADDFOOD_RECIPE_DONE)) {
             handleAddFoodRecipeDoneCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_ADDFOOD_RECIPE_STEP)) {
+            handleAddFoodRecipeStepCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_ADDFOOD_REVIEW_EDIT)) {
+            handleAddFoodReviewEditCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_ADDFOOD_CONFIRM)) {
+            handleAddFoodConfirmCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_CATEGORY)) {
             handleAddFoodCategoryCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_COOK_TIME_PRESET)) {
@@ -671,6 +815,8 @@ public class FoodBot extends TelegramLongPollingBot {
             handleEditCategoryCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_INGREDIENT)) {
             handleEditIngredientCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_FOOD_EDIT_RECIPE_STEP)) {
+            handleEditRecipeStepCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_FOOD_EDIT_RECIPE_CLEAR)) {
             handleEditRecipeClearCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_FOOD_EDIT_RECIPE_DONE)) {
@@ -704,10 +850,17 @@ public class FoodBot extends TelegramLongPollingBot {
                 answerCallback(callbackQuery.getId(), Messages.get(lang, "addfood.select_at_least_one"), true);
                 return;
             }
-            session.setStep(AddFoodSession.Step.AWAITING_RECIPE);
-            session.getRecipeSteps().clear();
             answerCallback(callbackQuery.getId(), null, false);
-            sendAddFoodRecipeStepPrompt(chatId, session, lang, 1);
+            if (session.isReturnToReview()) {
+                session.setReturnToReview(false);
+                session.setStep(AddFoodSession.Step.REVIEW);
+                renderAddFoodReview(chatId, session, lang);
+            } else {
+                session.setStep(AddFoodSession.Step.AWAITING_RECIPE);
+                session.getRecipeSteps().clear();
+                session.setEditingRecipeStepIndex(null);
+                renderAddFoodRecipeManager(chatId, session, lang);
+            }
             return;
         }
         if (data.equals(CB_ADDFOOD_INGREDIENT_CLEAR)) {
@@ -738,11 +891,17 @@ public class FoodBot extends TelegramLongPollingBot {
         int index = Integer.parseInt(data.substring(CB_ADDFOOD_CATEGORY.length()));
         String category = FoodCategories.ALL.get(index);
         session.setCategory(category);
-        session.setStep(AddFoodSession.Step.SELECTING_INGREDIENTS);
         session.getCandidateIngredients().clear();
         session.getCandidateIngredients().addAll(foodRepository.findAllIngredients(chatId, lang));
         answerCallback(callbackQuery.getId(), categoryLabel(category, lang), false);
-        renderAddFoodIngredientKeyboard(chatId, session, lang);
+        if (session.isReturnToReview()) {
+            session.setReturnToReview(false);
+            session.setStep(AddFoodSession.Step.REVIEW);
+            renderAddFoodReview(chatId, session, lang);
+        } else {
+            session.setStep(AddFoodSession.Step.SELECTING_INGREDIENTS);
+            renderAddFoodIngredientKeyboard(chatId, session, lang);
+        }
     }
 
     private void renderAddFoodIngredientKeyboard(long chatId, AddFoodSession session, Lang lang) {
@@ -753,14 +912,33 @@ public class FoodBot extends TelegramLongPollingBot {
         sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.ingredient_prompt"), markup);
     }
 
-    private void sendAddFoodRecipeStepPrompt(long chatId, AddFoodSession session, Lang lang, int stepNumber) {
-        InlineKeyboardButton done = new InlineKeyboardButton(Messages.get(lang, "btn.done_recipe"));
-        done.setCallbackData(CB_ADDFOOD_RECIPE_DONE);
+    private void renderAddFoodRecipeManager(long chatId, AddFoodSession session, Lang lang) {
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_ADDFOOD_BACK);
-        sendOrEditAddFood(chatId, session,
-                Messages.get(lang, "addfood.ask_recipe_step", stepNumber, RECIPE_STEP_CHAR_LIMIT),
-                new InlineKeyboardMarkup(List.of(List.of(done), List.of(back))));
+        InlineKeyboardMarkup markup = buildRecipeStepKeyboard(session.getRecipeSteps(), CB_ADDFOOD_RECIPE_STEP,
+                CB_ADDFOOD_RECIPE_DONE, back, lang);
+        String text = recipeStepManagerText(session.getRecipeSteps(), session.getEditingRecipeStepIndex(), lang);
+        sendOrEditAddFood(chatId, session, text, markup);
+    }
+
+    private void handleAddFoodRecipeStepCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null || session.getStep() != AddFoodSession.Step.AWAITING_RECIPE) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        String action = data.substring(CB_ADDFOOD_RECIPE_STEP.length());
+        int colon = action.indexOf(':');
+        String verb = action.substring(0, colon);
+        int index = Integer.parseInt(action.substring(colon + 1));
+        if (index < 0 || index >= session.getRecipeSteps().size()) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        applyRecipeStepAction(session, verb, index);
+        answerCallback(callbackQuery.getId(), null, false);
+        renderAddFoodRecipeManager(chatId, session, lang);
     }
 
     private void handleAddFoodRecipeDoneCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -770,28 +948,109 @@ public class FoodBot extends TelegramLongPollingBot {
             answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
             return;
         }
+        session.setReturnToReview(false);
+        session.setEditingRecipeStepIndex(null);
+        session.setStep(AddFoodSession.Step.REVIEW);
         answerCallback(callbackQuery.getId(), null, false);
-        finalizeNewFood(chatId, session, lang);
+        renderAddFoodReview(chatId, session, lang);
     }
 
-    private String joinRecipeSteps(List<String> steps) {
-        if (steps.isEmpty()) {
-            return null;
+    private String formatAddFoodReview(AddFoodSession session, Lang lang) {
+        String ingredients = session.getSelectedIngredients().stream()
+                .map(i -> IngredientIcons.iconFor(i) + " " + IngredientTranslations.translate(i, lang))
+                .collect(Collectors.joining(", "));
+        String timeText = session.getPrepTimeMinutes() + " " + Messages.get(lang, "min_unit");
+        String recipeText = session.getRecipeSteps().isEmpty()
+                ? Messages.get(lang, "food.no_recipe")
+                : RecipeSteps.join(session.getRecipeSteps());
+        return Messages.get(lang, "addfood.review_header") + "\n\n"
+                + "🍽️ " + session.getName() + "\n"
+                + "🏷️ " + categoryLabel(session.getCategory(), lang) + "\n"
+                + "⏱️ " + Messages.get(lang, "food.detail_time", timeText) + "\n"
+                + "🧾 " + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
+                + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n";
+    }
+
+    private void renderAddFoodReview(long chatId, AddFoodSession session, Lang lang) {
+        InlineKeyboardButton editName = new InlineKeyboardButton(Messages.get(lang, "edit.field.name"));
+        editName.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "name");
+        InlineKeyboardButton editTime = new InlineKeyboardButton(Messages.get(lang, "edit.field.time"));
+        editTime.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "time");
+        InlineKeyboardButton editCategory = new InlineKeyboardButton(Messages.get(lang, "edit.field.category"));
+        editCategory.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "category");
+        InlineKeyboardButton editIngredients = new InlineKeyboardButton(Messages.get(lang, "edit.field.ingredients"));
+        editIngredients.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "ingredients");
+        InlineKeyboardButton editRecipe = new InlineKeyboardButton(Messages.get(lang, "edit.field.recipe"));
+        editRecipe.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "recipe");
+        InlineKeyboardButton confirm = new InlineKeyboardButton(Messages.get(lang, "addfood.confirm_save"));
+        confirm.setCallbackData(CB_ADDFOOD_CONFIRM);
+        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
+        back.setCallbackData(CB_ADDFOOD_BACK);
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(List.of(
+                List.of(editName, editTime),
+                List.of(editCategory, editIngredients),
+                List.of(editRecipe),
+                List.of(confirm),
+                List.of(back)));
+        sendOrEditAddFood(chatId, session, formatAddFoodReview(session, lang), markup);
+    }
+
+    private void handleAddFoodReviewEditCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null || session.getStep() != AddFoodSession.Step.REVIEW) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
         }
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < steps.size(); i++) {
-            if (i > 0) {
-                builder.append("\n");
-            }
-            builder.append(i + 1).append(". ").append(steps.get(i));
+        String field = data.substring(CB_ADDFOOD_REVIEW_EDIT.length());
+        answerCallback(callbackQuery.getId(), null, false);
+        switch (field) {
+            case "name":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.AWAITING_NAME);
+                sendAddFoodNamePrompt(chatId, session, lang);
+                break;
+            case "time":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.AWAITING_PREP_TIME);
+                sendAddFoodTimePrompt(chatId, session, lang);
+                break;
+            case "category":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.SELECTING_CATEGORY);
+                sendAddFoodCategoryPrompt(chatId, session, lang);
+                break;
+            case "ingredients":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.SELECTING_INGREDIENTS);
+                renderAddFoodIngredientKeyboard(chatId, session, lang);
+                break;
+            case "recipe":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.AWAITING_RECIPE);
+                session.setEditingRecipeStepIndex(null);
+                renderAddFoodRecipeManager(chatId, session, lang);
+                break;
+            default:
+                break;
         }
-        return builder.toString();
+    }
+
+    private void handleAddFoodConfirmCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null || session.getStep() != AddFoodSession.Step.REVIEW) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        answerCallback(callbackQuery.getId(), null, false);
+        finalizeNewFood(chatId, session, lang);
     }
 
     private void finalizeNewFood(long chatId, AddFoodSession session, Lang lang) {
         Food food = new Food(UUID.randomUUID().toString(), session.getName(), session.getPrepTimeMinutes(),
                 session.getCategory(), new ArrayList<>(session.getSelectedIngredients()), session.getOwnerChatId(),
-                chatId, joinRecipeSteps(session.getRecipeSteps()), lang);
+                chatId, RecipeSteps.join(session.getRecipeSteps()), lang);
         foodRepository.add(food);
         clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         addFoodSessions.remove(chatId);
@@ -1122,26 +1381,43 @@ public class FoodBot extends TelegramLongPollingBot {
             case "recipe":
                 session.setStep(EditFoodSession.Step.EDITING_RECIPE);
                 session.getRecipeSteps().clear();
-                sendEditRecipeStepPrompt(chatId, lang, 1);
+                session.getRecipeSteps().addAll(RecipeSteps.parse(food.getRecipe()));
+                session.setEditingRecipeStepIndex(null);
+                session.setKeyboardMessageId(callbackQuery.getMessage().getMessageId());
+                renderEditRecipeManager(chatId, session, lang);
                 break;
             default:
                 break;
         }
     }
 
-    private void sendEditRecipeStepPrompt(long chatId, Lang lang, int stepNumber) {
-        InlineKeyboardButton done = new InlineKeyboardButton(Messages.get(lang, "btn.done_recipe"));
-        done.setCallbackData(CB_FOOD_EDIT_RECIPE_DONE);
+    private void renderEditRecipeManager(long chatId, EditFoodSession session, Lang lang) {
         InlineKeyboardButton clear = new InlineKeyboardButton(Messages.get(lang, "btn.clear_recipe"));
         clear.setCallbackData(CB_FOOD_EDIT_RECIPE_CLEAR);
-        SendMessage message = new SendMessage(String.valueOf(chatId),
-                Messages.get(lang, "edit.ask_recipe_step", stepNumber, RECIPE_STEP_CHAR_LIMIT));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(done, clear))));
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+        InlineKeyboardMarkup markup = buildRecipeStepKeyboard(session.getRecipeSteps(), CB_FOOD_EDIT_RECIPE_STEP,
+                CB_FOOD_EDIT_RECIPE_DONE, clear, lang);
+        String text = recipeStepManagerText(session.getRecipeSteps(), session.getEditingRecipeStepIndex(), lang);
+        sendOrEditEditFood(chatId, session, text, markup);
+    }
+
+    private void handleEditRecipeStepCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        EditFoodSession session = editSessions.get(chatId);
+        if (session == null || session.getStep() != EditFoodSession.Step.EDITING_RECIPE) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
         }
+        String action = data.substring(CB_FOOD_EDIT_RECIPE_STEP.length());
+        int colon = action.indexOf(':');
+        String verb = action.substring(0, colon);
+        int index = Integer.parseInt(action.substring(colon + 1));
+        if (index < 0 || index >= session.getRecipeSteps().size()) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        applyRecipeStepAction(session, verb, index);
+        answerCallback(callbackQuery.getId(), null, false);
+        renderEditRecipeManager(chatId, session, lang);
     }
 
     private void handleEditRecipeDoneCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -1160,8 +1436,9 @@ public class FoodBot extends TelegramLongPollingBot {
         Food food = foodOpt.get();
         Food updated = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
                 food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(),
-                joinRecipeSteps(session.getRecipeSteps()), food.getLanguage());
+                RecipeSteps.join(session.getRecipeSteps()), food.getLanguage());
         foodRepository.update(updated);
+        clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         editSessions.remove(chatId);
         answerCallback(callbackQuery.getId(), null, false);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "edit.saved", formatFood(updated, lang)));
@@ -1184,6 +1461,7 @@ public class FoodBot extends TelegramLongPollingBot {
         Food updated = new Food(food.getId(), food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
                 food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), null, food.getLanguage());
         foodRepository.update(updated);
+        clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         editSessions.remove(chatId);
         answerCallback(callbackQuery.getId(), null, false);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "edit.saved", formatFood(updated, lang)));
@@ -1676,12 +1954,10 @@ public class FoodBot extends TelegramLongPollingBot {
                 new InlineKeyboardMarkup(List.of(List.of(edit, delete), List.of(back))));
     }
 
-    private ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {
+    private ReplyKeyboardMarkup mainMenuKeyboard(Lang lang) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.add_food"));
-        if (isSuperAdmin(chatId)) {
-            row1.add(Messages.get(lang, "btn.all_foods"));
-        }
+        row1.add(Messages.get(lang, "btn.all_foods"));
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.what_can_cook"));
         row2.add(Messages.get(lang, "btn.change_lang"));
@@ -1695,7 +1971,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
     private void sendWithMainMenu(long chatId, Lang lang, String text) {
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setReplyMarkup(mainMenuKeyboard(lang, chatId));
+        message.setReplyMarkup(mainMenuKeyboard(lang));
         try {
             execute(message);
         } catch (TelegramApiException e) {

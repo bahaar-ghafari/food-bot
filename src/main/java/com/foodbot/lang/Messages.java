@@ -25,27 +25,27 @@ public final class Messages {
         put("btn.clear_recipe", "🗑️ Clear recipe", "🗑️ حذف دستور پخت");
         put("help.text",
                 "🍽️ FoodBot helps you track recipes and decide what to cook.\n\n"
-                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n\n"
+                        + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe. You'll get a chance to review and fix anything before it's saved.\n\n"
+                        + "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. On a food from your own personal list, you'll also see a \"⚙️ Settings\" button to ✏️ Edit or 🗑️ Delete it. Foods on the global list can only be edited or deleted by the admin once added.\n\n"
                         + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n\n"
                         + "🌐 Language — switch between English and Persian anytime.\n\n"
                         + "💬 Feedback — send a message straight to the admin.\n\n"
                         + "/cancel — cancel whatever you're doing.\n\n"
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
-                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n\n"
+                        + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری. قبل از ذخیره شدن، فرصت بازبینی و اصلاح آن را خواهید داشت.\n\n"
+                        + "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. روی غذایی از لیست شخصی خودتان، دکمه «⚙️ تنظیمات» را هم می‌بینید تا ✏️ ویرایش یا 🗑️ حذف کنید. غذاهای لیست عمومی پس از افزوده شدن فقط توسط ادمین قابل ویرایش یا حذف هستند.\n\n"
                         + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n\n"
                         + "💬 بازخورد — پیامی مستقیم برای ادمین ارسال کنید.\n\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n\n"
                         + "/help — نشان دادن همین پیام.");
         put("help.text.admin",
-                "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. (Admin only.)\n\n"
-                        + "⚙️ Settings — shown only to you on any food's detail view; tap it for ✏️ Edit / 🗑️ Delete.",
-                "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. (فقط ادمین.)\n\n"
-                        + "⚙️ تنظیمات — فقط برای شما، روی صفحه جزئیات هر غذایی نشان داده می‌شود؛ با زدنش گزینه‌های ✏️ ویرایش / 🗑️ حذف می‌آید.");
+                "👑 As the admin, your \"⚙️ Settings\" button shows up on every food, not just your own — you can edit or delete anyone's personal or global foods.",
+                "👑 به عنوان ادمین، دکمه «⚙️ تنظیمات» روی همه غذاها نشان داده می‌شود، نه فقط غذاهای خودتان — می‌توانید غذای شخصی یا عمومی هر کسی را ویرایش یا حذف کنید.");
         put("permission.denied",
-                "Only the admin can do that.",
-                "فقط ادمین می‌تواند این کار را انجام دهد.");
+                "Only the admin, or whoever added this to their personal list, can do that.",
+                "فقط ادمین یا کسی که این را به لیست شخصی خودش اضافه کرده می‌تواند این کار را انجام دهد.");
 
         put("addfood.ask_scope",
                 "Add this to your personal list or the global list?",
@@ -73,14 +73,23 @@ public final class Messages {
         put("addfood.select_at_least_one",
                 "Select at least one ingredient first.",
                 "اول حداقل یک ماده اولیه را انتخاب کنید.");
-        put("addfood.ask_recipe_step",
-                "📝 Step %d — describe it in %d characters or less. Tap Done if there are no more steps.",
-                "📝 مرحله %d — آن را در %d کاراکتر یا کمتر توضیح دهید. اگر مرحله دیگری نیست روی «تمام» بزنید.");
         put("recipe.step_too_long",
                 "That's %d characters — please keep each step to %d characters or less.",
                 "این %d کاراکتر است — لطفاً هر مرحله را در %d کاراکتر یا کمتر بنویسید.");
+        put("recipe.manager.header", "📝 Recipe steps:", "📝 مراحل دستور پخت:");
+        put("recipe.manager.empty", "No steps yet.", "هنوز مرحله‌ای نیست.");
+        put("recipe.manager.prompt",
+                "Type a new step (max %d characters). Use the buttons below to edit, reorder, or delete existing steps. Tap Done when finished.",
+                "یک مرحله جدید تایپ کنید (حداکثر %d کاراکتر). با دکمه‌های پایین می‌توانید مراحل را ویرایش، جابه‌جا یا حذف کنید. وقتی تمام شد روی «تمام» بزنید.");
+        put("recipe.manager.editing_step",
+                "✏️ Editing step %d — type its new text (max %d characters).",
+                "✏️ در حال ویرایش مرحله %d — متن جدید آن را تایپ کنید (حداکثر %d کاراکتر).");
         put("addfood.saved_toast", "Saved!", "ذخیره شد!");
         put("addfood.saved_message", "🎉 Saved: %s", "🎉 ذخیره شد: %s");
+        put("addfood.review_header",
+                "📝 Review your food before saving. Tap a field to change it, or Confirm & Save if it looks good.",
+                "📝 قبل از ذخیره، غذا را بررسی کنید. برای تغییر هر بخش روی آن بزنید، یا اگر خوب است روی «تأیید و ذخیره» بزنید.");
+        put("addfood.confirm_save", "✅ Confirm & Save", "✅ تأیید و ذخیره");
 
         put("selection_expired", "This selection has expired.", "این انتخاب منقضی شده است.");
         put("tap_button_above", "Please tap one of the buttons above.", "لطفاً یکی از دکمه‌های بالا را بزنید.");
@@ -172,9 +181,6 @@ public final class Messages {
         put("edit.ingredient_prompt",
                 "Tap to add or remove ingredients, or type to search the list or add a new one. Tap Done when you're finished.",
                 "برای اضافه یا حذف کردن مواد اولیه لمس کنید، یا برای جستجو یا افزودن ماده جدید تایپ کنید. وقتی تمام شد روی «تمام» بزنید.");
-        put("edit.ask_recipe_step",
-                "📝 New step %d — describe it in %d characters or less. Tap Done when finished, or Clear recipe to remove it entirely.",
-                "📝 مرحله جدید %d — آن را در %d کاراکتر یا کمتر توضیح دهید. وقتی تمام شد روی «تمام» بزنید، یا برای حذف کامل دستور پخت روی «حذف دستور پخت» بزنید.");
         put("edit.saved", "Updated: %s", "به‌روزرسانی شد: %s");
 
         put("delete.confirm", "Delete %s? This can't be undone.", "%s حذف شود؟ این کار قابل بازگشت نیست.");

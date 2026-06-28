@@ -5,9 +5,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AddFoodSession implements IngredientPickerState {
+public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState {
     public enum Step {
-        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_RECIPE
+        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_RECIPE, REVIEW
     }
 
     private Step step = Step.ASK_SCOPE;
@@ -16,6 +16,8 @@ public class AddFoodSession implements IngredientPickerState {
     private String category;
     private Long ownerChatId;
     private final List<String> recipeSteps = new ArrayList<>();
+    private Integer editingRecipeStepIndex;
+    private boolean returnToReview;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
@@ -64,6 +66,22 @@ public class AddFoodSession implements IngredientPickerState {
 
     public List<String> getRecipeSteps() {
         return recipeSteps;
+    }
+
+    public Integer getEditingRecipeStepIndex() {
+        return editingRecipeStepIndex;
+    }
+
+    public void setEditingRecipeStepIndex(Integer editingRecipeStepIndex) {
+        this.editingRecipeStepIndex = editingRecipeStepIndex;
+    }
+
+    public boolean isReturnToReview() {
+        return returnToReview;
+    }
+
+    public void setReturnToReview(boolean returnToReview) {
+        this.returnToReview = returnToReview;
     }
 
     public List<String> getCandidateIngredients() {
