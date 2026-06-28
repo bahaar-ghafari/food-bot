@@ -136,6 +136,12 @@ public class FoodBot extends TelegramLongPollingBot {
         long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
 
+        if (text.equalsIgnoreCase("/chatid") || text.toLowerCase().startsWith("/chatid@")) {
+            System.out.println("Chat ID requested: " + chatId);
+            send(chatId, "✅");
+            return;
+        }
+
         if (text.equalsIgnoreCase("/lang")) {
             sendLanguagePrompt(chatId);
             return;
