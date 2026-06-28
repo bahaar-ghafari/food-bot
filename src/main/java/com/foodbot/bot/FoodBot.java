@@ -25,6 +25,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -101,6 +102,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     private final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
     private final Map<Long, CookResultContext> lastCookResults = new ConcurrentHashMap<>();
+    private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
 
     public FoodBot(String token, String username, Long superAdminChatId) {
         this.token = token;
@@ -160,6 +162,7 @@ public class FoodBot extends TelegramLongPollingBot {
             }
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
         } else if (isSuperAdmin(chatId)
                 && (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods")))) {
@@ -169,15 +172,34 @@ public class FoodBot extends TelegramLongPollingBot {
             editSessions.remove(chatId);
             cookSessions.put(chatId, new CookSession());
             sendCookTimePrompt(chatId, lang);
+        } else if (text.equalsIgnoreCase("/feedback") || text.equals(Messages.get(lang, "btn.feedback"))) {
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.add(chatId);
+            send(chatId, Messages.get(lang, "feedback.ask"));
         } else if (addFoodSessions.containsKey(chatId)) {
             handleAddFoodText(chatId, text, lang);
         } else if (cookSessions.containsKey(chatId)) {
             handleCookText(chatId, text, lang);
         } else if (editSessions.containsKey(chatId)) {
             handleEditText(chatId, text, lang);
+        } else if (awaitingFeedback.contains(chatId)) {
+            handleFeedbackText(chatId, text, lang, update.getMessage().getFrom());
         } else {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "fallback"));
         }
+    }
+
+    private void handleFeedbackText(long chatId, String text, Lang lang, User from) {
+        awaitingFeedback.remove(chatId);
+        if (superAdminChatId != null && superAdminChatId != chatId) {
+            String who = (from != null && from.getUserName() != null) ? "@" + from.getUserName()
+                    : (from != null && from.getFirstName() != null) ? from.getFirstName() : String.valueOf(chatId);
+            Lang adminLang = lang(superAdminChatId);
+            send(superAdminChatId, Messages.get(adminLang, "feedback.notify_admin", who, chatId, text));
+        }
+        sendWithMainMenu(chatId, lang, Messages.get(lang, "feedback.sent"));
     }
 
     private Lang lang(long chatId) {
@@ -1665,6 +1687,7 @@ public class FoodBot extends TelegramLongPollingBot {
         row2.add(Messages.get(lang, "btn.change_lang"));
         KeyboardRow row3 = new KeyboardRow();
         row3.add(Messages.get(lang, "btn.help"));
+        row3.add(Messages.get(lang, "btn.feedback"));
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3));
         markup.setResizeKeyboard(true);
         return markup;

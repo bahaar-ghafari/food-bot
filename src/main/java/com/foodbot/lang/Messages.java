@@ -16,6 +16,7 @@ public final class Messages {
         put("btn.what_can_cook", "🍳 What can I cook?", "🍳 چی می‌تونم بپزم؟");
         put("btn.change_lang", "🌐 Language", "🌐 زبان");
         put("btn.help", "❓ Help", "❓ راهنما");
+        put("btn.feedback", "💬 Feedback", "💬 بازخورد");
         put("btn.settings", "⚙️ Settings", "⚙️ تنظیمات");
         put("btn.back", "🔙 Back", "🔙 بازگشت");
         put("btn.edit", "✏️ Edit", "✏️ ویرایش");
@@ -27,12 +28,14 @@ public final class Messages {
                         + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe.\n\n"
                         + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n\n"
                         + "🌐 Language — switch between English and Persian anytime.\n\n"
+                        + "💬 Feedback — send a message straight to the admin.\n\n"
                         + "/cancel — cancel whatever you're doing.\n\n"
                         + "/help — show this message.",
                 "🍽️ فودبات به شما کمک می‌کند دستور پخت‌ها را پیگیری کنید و تصمیم بگیرید چه چیزی بپزید.\n\n"
                         + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری.\n\n"
                         + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n\n"
+                        + "💬 بازخورد — پیامی مستقیم برای ادمین ارسال کنید.\n\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n\n"
                         + "/help — نشان دادن همین پیام.");
         put("help.text.admin",
@@ -123,6 +126,13 @@ public final class Messages {
         put("removed", "Removed %s", "%s حذف شد");
         put("added", "Added %s", "%s اضافه شد");
         put("cancelled", "Cancelled.", "لغو شد.");
+        put("feedback.ask",
+                "✍️ Type your feedback or suggestion below and I'll pass it along.",
+                "✍️ بازخورد یا پیشنهاد خود را تایپ کنید تا برایش ارسال کنم.");
+        put("feedback.sent", "🙏 Thanks! Your feedback was sent.", "🙏 ممنون! بازخورد شما ارسال شد.");
+        put("feedback.notify_admin",
+                "📬 New feedback from %s (chat %s):\n\n%s",
+                "📬 بازخورد جدید از %s (چت %s):\n\n%s");
         put("fallback",
                 "I didn't get that. Use the buttons below or /addfood.",
                 "متوجه نشدم. از دکمه‌های پایین یا /addfood استفاده کنید.");
