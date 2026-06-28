@@ -193,7 +193,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
     private void handleFeedbackText(long chatId, String text, Lang lang, User from) {
         awaitingFeedback.remove(chatId);
-        if (superAdminChatId != null && superAdminChatId != chatId) {
+        if (superAdminChatId != null) {
             String who = (from != null && from.getUserName() != null) ? "@" + from.getUserName()
                     : (from != null && from.getFirstName() != null) ? from.getFirstName() : String.valueOf(chatId);
             Lang adminLang = lang(superAdminChatId);
