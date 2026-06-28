@@ -210,7 +210,7 @@ public class FoodBot extends TelegramLongPollingBot {
             String who = (from != null && from.getUserName() != null) ? "@" + from.getUserName()
                     : (from != null && from.getFirstName() != null) ? from.getFirstName() : String.valueOf(chatId);
             Lang feedbackLang = lang(feedbackChatId);
-            send(feedbackChatId, Messages.get(feedbackLang, "feedback.notify_admin", who, chatId, text));
+            send(feedbackChatId, Messages.get(feedbackLang, "feedback.notify_admin", who, text));
         }
         sendWithMainMenu(chatId, lang, Messages.get(lang, "feedback.sent"));
     }

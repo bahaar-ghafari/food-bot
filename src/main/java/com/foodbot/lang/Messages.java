@@ -140,8 +140,8 @@ public final class Messages {
                 "✍️ بازخورد یا پیشنهاد خود را تایپ کنید تا برایش ارسال کنم.");
         put("feedback.sent", "🙏 Thanks! Your feedback was sent.", "🙏 ممنون! بازخورد شما ارسال شد.");
         put("feedback.notify_admin",
-                "📬 New feedback from %s (chat %s):\n\n%s",
-                "📬 بازخورد جدید از %s (چت %s):\n\n%s");
+                "📬 New feedback from %s:\n\n%s",
+                "📬 بازخورد جدید از %s:\n\n%s");
         put("fallback",
                 "I didn't get that. Use the buttons below or /addfood.",
                 "متوجه نشدم. از دکمه‌های پایین یا /addfood استفاده کنید.");
