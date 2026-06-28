@@ -19,6 +19,7 @@ public class AddFoodSession implements IngredientPickerState {
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
+    private int ingredientPage;
     private Integer keyboardMessageId;
 
     public Step getStep() {
@@ -83,6 +84,14 @@ public class AddFoodSession implements IngredientPickerState {
 
     public void setIngredientFilter(String ingredientFilter) {
         this.ingredientFilter = ingredientFilter;
+    }
+
+    public int getIngredientPage() {
+        return ingredientPage;
+    }
+
+    public void setIngredientPage(int ingredientPage) {
+        this.ingredientPage = ingredientPage;
     }
 
     public Integer getKeyboardMessageId() {

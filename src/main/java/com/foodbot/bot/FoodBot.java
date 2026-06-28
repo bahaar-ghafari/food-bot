@@ -38,7 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class FoodBot extends TelegramLongPollingBot {
-    private static final int MAX_INGREDIENT_BUTTONS = 24;
+    private static final int INGREDIENTS_PER_PAGE = 12;
+    private static final String INGREDIENT_PAGE_INFIX = "page:";
     private static final int FOODS_PER_PAGE = 10;
     private static final String SCOPE_MINE = "mine";
     private static final String SCOPE_GLOBAL = "global";
@@ -431,6 +432,7 @@ public class FoodBot extends TelegramLongPollingBot {
             return;
         }
         List<String> candidates = state.getCandidateIngredients();
+        state.setIngredientPage(0);
 
         String exact = IngredientSearch.findExactMatch(candidates, trimmed);
         if (exact != null) {
@@ -447,6 +449,15 @@ public class FoodBot extends TelegramLongPollingBot {
         candidates.add(trimmed);
         state.getSelectedIngredients().add(trimmed);
         state.setIngredientFilter("");
+    }
+
+    private boolean handleIngredientPageNav(IngredientPickerState state, String data, String prefix) {
+        String pagePrefix = prefix + INGREDIENT_PAGE_INFIX;
+        if (!data.startsWith(pagePrefix)) {
+            return false;
+        }
+        state.setIngredientPage(Integer.parseInt(data.substring(pagePrefix.length())));
+        return true;
     }
 
     private void toggleAndAnswer(Set<String> selected, String ingredient, String callbackId, Lang lang) {
@@ -524,6 +535,12 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (data.equals(CB_ADDFOOD_INGREDIENT_CLEAR)) {
             session.setIngredientFilter("");
+            session.setIngredientPage(0);
+            answerCallback(callbackQuery.getId(), null, false);
+            editAddFoodIngredientKeyboard(chatId, session, lang);
+            return;
+        }
+        if (handleIngredientPageNav(session, data, CB_ADDFOOD_INGREDIENT)) {
             answerCallback(callbackQuery.getId(), null, false);
             editAddFoodIngredientKeyboard(chatId, session, lang);
             return;
@@ -597,6 +614,12 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (data.equals(CB_COOK_INGREDIENT_CLEAR)) {
             session.setIngredientFilter("");
+            session.setIngredientPage(0);
+            answerCallback(callbackQuery.getId(), null, false);
+            editCookIngredientKeyboard(chatId, session, lang);
+            return;
+        }
+        if (handleIngredientPageNav(session, data, CB_COOK_INGREDIENT)) {
             answerCallback(callbackQuery.getId(), null, false);
             editCookIngredientKeyboard(chatId, session, lang);
             return;
@@ -812,6 +835,12 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (data.equals(CB_FOOD_EDIT_INGREDIENT_CLEAR)) {
             session.setIngredientFilter("");
+            session.setIngredientPage(0);
+            answerCallback(callbackQuery.getId(), null, false);
+            editEditIngredientKeyboard(chatId, session, lang);
+            return;
+        }
+        if (handleIngredientPageNav(session, data, CB_FOOD_EDIT_INGREDIENT)) {
             answerCallback(callbackQuery.getId(), null, false);
             editEditIngredientKeyboard(chatId, session, lang);
             return;
@@ -1003,10 +1032,14 @@ public class FoodBot extends TelegramLongPollingBot {
             rows.add(List.of(filterLabel, clear));
         }
 
-        List<String> visible = IngredientSearch.visibleCandidates(candidates, selected, filter, MAX_INGREDIENT_BUTTONS);
+        List<String> ordered = IngredientSearch.orderedCandidates(candidates, selected, filter);
+        int totalPages = Math.max(1, (ordered.size() + INGREDIENTS_PER_PAGE - 1) / INGREDIENTS_PER_PAGE);
+        int page = Math.max(0, Math.min(state.getIngredientPage(), totalPages - 1));
+        int start = page * INGREDIENTS_PER_PAGE;
+        int end = Math.min(start + INGREDIENTS_PER_PAGE, ordered.size());
 
         List<InlineKeyboardButton> currentRow = new ArrayList<>();
-        for (String name : visible) {
+        for (String name : ordered.subList(start, end)) {
             int index = candidates.indexOf(name);
             boolean isSelected = selected.contains(name);
             String label = (isSelected ? "✅ " : "⬜ ") + IngredientIcons.iconFor(name) + " "
@@ -1021,6 +1054,24 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (!currentRow.isEmpty()) {
             rows.add(currentRow);
+        }
+
+        if (totalPages > 1) {
+            List<InlineKeyboardButton> navRow = new ArrayList<>();
+            if (page > 0) {
+                InlineKeyboardButton prev = new InlineKeyboardButton("◀️");
+                prev.setCallbackData(prefix + INGREDIENT_PAGE_INFIX + (page - 1));
+                navRow.add(prev);
+            }
+            InlineKeyboardButton indicator = new InlineKeyboardButton((page + 1) + "/" + totalPages);
+            indicator.setCallbackData("noop");
+            navRow.add(indicator);
+            if (page < totalPages - 1) {
+                InlineKeyboardButton next = new InlineKeyboardButton("▶️");
+                next.setCallbackData(prefix + INGREDIENT_PAGE_INFIX + (page + 1));
+                navRow.add(next);
+            }
+            rows.add(navRow);
         }
 
         InlineKeyboardButton doneButton = new InlineKeyboardButton(

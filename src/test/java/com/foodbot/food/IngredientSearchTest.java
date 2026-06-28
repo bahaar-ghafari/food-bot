@@ -59,4 +59,24 @@ class IngredientSearchTest {
 
         assertEquals(3, visible.size());
     }
+
+    @Test
+    void orderedCandidatesPutsSelectedFirstThenFilterMatches() {
+        List<String> candidates = List.of("Egg", "Eggplant", "Rice", "Potato");
+        Set<String> selected = new LinkedHashSet<>(List.of("Rice"));
+
+        List<String> ordered = IngredientSearch.orderedCandidates(candidates, selected, "egg");
+
+        assertEquals(List.of("Rice", "Egg", "Eggplant"), ordered);
+    }
+
+    @Test
+    void orderedCandidatesIsUncappedSoCallersCanPaginate() {
+        List<String> candidates = List.of("A", "B", "C", "D", "E", "F");
+        Set<String> selected = Set.of();
+
+        List<String> ordered = IngredientSearch.orderedCandidates(candidates, selected, "");
+
+        assertEquals(6, ordered.size());
+    }
 }

@@ -13,6 +13,7 @@ public class CookSession implements IngredientPickerState {
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> haveIngredients = new LinkedHashSet<>();
     private String ingredientFilter = "";
+    private int ingredientPage;
     private boolean canShop;
     private String category;
     private Integer keyboardMessageId;
@@ -54,6 +55,16 @@ public class CookSession implements IngredientPickerState {
     @Override
     public void setIngredientFilter(String ingredientFilter) {
         this.ingredientFilter = ingredientFilter;
+    }
+
+    @Override
+    public int getIngredientPage() {
+        return ingredientPage;
+    }
+
+    @Override
+    public void setIngredientPage(int ingredientPage) {
+        this.ingredientPage = ingredientPage;
     }
 
     public boolean isCanShop() {

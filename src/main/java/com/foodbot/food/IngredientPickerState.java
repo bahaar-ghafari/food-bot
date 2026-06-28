@@ -12,6 +12,10 @@ public interface IngredientPickerState {
 
     void setIngredientFilter(String filter);
 
+    int getIngredientPage();
+
+    void setIngredientPage(int page);
+
     Integer getKeyboardMessageId();
 
     void setKeyboardMessageId(Integer keyboardMessageId);

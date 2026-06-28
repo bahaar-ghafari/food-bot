@@ -51,7 +51,7 @@ Whenever you're asked to pick ingredients (adding/editing a food, or telling `/c
 - An exact existing name — toggles that ingredient directly.
 - A name that matches nothing — adds it as a brand-new ingredient and selects it.
 
-The button list is capped at 24 visible at once so it stays usable even with 100+ ingredients in the system; typing narrows the search across the full list regardless of the cap.
+The button list is paginated at 12 per page with "◀️"/"▶️" navigation, so it stays usable even with 100+ ingredients in the system; typing narrows the search across the full list, and selected ingredients always stay visible on the first page.
 
 ### Editing
 
