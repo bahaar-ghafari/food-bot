@@ -1,0 +1,34 @@
+# Production stack for FoodBot. Lives on the VPS at
+# /opt/foodbot/docker-compose.yml.
+# Requires a sibling .env with TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME,
+# and SUPERADMIN_CHAT_ID (never committed).
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HEALTH_ADDR: ":8080"
+    volumes:
+      - botdata:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - autoheal=true
+
+  # Restarts any container labelled autoheal=true when it goes unhealthy —
+  # covers a hung-but-running bot that the restart policy alone wouldn't catch.
+  autoheal:
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  botdata:

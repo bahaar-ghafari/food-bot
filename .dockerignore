@@ -1,0 +1,10 @@
+target/
+.git/
+.env
+.env.example
+foods.json
+languages.json
+*.md
+assets/
+.claude/
+.DS_Store

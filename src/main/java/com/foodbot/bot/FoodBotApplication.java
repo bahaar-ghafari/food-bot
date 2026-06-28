@@ -15,6 +15,7 @@ public class FoodBotApplication {
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(new FoodBot(token, username, superAdminChatId));
+            HealthCheckServer.startIfConfigured();
             System.out.println("FoodBot started as " + username);
         } catch (Exception e) {
             e.printStackTrace();
