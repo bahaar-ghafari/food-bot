@@ -8,6 +8,7 @@ import com.foodbot.food.Food;
 import com.foodbot.food.FoodCategories;
 import com.foodbot.food.FoodNameTranslations;
 import com.foodbot.food.FoodRepository;
+import com.foodbot.food.FoodSearch;
 import com.foodbot.food.IngredientIcons;
 import com.foodbot.food.IngredientPickerState;
 import com.foodbot.food.IngredientSearch;
@@ -16,6 +17,7 @@ import com.foodbot.food.Paginator;
 import com.foodbot.food.PantryStaples;
 import com.foodbot.food.RecipeStepEditorState;
 import com.foodbot.food.RecipeSteps;
+import com.foodbot.food.SearchResultContext;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
@@ -49,6 +51,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final int FOODS_PER_PAGE = 10;
     private static final String SCOPE_MINE = "mine";
     private static final String SCOPE_GLOBAL = "global";
+    private static final String SCOPE_SEARCH = "search";
 
     private static final String CB_LANG = "lang:";
     private static final String CB_ADDFOOD_CATEGORY = "afc:";
@@ -109,7 +112,9 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     private final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
     private final Map<Long, CookResultContext> lastCookResults = new ConcurrentHashMap<>();
+    private final Map<Long, SearchResultContext> lastSearchResults = new ConcurrentHashMap<>();
     private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
+    private final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
 
     public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId) {
         this.token = token;
@@ -177,6 +182,7 @@ public class FoodBot extends TelegramLongPollingBot {
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
             awaitingFeedback.remove(chatId);
+            awaitingSearch.remove(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
         } else if (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods"))) {
             sendViewFoodsPrompt(chatId, lang);
@@ -191,6 +197,19 @@ public class FoodBot extends TelegramLongPollingBot {
             editSessions.remove(chatId);
             awaitingFeedback.add(chatId);
             send(chatId, Messages.get(lang, "feedback.ask"));
+        } else if (text.equalsIgnoreCase("/search") || text.equals(Messages.get(lang, "btn.search"))
+                || text.toLowerCase().startsWith("/search ")) {
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
+            String query = text.toLowerCase().startsWith("/search ") ? text.substring(8).trim() : "";
+            if (query.isEmpty()) {
+                awaitingSearch.add(chatId);
+                send(chatId, Messages.get(lang, "search.ask"));
+            } else {
+                handleSearchQuery(chatId, query, lang);
+            }
         } else if (addFoodSessions.containsKey(chatId)) {
             handleAddFoodText(chatId, text, lang);
         } else if (cookSessions.containsKey(chatId)) {
@@ -199,6 +218,8 @@ public class FoodBot extends TelegramLongPollingBot {
             handleEditText(chatId, text, lang);
         } else if (awaitingFeedback.contains(chatId)) {
             handleFeedbackText(chatId, text, lang, update.getMessage().getFrom());
+        } else if (awaitingSearch.contains(chatId)) {
+            handleSearchQuery(chatId, text, lang);
         } else {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "fallback"));
         }
@@ -213,6 +234,46 @@ public class FoodBot extends TelegramLongPollingBot {
             send(feedbackChatId, Messages.get(feedbackLang, "feedback.notify_admin", who, text));
         }
         sendWithMainMenu(chatId, lang, Messages.get(lang, "feedback.sent"));
+    }
+
+    private void handleSearchQuery(long chatId, String text, Lang lang) {
+        if (!matchesLanguage(text, lang)) {
+            send(chatId, Messages.get(lang, "lang.wrong_script"));
+            return;
+        }
+        awaitingSearch.remove(chatId);
+        List<Food> visible = foodRepository.findVisibleTo(chatId, lang);
+        List<Food> matches = FoodSearch.search(visible, text);
+        if (matches.isEmpty()) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "search.no_results", text));
+            return;
+        }
+        lastSearchResults.put(chatId, new SearchResultContext(matches, text));
+        if (matches.size() == 1) {
+            sendFoodDetailMessage(chatId, lang, SCOPE_SEARCH, 0, matches.get(0));
+        } else {
+            sendFoodListPage(chatId, lang, SCOPE_SEARCH, 0, null);
+        }
+    }
+
+    private void sendFoodDetailMessage(long chatId, Lang lang, String scope, int page, Food food) {
+        String text = formatFoodDetail(food, lang);
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
+        back.setCallbackData(CB_VIEW_FOODS_PAGE + scope + ":" + page);
+        row.add(back);
+        if (canModify(food, chatId)) {
+            InlineKeyboardButton settings = new InlineKeyboardButton(Messages.get(lang, "btn.settings"));
+            settings.setCallbackData(CB_FOOD_SETTINGS + scope + ":" + page + ":" + food.getId());
+            row.add(settings);
+        }
+        SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(row)));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     private Lang lang(long chatId) {
@@ -1839,10 +1900,16 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendFoodListPage(long chatId, Lang lang, String scope, int page, Integer editMessageId) {
-        List<Food> foods = scope.equals(SCOPE_MINE)
-                ? foodRepository.findOwnedBy(chatId, lang)
-                : foodRepository.findGlobal(lang);
-        String headerKey = scope.equals(SCOPE_MINE) ? "foods.header.mine" : "foods.header.global";
+        List<Food> foods;
+        String headerText;
+        if (scope.equals(SCOPE_SEARCH)) {
+            SearchResultContext ctx = lastSearchResults.get(chatId);
+            foods = ctx != null ? ctx.getFoods() : List.of();
+            headerText = Messages.get(lang, "search.results_header", ctx != null ? ctx.getQuery() : "");
+        } else {
+            foods = scope.equals(SCOPE_MINE) ? foodRepository.findOwnedBy(chatId, lang) : foodRepository.findGlobal(lang);
+            headerText = Messages.get(lang, scope.equals(SCOPE_MINE) ? "foods.header.mine" : "foods.header.global");
+        }
 
         if (foods.isEmpty()) {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "foods.none"));
@@ -1883,11 +1950,11 @@ public class FoodBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
 
         if (editMessageId != null) {
-            editMessageTextAndMarkup(chatId, editMessageId, Messages.get(lang, headerKey), markup);
+            editMessageTextAndMarkup(chatId, editMessageId, headerText, markup);
             return;
         }
 
-        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, headerKey));
+        SendMessage message = new SendMessage(String.valueOf(chatId), headerText);
         message.setReplyMarkup(markup);
         try {
             execute(message);
@@ -1961,11 +2028,13 @@ public class FoodBot extends TelegramLongPollingBot {
         row1.add(Messages.get(lang, "btn.all_foods"));
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.what_can_cook"));
-        row2.add(Messages.get(lang, "btn.change_lang"));
+        row2.add(Messages.get(lang, "btn.search"));
         KeyboardRow row3 = new KeyboardRow();
+        row3.add(Messages.get(lang, "btn.change_lang"));
         row3.add(Messages.get(lang, "btn.help"));
-        row3.add(Messages.get(lang, "btn.feedback"));
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3));
+        KeyboardRow row4 = new KeyboardRow();
+        row4.add(Messages.get(lang, "btn.feedback"));
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3, row4));
         markup.setResizeKeyboard(true);
         return markup;
     }

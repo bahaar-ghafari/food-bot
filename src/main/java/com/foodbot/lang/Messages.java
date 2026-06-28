@@ -17,6 +17,7 @@ public final class Messages {
         put("btn.change_lang", "🌐 Language", "🌐 زبان");
         put("btn.help", "❓ Help", "❓ راهنما");
         put("btn.feedback", "💬 Feedback", "💬 بازخورد");
+        put("btn.search", "🔍 Search recipe", "🔍 جستجوی غذا");
         put("btn.settings", "⚙️ Settings", "⚙️ تنظیمات");
         put("btn.back", "🔙 Back", "🔙 بازگشت");
         put("btn.edit", "✏️ Edit", "✏️ ویرایش");
@@ -28,6 +29,7 @@ public final class Messages {
                         + "➕ Add food — add a recipe to your personal list or the shared global list: name, prep time, category, ingredients (tap existing ones, type a few letters to search a long list, or type a full new name to add it), then an optional recipe. You'll get a chance to review and fix anything before it's saved.\n\n"
                         + "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe. On a food from your own personal list, you'll also see a \"⚙️ Settings\" button to ✏️ Edit or 🗑️ Delete it. Foods on the global list can only be edited or deleted by the admin once added.\n\n"
                         + "🍳 What can I cook? — pick a time preset (or type one), say what you have and whether you can shop, then tap any suggested food to see what you have vs. need to buy, plus its recipe.\n\n"
+                        + "🔍 Search recipe — type a food name (or part of it, like \"ghorme\" for Ghormeh Sabzi) and the closest matches show up; if nothing matches by name, it checks ingredients instead. One match shows the recipe right away, more than one shows tappable buttons to pick from.\n\n"
                         + "🌐 Language — switch between English and Persian anytime.\n\n"
                         + "💬 Feedback — send a message straight to the admin.\n\n"
                         + "/cancel — cancel whatever you're doing.\n\n"
@@ -36,6 +38,7 @@ public final class Messages {
                         + "➕ افزودن غذا — یک غذا به لیست شخصی یا لیست عمومی اضافه کنید: اسم، زمان آماده‌سازی، دسته‌بندی، مواد اولیه (روی موادِ موجود بزنید، برای جستجو در لیست بلند چند حرف تایپ کنید، یا اسم کامل یک ماده جدید را تایپ کنید تا اضافه شود)، و در آخر یک دستور پخت اختیاری. قبل از ذخیره شدن، فرصت بازبینی و اصلاح آن را خواهید داشت.\n\n"
                         + "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید. روی غذایی از لیست شخصی خودتان، دکمه «⚙️ تنظیمات» را هم می‌بینید تا ✏️ ویرایش یا 🗑️ حذف کنید. غذاهای لیست عمومی پس از افزوده شدن فقط توسط ادمین قابل ویرایش یا حذف هستند.\n\n"
                         + "🍳 چی می‌تونم بپزم؟ — یک زمان آماده انتخاب کنید (یا تایپ کنید)، بگویید چی دارید و می‌توانید خرید کنید یا نه، سپس روی هر غذای پیشنهادی بزنید تا ببینید چی دارید و چی باید بخرید، به همراه دستور پختش.\n\n"
+                        + "🔍 جستجوی غذا — اسم یک غذا (یا بخشی از آن) را تایپ کنید تا نزدیک‌ترین نتایج نشان داده شود؛ اگر چیزی با اسم پیدا نشد، مواد اولیه را هم بررسی می‌کند. اگر فقط یک نتیجه باشد، دستور پختش را مستقیم نشان می‌دهد؛ اگر بیشتر بود، دکمه‌هایی برای انتخاب نشان می‌دهد.\n\n"
                         + "🌐 زبان — هر وقت خواستید بین انگلیسی و فارسی تغییر دهید.\n\n"
                         + "💬 بازخورد — پیامی مستقیم برای ادمین ارسال کنید.\n\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n\n"
@@ -154,6 +157,14 @@ public final class Messages {
                 "قفسه خالیه! 📭 با /addfood یکی اضافه کنید.");
         put("foods.header.mine", "👤 Your foods, tap one for details:", "👤 غذاهای شما، برای جزئیات روی یکی بزنید:");
         put("foods.header.global", "🌍 Global foods, tap one for details:", "🌍 غذاهای عمومی، برای جزئیات روی یکی بزنید:");
+        put("search.ask",
+                "🔍 Type a food name (or part of it), or an ingredient, to search for:",
+                "🔍 اسم غذا (یا بخشی از آن) یا یک ماده اولیه را برای جستجو تایپ کنید:");
+        put("search.results_header", "🔍 Results for \"%s\", tap one for details:",
+                "🔍 نتایج برای «%s»، برای جزئیات روی یکی بزنید:");
+        put("search.no_results",
+                "😕 Nothing found for \"%s\" — no matching food or ingredient. Try a different word?",
+                "😕 چیزی برای «%s» پیدا نشد — نه غذا و نه ماده اولیه‌ای مطابقت داشت. کلمه دیگری را امتحان کنید؟");
         put("settings.choose_action", "What do you want to do?", "چه کاری می‌خواهید انجام دهید؟");
         put("food.detail_category", "Category: %s", "دسته‌بندی: %s");
         put("food.detail_time", "Prep time: %s", "زمان آماده‌سازی: %s");
