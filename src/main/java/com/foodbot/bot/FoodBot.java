@@ -11,6 +11,7 @@ import com.foodbot.food.IngredientIcons;
 import com.foodbot.food.IngredientPickerState;
 import com.foodbot.food.IngredientSearch;
 import com.foodbot.food.IngredientTranslations;
+import com.foodbot.food.Paginator;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
@@ -1038,13 +1039,12 @@ public class FoodBot extends TelegramLongPollingBot {
         }
 
         List<String> ordered = IngredientSearch.orderedCandidates(candidates, selected, filter);
-        int totalPages = Math.max(1, (ordered.size() + INGREDIENTS_PER_PAGE - 1) / INGREDIENTS_PER_PAGE);
-        int page = Math.max(0, Math.min(state.getIngredientPage(), totalPages - 1));
-        int start = page * INGREDIENTS_PER_PAGE;
-        int end = Math.min(start + INGREDIENTS_PER_PAGE, ordered.size());
+        int totalPages = Paginator.totalPages(ordered.size(), INGREDIENTS_PER_PAGE);
+        int page = Paginator.clampPage(state.getIngredientPage(), totalPages);
+        List<String> pageItems = Paginator.pageSlice(ordered, page, INGREDIENTS_PER_PAGE);
 
         List<InlineKeyboardButton> currentRow = new ArrayList<>();
-        for (String name : ordered.subList(start, end)) {
+        for (String name : pageItems) {
             int index = candidates.indexOf(name);
             boolean isSelected = selected.contains(name);
             String label = (isSelected ? "✅ " : "⬜ ") + IngredientIcons.iconFor(name) + " "
@@ -1182,13 +1182,12 @@ public class FoodBot extends TelegramLongPollingBot {
             return;
         }
 
-        int totalPages = (foods.size() + FOODS_PER_PAGE - 1) / FOODS_PER_PAGE;
-        int clampedPage = Math.max(0, Math.min(page, totalPages - 1));
-        int start = clampedPage * FOODS_PER_PAGE;
-        int end = Math.min(start + FOODS_PER_PAGE, foods.size());
+        int totalPages = Paginator.totalPages(foods.size(), FOODS_PER_PAGE);
+        int clampedPage = Paginator.clampPage(page, totalPages);
+        List<Food> pageItems = Paginator.pageSlice(foods, clampedPage, FOODS_PER_PAGE);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        for (Food food : foods.subList(start, end)) {
+        for (Food food : pageItems) {
             String label = FoodNameTranslations.translate(food.getName(), lang) + " (" + food.getPrepTimeMinutes()
                     + " " + Messages.get(lang, "min_unit") + ")";
             InlineKeyboardButton button = new InlineKeyboardButton(label);
