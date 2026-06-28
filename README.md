@@ -24,6 +24,21 @@ A minimal Telegram bot project.
    java -jar target/food-bot-0.0.1-SNAPSHOT.jar
    ```
 
+## Production deployment (Docker)
+
+The bot runs in production as a Docker Compose stack (`docker-compose.yml` + `Dockerfile`), currently deployed at `/opt/foodbot` on the VPS:
+
+- **`bot`** — built from the repo's multi-stage `Dockerfile` (Maven build → `eclipse-temurin:17-jre-alpine` runtime). Reads secrets from a sibling `.env` (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `SUPERADMIN_CHAT_ID` — never committed). `foods.json`/`languages.json` persist under a bind-mounted `./data` directory, so they can be seeded or backed up directly from the host.
+- **`autoheal`** — restarts the `bot` container if it ever reports unhealthy, covering a hung-but-running process that the plain restart policy wouldn't catch on its own.
+- The container exposes an opt-in health endpoint (`HealthCheckServer`, only started when `HEALTH_ADDR` is set) at `/healthz`, which the Compose healthcheck polls every 30s.
+
+To deploy an update: sync the repo to the server (the deploy used `rsync`, since the GitHub repo is private and the server has no stored credentials for it — `git pull` would need a deploy key or PAT set up first), then from `/opt/foodbot`:
+```bash
+docker compose up -d --build
+```
+
+**Note:** since the bot uses long-polling, only one instance can be running against the Telegram token at a time — stop any local/dev instance before (re)starting the production one, or Telegram will return 409 conflicts.
+
 ## Configuration
 
 - `telegram.bot.token` / `TELEGRAM_BOT_TOKEN` — the bot token.
