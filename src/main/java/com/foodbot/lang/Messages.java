@@ -41,13 +41,6 @@ public final class Messages {
                         + "💬 بازخورد — پیامی مستقیم برای ادمین ارسال کنید.\n\n"
                         + "/cancel — هر کاری که در حال انجام است را لغو می‌کند.\n\n"
                         + "/help — نشان دادن همین پیام.");
-        put("help.text.admin",
-                "👑 As the admin, you also get:\n\n"
-                        + "📋 All foods — pick your list or the global list, then tap a food to see its category, prep time, ingredients, and recipe.\n\n"
-                        + "Your \"⚙️ Settings\" button shows up on every food, not just your own — you can edit or delete anyone's personal or global foods.",
-                "👑 به عنوان ادمین، این موارد را هم دارید:\n\n"
-                        + "📋 همه غذاها — لیست خودتان یا لیست عمومی را انتخاب کنید، سپس روی یک غذا بزنید تا دسته‌بندی، زمان آماده‌سازی، مواد اولیه و دستور پختش را ببینید.\n\n"
-                        + "دکمه «⚙️ تنظیمات» شما روی همه غذاها نشان داده می‌شود، نه فقط غذاهای خودتان — می‌توانید غذای شخصی یا عمومی هر کسی را ویرایش یا حذف کنید.");
         put("permission.denied",
                 "Only the admin, or whoever added this to their personal list, can do that.",
                 "فقط ادمین یا کسی که این را به لیست شخصی خودش اضافه کرده می‌تواند این کار را انجام دهد.");

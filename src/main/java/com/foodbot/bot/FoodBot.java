@@ -203,11 +203,7 @@ public class FoodBot extends TelegramLongPollingBot {
         if (text.equalsIgnoreCase("/start")) {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
-            String helpText = Messages.get(lang, "help.text");
-            if (isSuperAdmin(chatId)) {
-                helpText += "\n" + Messages.get(lang, "help.text.admin");
-            }
-            sendWithMainMenu(chatId, lang, helpText);
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "help.text"));
         } else if (text.equals(Messages.get(lang, "btn.change_lang"))) {
             sendLanguagePrompt(chatId);
         } else if (text.equalsIgnoreCase("/addfood") || text.equals(Messages.get(lang, "btn.add_food"))) {
