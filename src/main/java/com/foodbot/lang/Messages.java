@@ -192,7 +192,9 @@ public final class Messages {
                 "Please choose your language / لطفاً زبان خود را انتخاب کنید:",
                 "Please choose your language / لطفاً زبان خود را انتخاب کنید:");
         put("lang.confirmed", "Language set to English.", "زبان به فارسی تغییر یافت.");
-        put("lang.wrong_script", "Please type in English.", "لطفاً به فارسی تایپ کنید.");
+        put("lang.wrong_script",
+                "Please type in English, or change the language with /lang.",
+                "لطفاً به فارسی تایپ کنید، یا با /lang زبان را تغییر دهید.");
 
         put("edit.choose_field", "What do you want to edit?", "چی را می‌خواهید ویرایش کنید؟");
         put("edit.field.name", "Name", "اسم");
