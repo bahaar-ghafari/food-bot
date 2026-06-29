@@ -1507,8 +1507,18 @@ public class FoodBot extends TelegramLongPollingBot {
         List<Food> shoppingNeeded = computeCookMatches(chatId, lang, ctx, true);
 
         if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
-            String key = ctx.isCanShop() ? "cook.nothing_matches" : "cook.nothing_matches_no_shop";
-            sendWithMainMenu(chatId, lang, Messages.get(lang, key));
+            String message;
+            if (ctx.isCanShop()) {
+                message = Messages.get(lang, "cook.nothing_matches");
+            } else if (ctx.getHaveIngredients().isEmpty()) {
+                message = Messages.get(lang, "cook.nothing_matches_no_shop_empty");
+            } else {
+                String haveList = ctx.getHaveIngredients().stream()
+                        .map(i -> iconPrefix(i) + IngredientTranslations.translate(i, lang))
+                        .collect(Collectors.joining(", "));
+                message = Messages.get(lang, "cook.nothing_matches_no_shop_raw", haveList);
+            }
+            sendWithMainMenu(chatId, lang, message);
             return;
         }
         if (!ready.isEmpty()) {
