@@ -90,6 +90,10 @@ Saved foods (name, category, prep time, ingredients, and an optional recipe) are
 
 Every food is tagged with the language it was created in (inferred from whether its name was typed in Persian script). All lists, ingredient pools, and `/cook` matches are filtered by your *current* language: in English mode you never see Persian-named foods or Persian ingredient words, and vice versa in Persian mode — these are effectively two separate menus, not one menu translated on the fly. Editing/deleting a food you already have open works regardless of language (it's permission-based, not menu-browsing), and preserves the food's original language tag.
 
+### UI text catalog
+
+All bot-facing text lives outside the code, in `src/main/resources/messages_en.json` and `messages_fa.json` (flat `"key": "text"` maps, loaded once at startup). `Messages.get(lang, key, args...)` looks a key up in the matching file and applies `String.format` if args are given; an unknown key just falls back to the key itself. To change wording or add a new string, edit the JSON files directly — `Messages.java` itself has no text in it, just the lookup/formatting logic.
+
 ## Tests
 
 Unit tests cover `FoodRepository` (CRUD, ownership scoping, persistence, legacy-data ID backfill), `FoodCategories`, `IngredientIcons`, `IngredientTranslations`, `FoodNameTranslations`, `IngredientSearch` (the filter/cap logic behind the ingredient picker), `Paginator`, `PantryStaples`, `RecipeSteps`, `FoodSearch` (name/ingredient/fuzzy matching), `Levenshtein`, `TimeFormat`, `Messages` (catalog completeness), and `LanguageRepository`. The Telegram-facing `FoodBot` class itself isn't unit-tested — it's tightly coupled to the Telegram API's `execute()` calls — so changes there should still be manually verified by running the bot.
