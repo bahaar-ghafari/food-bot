@@ -9,8 +9,8 @@ public final class Messages {
 
     static {
         put("welcome",
-                "Welcome to FoodBot! Use the buttons below.",
-                "به فودبات خوش آمدید! از دکمه‌های زیر استفاده کنید.");
+                "👋 Hey! Welcome to FoodBot — your personal kitchen sidekick. What are we doing today?",
+                "👋 سلام! به فودبات خوش اومدی — دستیار آشپزخونه‌ات. امروز چیکار می‌کنیم؟");
         put("btn.add_food", "➕ Add food", "➕ افزودن غذا");
         put("btn.all_foods", "📋 All foods", "📋 همه غذاها");
         put("btn.what_can_cook", "🍳 What can I cook?", "🍳 چی می‌تونم بپزم؟");
@@ -54,11 +54,11 @@ public final class Messages {
         put("scope.global", "🌍 Global list", "🌍 لیست عمومی");
         put("scope.all", "🌐 All", "🌐 همه");
         put("addfood.ask_name",
-                "Let's add a new food. What's its name?",
-                "بیایید یک غذای جدید اضافه کنیم. اسمش چیه؟");
+                "Ooh, a new recipe! 🍽️ What's it called?",
+                "اوه، یه غذای جدید! 🍽️ اسمش چیه؟");
         put("addfood.ask_time",
-                "Got it: %s. How many minutes does it take to prepare?",
-                "باشه: %s. چند دقیقه طول می‌کشه تا آماده شه؟");
+                "Nice — %s sounds delicious! ⏱️ How long does it take to make? (in minutes)",
+                "عالیه — %s خوشمزه به نظر میرسه! ⏱️ چند دقیقه طول می‌کشه؟");
         put("addfood.invalid_time",
                 "That doesn't look like a number. How many minutes does it take to prepare?",
                 "این عدد نیست. چند دقیقه طول می‌کشه تا آماده شه؟");
@@ -86,13 +86,17 @@ public final class Messages {
                 "✏️ Editing step %d — type its new text (max %d characters).",
                 "✏️ در حال ویرایش مرحله %d — متن جدید آن را تایپ کنید (حداکثر %d کاراکتر).");
         put("addfood.saved_toast", "Saved!", "ذخیره شد!");
-        put("addfood.saved_message", "🎉 Saved: %s", "🎉 ذخیره شد: %s");
+        put("addfood.saved_message",
+                "🎉 Boom! %s is now in your list. Happy cooking!",
+                "🎉 آفرین! %s به لیستت اضافه شد. نوش جان!");
         put("addfood.review_header",
                 "📝 Review your food before saving. Tap a field to change it, or Confirm & Save if it looks good.",
                 "📝 قبل از ذخیره، غذا را بررسی کنید. برای تغییر هر بخش روی آن بزنید، یا اگر خوب است روی «تأیید و ذخیره» بزنید.");
         put("addfood.confirm_save", "✅ Confirm & Save", "✅ تأیید و ذخیره");
 
-        put("selection_expired", "This selection has expired.", "این انتخاب منقضی شده است.");
+        put("selection_expired",
+                "⏰ Oops, that selection expired. Give it another go!",
+                "⏰ اوپس، این انتخاب منقضی شده. دوباره امتحان کن!");
         put("tap_button_above", "Please tap one of the buttons above.", "لطفاً یکی از دکمه‌های بالا را بزنید.");
 
         put("cook.ask_time",
@@ -119,19 +123,22 @@ public final class Messages {
                 "بر اساس دسته‌بندی فیلتر کنید، یا «همه» را انتخاب کنید.");
         put("category.any", "Any", "همه");
         put("cook.nothing_matches",
-                "Hmm, nothing on the menu fits that. 🤔 Try more time, different ingredients, or add more foods with /addfood.",
-                "هوم، هیچی با این شرایط جور نشد. 🤔 زمان بیشتر، مواد اولیه دیگر، یا با /addfood غذای بیشتری اضافه کنید.");
+                "Nothing matched your vibe right now. 🤷 Try more time, swap some ingredients, or add new foods with /addfood.",
+                "چیزی پیدا نشد که جور باشه. 🤷 زمان بیشتر، مواد دیگه، یا با /addfood غذا اضافه کن.");
         put("cook.nothing_matches_no_shop",
-                "Nothing fits, and shopping's off the table... looks like a fresh-air dinner tonight! 🌬️🍽️ Try more time, different ingredients, or add a food with /addfood.",
-                "هیچی جور نشد و رفتن خرید هم گزینه نیست... امشب باید با هوای تازه سیر شوید! 🌬️🍽️ زمان بیشتر، مواد اولیه دیگر، یا با /addfood یک غذا اضافه کنید.");
-        put("cook.ready_header", "✅ You can cook right now — tap one for details:",
-                "✅ همین الان می‌توانید این‌ها را بپزید — برای جزئیات روی یکی بزنید:");
+                "Nothing works and shopping's out... guess it's a cereal night! 🥣 Try different ingredients or add more foods with /addfood.",
+                "هیچی جور نشد و خرید هم نه... امشب شام نداریم! 🥣 مواد دیگه امتحان کن یا با /addfood غذا اضافه کن.");
+        put("cook.ready_header",
+                "🔥 You're all set! Tap one to see the details:",
+                "🔥 آماده‌ای! روی یکی بزن تا جزئیات ببینی:");
         put("cook.shopping_header",
-                "🛒 You could cook these if you grab a few things — tap one for details:",
-                "🛒 اگر چند چیز بخرید می‌توانید این‌ها را هم بپزید — برای جزئیات روی یکی بزنید:");
+                "🛒 Just grab a few things and you're golden — tap one to see what you need:",
+                "🛒 فقط چند چیز کم داری — روی یکی بزن ببین چی باید بخری:");
         put("cook.detail_have", "✅ You already have:", "✅ این‌ها را از قبل دارید:");
         put("cook.detail_need", "🛒 You need to buy:", "🛒 این‌ها را باید بخرید:");
-        put("cook.detail_have_everything", "🎉 You have everything for this!", "🎉 همه چیز برای این غذا را دارید!");
+        put("cook.detail_have_everything",
+                "🎉 You've got everything! Time to get cooking!",
+                "🎉 همه چیز داری! وقت پختنه!");
 
         put("removed", "Removed %s", "%s حذف شد");
         put("added", "Added %s", "%s اضافه شد");
@@ -139,20 +146,22 @@ public final class Messages {
         put("feedback.ask",
                 "✍️ Type your feedback or suggestion below and I'll pass it along.",
                 "✍️ بازخورد یا پیشنهاد خود را تایپ کنید تا برایش ارسال کنم.");
-        put("feedback.sent", "🙏 Thanks! Your feedback was sent.", "🙏 ممنون! بازخورد شما ارسال شد.");
+        put("feedback.sent",
+                "🙏 Got it — thanks for the input! We'll take a look.",
+                "🙏 دریافت شد — ممنون از بازخوردت! نگاهی می‌اندازیم.");
         put("feedback.notify_admin",
                 "📬 New feedback from %s:\n\n%s",
                 "📬 بازخورد جدید از %s:\n\n%s");
         put("fallback",
-                "I didn't get that. Use the buttons below or /addfood.",
-                "متوجه نشدم. از دکمه‌های پایین یا /addfood استفاده کنید.");
+                "Hmm, didn't catch that. 🤔 Use the buttons below or try /addfood!",
+                "نفهمیدم چی گفتی. 🤔 از دکمه‌های پایین یا /addfood استفاده کن!");
 
         put("foods.ask_scope",
                 "Which list do you want to see?",
                 "کدوم لیست رو می‌خواید ببینید؟");
         put("foods.none",
-                "The cupboard's empty! 📭 Use /addfood to stock it up.",
-                "قفسه خالیه! 📭 با /addfood یکی اضافه کنید.");
+                "Your list is empty! 😅 Start adding foods with /addfood.",
+                "لیستت خالیه! 😅 با /addfood شروع به اضافه کردن کن.");
         put("foods.header.mine", "👤 Your foods, tap one for details:", "👤 غذاهای شما، برای جزئیات روی یکی بزنید:");
         put("foods.header.global", "🌍 Global foods, tap one for details:", "🌍 غذاهای عمومی، برای جزئیات روی یکی بزنید:");
         put("foods.header.all", "🌐 All foods (yours + global), tap one for details:",
@@ -163,8 +172,8 @@ public final class Messages {
         put("search.results_header", "🔍 Results for \"%s\", tap one for details:",
                 "🔍 نتایج برای «%s»، برای جزئیات روی یکی بزنید:");
         put("search.no_results",
-                "😕 Nothing found for \"%s\" — no matching food or ingredient. Try a different word?",
-                "😕 چیزی برای «%s» پیدا نشد — نه غذا و نه ماده اولیه‌ای مطابقت داشت. کلمه دیگری را امتحان کنید؟");
+                "😕 Couldn't find anything for \"%s\". Maybe a typo? Try a different word!",
+                "😕 چیزی برای «%s» پیدا نشد. شاید اشتباه تایپ شده؟ کلمه دیگه‌ای امتحان کن!");
         put("search.fuzzy_suggestion", "🤔 Did you mean \"%s\"?", "🤔 منظورتون «%s» بود؟");
         put("search.fuzzy_yes", "✅ Yes, that's it", "✅ بله، همینه");
         put("search.fuzzy_no", "❌ No", "❌ نه");
@@ -213,7 +222,9 @@ public final class Messages {
         put("delete.confirm", "Delete %s? This can't be undone.", "%s حذف شود؟ این کار قابل بازگشت نیست.");
         put("delete.confirm_yes", "🗑️ Yes, delete", "🗑️ بله، حذف کن");
         put("delete.confirm_no", "🚫 Cancel", "🚫 لغو");
-        put("delete.done", "🗑️ Poof! Deleted: %s", "🗑️ پاک شد! حذف شد: %s");
+        put("delete.done",
+                "💨 Gone! %s has been wiped from existence.",
+                "💨 رفت! %s از لیست پاک شد.");
 
         put("category.Breakfast", "Breakfast", "صبحانه");
         put("category.MainCourse", "Main Course", "غذای اصلی");
