@@ -43,5 +43,6 @@ class IngredientTranslationsTest {
         assertEquals("chickpeas", IngredientTranslations.translate("نخود", Lang.EN));
         assertEquals("تمبر هندی", IngredientTranslations.translate("tamarind", Lang.FA));
         assertEquals("salmon", IngredientTranslations.translate("ماهی سالمون", Lang.EN));
+        assertEquals("تخمه", IngredientTranslations.translate("sunflower seeds", Lang.FA));
     }
 }

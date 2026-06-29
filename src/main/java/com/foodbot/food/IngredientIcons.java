@@ -162,6 +162,8 @@ public final class IngredientIcons {
         ICONS.put("فلفل", "🌶️");
         ICONS.put("روغن", "🫒");
         ICONS.put("زعفرون", "🌼");
+        ICONS.put("تخمه", "🌻");
+        ICONS.put("sunflower seeds", "🌻");
     }
 
     public static String iconFor(String ingredient) {

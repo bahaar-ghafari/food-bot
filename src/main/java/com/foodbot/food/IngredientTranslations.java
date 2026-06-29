@@ -79,6 +79,7 @@ public final class IngredientTranslations {
         addPair("coffee", "قهوه");
         addPair("oil", "روغن");
         addPair("pepper", "فلفل");
+        addPair("sunflower seeds", "تخمه");
     }
 
     private static void addPair(String en, String fa) {

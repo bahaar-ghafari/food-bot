@@ -47,6 +47,8 @@ class IngredientIconsTest {
         assertEquals("🌼", IngredientIcons.iconFor("saffron"));
         assertEquals("🫛", IngredientIcons.iconFor("chickpeas"));
         assertEquals("🍫", IngredientIcons.iconFor("chocolate"));
+        assertEquals("🌻", IngredientIcons.iconFor("تخمه"));
+        assertEquals("🌻", IngredientIcons.iconFor("sunflower seeds"));
     }
 
     @Test
