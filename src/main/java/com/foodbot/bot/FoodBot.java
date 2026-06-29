@@ -52,6 +52,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final int FOODS_PER_PAGE = 10;
     private static final String SCOPE_MINE = "mine";
     private static final String SCOPE_GLOBAL = "global";
+    private static final String SCOPE_ALL = "all";
     private static final String SCOPE_SEARCH = "search";
     private static final String CB_SEARCH_FUZZY_YES = "srfy";
     private static final String CB_SEARCH_FUZZY_NO = "srfn";
@@ -83,6 +84,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_ADDFOOD_SCOPE_GLOBAL = "afs:global";
     private static final String CB_VIEW_FOODS_MINE = "vf:mine";
     private static final String CB_VIEW_FOODS_GLOBAL = "vf:global";
+    private static final String CB_VIEW_FOODS_ALL = "vf:all";
     private static final String CB_VIEW_FOODS_PAGE = "vfp:";
 
     private static final String CB_FOOD_EDIT_START = "fe:";
@@ -106,6 +108,9 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_FOOD_VIEW = "fv:";
     private static final String CB_FOOD_SETTINGS = "fset:";
     private static final int RECIPE_STEP_CHAR_LIMIT = 150;
+    private static final String MAINTENANCE_MESSAGE =
+            "⚠️ Something went wrong on our end. Please try again in a couple of minutes — we might be doing maintenance.\n\n"
+                    + "⚠️ مشکلی پیش آمد. لطفاً چند دقیقه دیگر دوباره امتحان کنید — ممکن است در حال به‌روزرسانی باشیم.";
 
     private final String token;
     private final String username;
@@ -132,6 +137,36 @@ public class FoodBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        try {
+            processUpdate(update);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Long chatId = extractChatId(update);
+            if (chatId != null) {
+                try {
+                    execute(new SendMessage(String.valueOf(chatId), MAINTENANCE_MESSAGE));
+                } catch (TelegramApiException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private Long extractChatId(Update update) {
+        try {
+            if (update.hasCallbackQuery()) {
+                return update.getCallbackQuery().getMessage().getChatId();
+            }
+            if (update.hasMessage()) {
+                return update.getMessage().getChatId();
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+        return null;
+    }
+
+    private void processUpdate(Update update) {
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             if (callbackQuery.getData().startsWith(CB_LANG)) {
@@ -429,9 +464,9 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendAddFoodScopePrompt(long chatId, AddFoodSession session, Lang lang) {
-        InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "scope.mine"));
+        InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "addfood.scope.mine"));
         mine.setCallbackData(CB_ADDFOOD_SCOPE_MINE);
-        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "scope.global"));
+        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "addfood.scope.global"));
         global.setCallbackData(CB_ADDFOOD_SCOPE_GLOBAL);
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_ADDFOOD_CANCEL);
@@ -533,8 +568,10 @@ public class FoodBot extends TelegramLongPollingBot {
         mine.setCallbackData(CB_VIEW_FOODS_MINE);
         InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "scope.global"));
         global.setCallbackData(CB_VIEW_FOODS_GLOBAL);
+        InlineKeyboardButton all = new InlineKeyboardButton(Messages.get(lang, "scope.all"));
+        all.setCallbackData(CB_VIEW_FOODS_ALL);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "foods.ask_scope"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(mine, global))));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(mine, global), List.of(all))));
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -545,7 +582,8 @@ public class FoodBot extends TelegramLongPollingBot {
     private void handleViewFoodsCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
         answerCallback(callbackQuery.getId(), null, false);
-        String scope = data.equals(CB_VIEW_FOODS_MINE) ? SCOPE_MINE : SCOPE_GLOBAL;
+        String scope = data.equals(CB_VIEW_FOODS_MINE) ? SCOPE_MINE
+                : data.equals(CB_VIEW_FOODS_GLOBAL) ? SCOPE_GLOBAL : SCOPE_ALL;
         sendFoodListPage(chatId, lang, scope, 0, null);
     }
 
@@ -953,7 +991,8 @@ public class FoodBot extends TelegramLongPollingBot {
             handleAddFoodCancelCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_ADDFOOD_BACK)) {
             handleAddFoodBackCallback(callbackQuery, chatId, data);
-        } else if (data.equals(CB_VIEW_FOODS_MINE) || data.equals(CB_VIEW_FOODS_GLOBAL)) {
+        } else if (data.equals(CB_VIEW_FOODS_MINE) || data.equals(CB_VIEW_FOODS_GLOBAL)
+                || data.equals(CB_VIEW_FOODS_ALL)) {
             handleViewFoodsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_VIEW_FOODS_PAGE)) {
             handleViewFoodsPageCallback(callbackQuery, chatId, data);
@@ -2027,6 +2066,10 @@ public class FoodBot extends TelegramLongPollingBot {
             SearchResultContext ctx = lastSearchResults.get(chatId);
             foods = ctx != null ? ctx.getFoods() : List.of();
             headerText = Messages.get(lang, "search.results_header", ctx != null ? ctx.getQuery() : "");
+        } else if (scope.equals(SCOPE_ALL)) {
+            foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));
+            foods.addAll(foodRepository.findGlobal(lang));
+            headerText = Messages.get(lang, "foods.header.all");
         } else {
             foods = scope.equals(SCOPE_MINE) ? foodRepository.findOwnedBy(chatId, lang) : foodRepository.findGlobal(lang);
             headerText = Messages.get(lang, scope.equals(SCOPE_MINE) ? "foods.header.mine" : "foods.header.global");

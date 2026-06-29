@@ -55,8 +55,11 @@ public final class Messages {
         put("addfood.ask_scope",
                 "Add this to your personal list or the global list?",
                 "این رو به لیست شخصی یا لیست عمومی اضافه کنم؟");
-        put("scope.mine", "👤 My list (only you can see it)", "👤 لیست من (فقط شما می‌بینید)");
-        put("scope.global", "🌍 Global list (everyone can see it)", "🌍 لیست عمومی (همه می‌بینند)");
+        put("addfood.scope.mine", "👤 My list (only you can see it)", "👤 لیست من (فقط شما می‌بینید)");
+        put("addfood.scope.global", "🌍 Global list (everyone can see it)", "🌍 لیست عمومی (همه می‌بینند)");
+        put("scope.mine", "👤 My list", "👤 لیست من");
+        put("scope.global", "🌍 Global list", "🌍 لیست عمومی");
+        put("scope.all", "🌐 All", "🌐 همه");
         put("addfood.ask_name",
                 "Let's add a new food. What's its name?",
                 "بیایید یک غذای جدید اضافه کنیم. اسمش چیه؟");
@@ -159,6 +162,8 @@ public final class Messages {
                 "قفسه خالیه! 📭 با /addfood یکی اضافه کنید.");
         put("foods.header.mine", "👤 Your foods, tap one for details:", "👤 غذاهای شما، برای جزئیات روی یکی بزنید:");
         put("foods.header.global", "🌍 Global foods, tap one for details:", "🌍 غذاهای عمومی، برای جزئیات روی یکی بزنید:");
+        put("foods.header.all", "🌐 All foods (yours + global), tap one for details:",
+                "🌐 همه غذاها (شما + عمومی)، برای جزئیات روی یکی بزنید:");
         put("search.ask",
                 "🔍 Type a food name (or part of it), or an ingredient, to search for:",
                 "🔍 اسم غذا (یا بخشی از آن) یا یک ماده اولیه را برای جستجو تایپ کنید:");
