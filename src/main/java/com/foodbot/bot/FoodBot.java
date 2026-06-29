@@ -216,6 +216,7 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (text.equalsIgnoreCase("/addfood") || text.equals(Messages.get(lang, "btn.add_food"))) {
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
+            awaitingSearch.remove(chatId);
             AddFoodSession newSession = new AddFoodSession();
             addFoodSessions.put(chatId, newSession);
             sendAddFoodScopePrompt(chatId, newSession, lang);
@@ -235,12 +236,14 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (text.equalsIgnoreCase("/cook") || text.equals(Messages.get(lang, "btn.what_can_cook"))) {
             addFoodSessions.remove(chatId);
             editSessions.remove(chatId);
+            awaitingSearch.remove(chatId);
             cookSessions.put(chatId, new CookSession());
             sendCookTimePrompt(chatId, lang);
         } else if (text.equalsIgnoreCase("/feedback") || text.equals(Messages.get(lang, "btn.feedback"))) {
             addFoodSessions.remove(chatId);
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
+            awaitingSearch.remove(chatId);
             awaitingFeedback.add(chatId);
             send(chatId, Messages.get(lang, "feedback.ask"));
         } else if (text.equalsIgnoreCase("/search") || text.equals(Messages.get(lang, "btn.search"))
@@ -333,6 +336,7 @@ public class FoodBot extends TelegramLongPollingBot {
         List<Food> otherVisible = foodRepository.findVisibleTo(chatId, other);
         List<Food> otherMatches = FoodSearch.search(otherVisible, translated);
         if (otherMatches.isEmpty()) {
+            awaitingSearch.add(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "search.no_results", text));
             return;
         }
@@ -409,6 +413,7 @@ public class FoodBot extends TelegramLongPollingBot {
         String query = pendingSearchQuery.remove(chatId);
         answerCallback(callbackQuery.getId(), null, false);
         clearInlineKeyboard(chatId, callbackQuery.getMessage().getMessageId());
+        awaitingSearch.add(chatId);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "search.no_results", query == null ? "" : query));
     }
 
