@@ -53,10 +53,10 @@ public final class Messages {
                 "فقط ادمین یا کسی که این را به لیست شخصی خودش اضافه کرده می‌تواند این کار را انجام دهد.");
 
         put("addfood.ask_scope",
-                "Add this to your personal list or the global list?",
-                "این رو به لیست شخصی یا لیست عمومی اضافه کنم؟");
-        put("addfood.scope.mine", "👤 My list (only you can see it)", "👤 لیست من (فقط شما می‌بینید)");
-        put("addfood.scope.global", "🌍 Global list (everyone can see it)", "🌍 لیست عمومی (همه می‌بینند)");
+                "Add this to your personal list or the global list? (personal = only you can see it, global = everyone can see it)",
+                "این رو به لیست شخصی یا لیست عمومی اضافه کنم؟ (شخصی = فقط شما می‌بینید، عمومی = همه می‌بینند)");
+        put("addfood.scope.mine", "👤 My list", "👤 لیست من");
+        put("addfood.scope.global", "🌍 Global list", "🌍 لیست عمومی");
         put("scope.mine", "👤 My list", "👤 لیست من");
         put("scope.global", "🌍 Global list", "🌍 لیست عمومی");
         put("scope.all", "🌐 All", "🌐 همه");
