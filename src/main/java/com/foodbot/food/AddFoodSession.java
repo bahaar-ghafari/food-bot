@@ -1,13 +1,16 @@
 package com.foodbot.food;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState {
+public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState, AmountEditorState {
     public enum Step {
-        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_RECIPE, REVIEW
+        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_AMOUNTS,
+        AWAITING_RECIPE, REVIEW
     }
 
     private Step step = Step.ASK_SCOPE;
@@ -20,6 +23,8 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
     private boolean returnToReview;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
+    private final Map<String, String> ingredientAmounts = new LinkedHashMap<>();
+    private String amountEditingIngredient;
     private String ingredientFilter = "";
     private int ingredientPage;
     private Integer keyboardMessageId;
@@ -90,6 +95,18 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
 
     public Set<String> getSelectedIngredients() {
         return selectedIngredients;
+    }
+
+    public Map<String, String> getIngredientAmounts() {
+        return ingredientAmounts;
+    }
+
+    public String getAmountEditingIngredient() {
+        return amountEditingIngredient;
+    }
+
+    public void setAmountEditingIngredient(String amountEditingIngredient) {
+        this.amountEditingIngredient = amountEditingIngredient;
     }
 
     public String getIngredientFilter() {

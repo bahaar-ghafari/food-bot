@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -174,5 +175,31 @@ class FoodRepositoryTest {
         Optional<Food> found = repo.findById("x2");
         assertTrue(found.isPresent());
         assertEquals(Lang.EN, found.get().getLanguage());
+    }
+
+    @Test
+    void ingredientAmountsPersistAcrossRepositoryInstances(@TempDir Path tempDir) {
+        Path file = tempDir.resolve("foods.json");
+        FoodRepository repo = new FoodRepository(file);
+        repo.add(new Food("id-9", "Omelette", 10, "Breakfast", List.of("egg", "cheese"), null, 111L, null, Lang.EN,
+                Map.of("egg", "2")));
+
+        FoodRepository reloaded = new FoodRepository(file);
+        Optional<Food> found = reloaded.findById("id-9");
+        assertTrue(found.isPresent());
+        assertEquals("2", found.get().getIngredientAmounts().get("egg"));
+        assertTrue(found.get().getIngredientAmounts().get("cheese") == null);
+    }
+
+    @Test
+    void legacyDataMissingIngredientAmountsLoadsWithEmptyMap(@TempDir Path tempDir) throws Exception {
+        Path file = tempDir.resolve("foods.json");
+        Files.writeString(file,
+                "[{\"id\":\"x3\",\"name\":\"Legacy\",\"prepTimeMinutes\":10,\"category\":\"Other\",\"ingredients\":[\"rice\"]}]");
+
+        FoodRepository repo = new FoodRepository(file);
+        Optional<Food> found = repo.findById("x3");
+        assertTrue(found.isPresent());
+        assertTrue(found.get().getIngredientAmounts().isEmpty());
     }
 }

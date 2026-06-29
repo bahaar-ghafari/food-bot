@@ -3,6 +3,7 @@ package com.foodbot.food;
 import com.foodbot.lang.Lang;
 
 import java.util.List;
+import java.util.Map;
 
 public class Food {
     private final String id;
@@ -14,9 +15,17 @@ public class Food {
     private final Long createdByChatId;
     private final String recipe;
     private final Lang language;
+    private final Map<String, String> ingredientAmounts;
 
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
                 Long ownerChatId, Long createdByChatId, String recipe, Lang language) {
+        this(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe, language,
+                Map.of());
+    }
+
+    public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
+                Long ownerChatId, Long createdByChatId, String recipe, Lang language,
+                Map<String, String> ingredientAmounts) {
         this.id = id;
         this.name = name;
         this.prepTimeMinutes = prepTimeMinutes;
@@ -26,6 +35,7 @@ public class Food {
         this.createdByChatId = createdByChatId;
         this.recipe = recipe;
         this.language = language;
+        this.ingredientAmounts = ingredientAmounts != null ? ingredientAmounts : Map.of();
     }
 
     public String getId() {
@@ -62,6 +72,10 @@ public class Food {
 
     public Lang getLanguage() {
         return language;
+    }
+
+    public Map<String, String> getIngredientAmounts() {
+        return ingredientAmounts != null ? ingredientAmounts : Map.of();
     }
 
     @Override
