@@ -63,6 +63,17 @@ public class TelegramConfig {
         return Long.parseLong(value.trim());
     }
 
+    public String getAnthropicApiKey() {
+        String value = dotenv.get("ANTHROPIC_API_KEY");
+        if (value == null || value.isBlank()) {
+            value = properties.getProperty("anthropic.api.key");
+        }
+        if (value == null || value.isBlank()) {
+            value = System.getenv("ANTHROPIC_API_KEY");
+        }
+        return (value == null || value.isBlank()) ? null : value.trim();
+    }
+
     public Long getFeedbackChatId() {
         String value = dotenv.get("FEEDBACK_CHAT_ID");
         if (value == null || value.isBlank()) {

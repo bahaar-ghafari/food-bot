@@ -1,5 +1,6 @@
 package com.foodbot.bot;
 
+import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.AmountEditorState;
 import com.foodbot.food.CookResultContext;
@@ -10,6 +11,7 @@ import com.foodbot.food.FoodCategories;
 import com.foodbot.food.FoodNameTranslations;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.food.FoodSearch;
+import com.foodbot.food.IngredientCategories;
 import com.foodbot.food.IngredientIcons;
 import com.foodbot.food.IngredientPickerState;
 import com.foodbot.food.IngredientSearch;
@@ -39,6 +41,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,12 +137,18 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, String> pendingSearchQuery = new ConcurrentHashMap<>();
     private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
     private final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
+    private final AiSuggestionService aiSuggestionService;
 
     public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId) {
+        this(token, username, superAdminChatId, feedbackChatId, null);
+    }
+
+    public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId, String anthropicApiKey) {
         this.token = token;
         this.username = username;
         this.superAdminChatId = superAdminChatId;
         this.feedbackChatId = feedbackChatId;
+        this.aiSuggestionService = new AiSuggestionService(anthropicApiKey);
     }
 
     @Override
@@ -1492,7 +1501,16 @@ public class FoodBot extends TelegramLongPollingBot {
                 result.add(food);
             }
         }
+        if (needsShopping) {
+            result.sort(Comparator.comparingInt(food -> missingCount(food, ctx.getHaveIngredients())));
+        }
         return result;
+    }
+
+    private int missingCount(Food food, Set<String> haveIngredients) {
+        return (int) food.getIngredients().stream()
+                .filter(ing -> !effectivelyHas(haveIngredients, ing))
+                .count();
     }
 
     private boolean effectivelyHas(Set<String> haveIngredients, String ingredient) {
@@ -1512,18 +1530,7 @@ public class FoodBot extends TelegramLongPollingBot {
         List<Food> shoppingNeeded = computeCookMatches(chatId, lang, ctx, true);
 
         if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
-            String message;
-            if (ctx.isCanShop()) {
-                message = Messages.get(lang, "cook.nothing_matches");
-            } else if (ctx.getHaveIngredients().isEmpty()) {
-                message = Messages.get(lang, "cook.nothing_matches_no_shop_empty");
-            } else {
-                String haveList = ctx.getHaveIngredients().stream()
-                        .map(i -> iconPrefix(i) + IngredientTranslations.translate(i, lang))
-                        .collect(Collectors.joining(", "));
-                message = Messages.get(lang, "cook.nothing_matches_no_shop_raw", haveList);
-            }
-            sendWithMainMenu(chatId, lang, message);
+            sendNoMatchFallback(chatId, lang, ctx);
             return;
         }
         if (!ready.isEmpty()) {
@@ -1532,6 +1539,46 @@ public class FoodBot extends TelegramLongPollingBot {
         if (!shoppingNeeded.isEmpty()) {
             sendCookResultPage(chatId, lang, GROUP_SHOP, 0, null);
         }
+    }
+
+    /**
+     * Nothing in the food list fits. If shopping is an option, ask the AI for a one-off
+     * suggestion; otherwise prefer picking a protein/carb the user already has over
+     * suggesting they eat their whole pantry raw, and only fall back to the AI/raw messages
+     * once that's not possible either.
+     */
+    private void sendNoMatchFallback(long chatId, Lang lang, CookResultContext ctx) {
+        if (ctx.isCanShop()) {
+            String message = aiSuggestionMessage(ctx, lang, true)
+                    .orElseGet(() -> Messages.get(lang, "cook.nothing_matches"));
+            sendWithMainMenu(chatId, lang, message);
+            return;
+        }
+        if (ctx.getHaveIngredients().isEmpty()) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches_no_shop_empty"));
+            return;
+        }
+        Optional<String> pick = IngredientCategories.pickProteinOrCarb(ctx.getHaveIngredients());
+        if (pick.isPresent()) {
+            String label = iconPrefix(pick.get()) + IngredientTranslations.translate(pick.get(), lang);
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches_no_shop_suggest", label));
+            return;
+        }
+        String message = aiSuggestionMessage(ctx, lang, false).orElseGet(() -> {
+            String haveList = ctx.getHaveIngredients().stream()
+                    .map(i -> iconPrefix(i) + IngredientTranslations.translate(i, lang))
+                    .collect(Collectors.joining(", "));
+            return Messages.get(lang, "cook.nothing_matches_no_shop_raw", haveList);
+        });
+        sendWithMainMenu(chatId, lang, message);
+    }
+
+    private Optional<String> aiSuggestionMessage(CookResultContext ctx, Lang lang, boolean canShop) {
+        List<String> haveIngredients = ctx.getHaveIngredients().stream()
+                .map(i -> IngredientTranslations.translate(i, lang))
+                .collect(Collectors.toList());
+        return aiSuggestionService.suggest(haveIngredients, ctx.getTimeMinutes(), canShop, lang)
+                .map(text -> Messages.get(lang, "cook.ai_suggestion", text));
     }
 
     private void sendCookResultPage(long chatId, Lang lang, String group, int page, Integer editMessageId) {
