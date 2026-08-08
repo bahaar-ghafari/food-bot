@@ -91,6 +91,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_VIEW_FOODS_GLOBAL = "vf:global";
     private static final String CB_VIEW_FOODS_ALL = "vf:all";
     private static final String CB_VIEW_FOODS_PAGE = "vfp:";
+    private static final String CB_ADMIN_RELOAD = "adm:reload:";
 
     private static final String CB_FOOD_EDIT_START = "fe:";
     private static final String CB_FOOD_EDIT_FIELD = "fef:";
@@ -1098,6 +1099,8 @@ public class FoodBot extends TelegramLongPollingBot {
             handleViewFoodsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_VIEW_FOODS_PAGE)) {
             handleViewFoodsPageCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_ADMIN_RELOAD)) {
+            handleAdminReloadCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_INGREDIENT)) {
             handleAddFoodIngredientCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_AMOUNT)) {
@@ -2349,6 +2352,12 @@ public class FoodBot extends TelegramLongPollingBot {
             rows.add(navRow);
         }
 
+        if (isSuperAdmin(chatId) && !scope.equals(SCOPE_SEARCH)) {
+            InlineKeyboardButton reload = new InlineKeyboardButton(Messages.get(lang, "btn.admin_reload"));
+            reload.setCallbackData(CB_ADMIN_RELOAD + scope + ":" + clampedPage);
+            rows.add(List.of(reload));
+        }
+
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
 
         if (editMessageId != null) {
@@ -2363,6 +2372,21 @@ public class FoodBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleAdminReloadCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        if (!isSuperAdmin(chatId)) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        String remainder = data.substring(CB_ADMIN_RELOAD.length());
+        int separatorIndex = remainder.lastIndexOf(':');
+        String scope = remainder.substring(0, separatorIndex);
+        int page = Integer.parseInt(remainder.substring(separatorIndex + 1));
+        foodRepository.reload();
+        answerCallback(callbackQuery.getId(), Messages.get(lang, "admin.reloaded"), false);
+        sendFoodListPage(chatId, lang, scope, page, callbackQuery.getMessage().getMessageId());
     }
 
     private String formatFoodDetail(Food food, Lang lang) {

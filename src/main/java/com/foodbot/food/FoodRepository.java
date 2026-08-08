@@ -57,6 +57,15 @@ public class FoodRepository {
         }
     }
 
+    /**
+     * Re-reads {@code dataFile} from disk, replacing the in-memory list - picks up changes
+     * made outside the running bot (e.g. a manually edited or restored foods.json).
+     */
+    public synchronized void reload() {
+        foods.clear();
+        foods.addAll(load());
+    }
+
     public synchronized List<Food> findVisibleTo(long chatId, Lang lang) {
         List<Food> result = new ArrayList<>();
         for (Food food : foods) {

@@ -192,6 +192,25 @@ class FoodRepositoryTest {
     }
 
     @Test
+    void reloadPicksUpChangesWrittenToDiskByAnotherProcess(@TempDir Path tempDir) throws Exception {
+        Path file = tempDir.resolve("foods.json");
+        FoodRepository repo = new FoodRepository(file);
+        repo.add(new Food("id-10", "Toast", 5, "Breakfast", List.of("bread"), null, 111L, null, Lang.EN));
+        assertEquals(1, repo.findGlobal(Lang.EN).size());
+
+        Files.writeString(file,
+                "[{\"id\":\"id-11\",\"name\":\"Pancakes\",\"prepTimeMinutes\":15,\"category\":\"Breakfast\","
+                        + "\"ingredients\":[\"flour\",\"egg\"],\"language\":\"EN\"}]");
+
+        repo.reload();
+
+        List<Food> global = repo.findGlobal(Lang.EN);
+        assertEquals(1, global.size());
+        assertEquals("Pancakes", global.get(0).getName());
+        assertTrue(repo.findById("id-10").isEmpty());
+    }
+
+    @Test
     void legacyDataMissingIngredientAmountsLoadsWithEmptyMap(@TempDir Path tempDir) throws Exception {
         Path file = tempDir.resolve("foods.json");
         Files.writeString(file,
