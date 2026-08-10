@@ -1,6 +1,7 @@
 package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
+import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.AmountEditorState;
 import com.foodbot.food.CookResultContext;
@@ -139,6 +140,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
     private final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
     private final AiSuggestionService aiSuggestionService;
+    private final MealDbSuggestionService mealDbSuggestionService = new MealDbSuggestionService();
 
     public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId) {
         this(token, username, superAdminChatId, feedbackChatId, null);
@@ -1576,12 +1578,25 @@ public class FoodBot extends TelegramLongPollingBot {
         sendWithMainMenu(chatId, lang, message);
     }
 
+    /**
+     * Tries the Claude-based suggestion first (only does anything if ANTHROPIC_API_KEY is
+     * configured), then falls back to a free, no-signup recipe lookup via TheMealDB so this
+     * fallback always works even without an API key.
+     */
     private Optional<String> aiSuggestionMessage(CookResultContext ctx, Lang lang, boolean canShop) {
-        List<String> haveIngredients = ctx.getHaveIngredients().stream()
+        List<String> localizedHave = ctx.getHaveIngredients().stream()
                 .map(i -> IngredientTranslations.translate(i, lang))
                 .collect(Collectors.toList());
-        return aiSuggestionService.suggest(haveIngredients, ctx.getTimeMinutes(), canShop, lang)
+        Optional<String> aiText = aiSuggestionService.suggest(localizedHave, ctx.getTimeMinutes(), canShop, lang)
                 .map(text -> Messages.get(lang, "cook.ai_suggestion", text));
+        if (aiText.isPresent()) {
+            return aiText;
+        }
+        List<String> englishHave = ctx.getHaveIngredients().stream()
+                .map(i -> IngredientTranslations.translate(i, Lang.EN))
+                .collect(Collectors.toList());
+        return mealDbSuggestionService.suggest(englishHave)
+                .map(text -> Messages.get(lang, "cook.recipe_search_suggestion", text));
     }
 
     private void sendCookResultPage(long chatId, Lang lang, String group, int page, Integer editMessageId) {
