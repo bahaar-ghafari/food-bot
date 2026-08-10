@@ -24,67 +24,44 @@ public class TelegramConfig {
     }
 
     public String getBotToken() {
-        String token = dotenv.get("TELEGRAM_BOT_TOKEN");
-        if (token == null || token.isBlank()) {
-            token = properties.getProperty("telegram.bot.token");
-        }
-        if (token == null || token.isBlank()) {
-            token = System.getenv("TELEGRAM_BOT_TOKEN");
-        }
-        if (token == null || token.isBlank()) {
+        String token = firstNonBlank(dotenv.get("TELEGRAM_BOT_TOKEN"), properties.getProperty("telegram.bot.token"),
+                System.getenv("TELEGRAM_BOT_TOKEN"));
+        if (token == null) {
             throw new IllegalStateException("Telegram token is missing. Set TELEGRAM_BOT_TOKEN in .env or telegram.bot.token in application.properties.");
         }
         return token;
     }
 
     public String getBotUsername() {
-        String username = dotenv.get("TELEGRAM_BOT_USERNAME");
-        if (username != null && !username.isBlank()) {
-            return username;
-        }
-        username = properties.getProperty("telegram.bot.username");
-        if (username == null || username.isBlank()) {
-            return "FoodBot";
-        }
-        return username;
+        return firstNonBlank(dotenv.get("TELEGRAM_BOT_USERNAME"), properties.getProperty("telegram.bot.username"),
+                "FoodBot");
     }
 
     public Long getSuperAdminChatId() {
-        String value = dotenv.get("SUPERADMIN_CHAT_ID");
-        if (value == null || value.isBlank()) {
-            value = properties.getProperty("superadmin.chat.id");
-        }
-        if (value == null || value.isBlank()) {
-            value = System.getenv("SUPERADMIN_CHAT_ID");
-        }
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return Long.parseLong(value.trim());
+        String value = firstNonBlank(dotenv.get("SUPERADMIN_CHAT_ID"), properties.getProperty("superadmin.chat.id"),
+                System.getenv("SUPERADMIN_CHAT_ID"));
+        return value == null ? null : Long.parseLong(value.trim());
     }
 
     public String getAnthropicApiKey() {
-        String value = dotenv.get("ANTHROPIC_API_KEY");
-        if (value == null || value.isBlank()) {
-            value = properties.getProperty("anthropic.api.key");
-        }
-        if (value == null || value.isBlank()) {
-            value = System.getenv("ANTHROPIC_API_KEY");
-        }
-        return (value == null || value.isBlank()) ? null : value.trim();
+        String value = firstNonBlank(dotenv.get("ANTHROPIC_API_KEY"), properties.getProperty("anthropic.api.key"),
+                System.getenv("ANTHROPIC_API_KEY"));
+        return value == null ? null : value.trim();
     }
 
     public Long getFeedbackChatId() {
-        String value = dotenv.get("FEEDBACK_CHAT_ID");
-        if (value == null || value.isBlank()) {
-            value = properties.getProperty("feedback.chat.id");
+        String value = firstNonBlank(dotenv.get("FEEDBACK_CHAT_ID"), properties.getProperty("feedback.chat.id"),
+                System.getenv("FEEDBACK_CHAT_ID"));
+        return value == null ? getSuperAdminChatId() : Long.parseLong(value.trim());
+    }
+
+    /** Returns the first non-null, non-blank value, preserving the given precedence order. */
+    static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
         }
-        if (value == null || value.isBlank()) {
-            value = System.getenv("FEEDBACK_CHAT_ID");
-        }
-        if (value == null || value.isBlank()) {
-            return getSuperAdminChatId();
-        }
-        return Long.parseLong(value.trim());
+        return null;
     }
 }
