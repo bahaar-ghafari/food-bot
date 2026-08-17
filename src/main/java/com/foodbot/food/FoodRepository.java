@@ -96,6 +96,21 @@ public class FoodRepository {
         return result;
     }
 
+    /**
+     * Foods this chat created, regardless of where they currently live (their own personal
+     * list or the global list) - e.g. a food they added to the global list still shows up here
+     * even though {@link #findOwnedBy} won't return it.
+     */
+    public synchronized List<Food> findCreatedBy(long chatId, Lang lang) {
+        List<Food> result = new ArrayList<>();
+        for (Food food : foods) {
+            if (food.getLanguage() == lang && food.getCreatedByChatId() != null && food.getCreatedByChatId() == chatId) {
+                result.add(food);
+            }
+        }
+        return result;
+    }
+
     public synchronized List<String> findAllIngredients(long chatId, Lang lang) {
         TreeSet<String> ingredients = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (Food food : findVisibleTo(chatId, lang)) {

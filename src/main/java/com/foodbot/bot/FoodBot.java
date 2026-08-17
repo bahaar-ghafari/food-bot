@@ -60,6 +60,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String SCOPE_GLOBAL = "global";
     private static final String SCOPE_ALL = "all";
     private static final String SCOPE_SEARCH = "search";
+    private static final String SCOPE_CREATED = "created";
     private static final String CB_SEARCH_FUZZY_YES = "srfy";
     private static final String CB_SEARCH_FUZZY_NO = "srfn";
     private static final String CB_SEARCH_OTHERLANG_YES = "sroy";
@@ -91,6 +92,7 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_VIEW_FOODS_MINE = "vf:mine";
     private static final String CB_VIEW_FOODS_GLOBAL = "vf:global";
     private static final String CB_VIEW_FOODS_ALL = "vf:all";
+    private static final String CB_VIEW_FOODS_CREATED = "vf:created";
     private static final String CB_VIEW_FOODS_PAGE = "vfp:";
     private static final String CB_ADMIN_RELOAD = "adm:reload:";
 
@@ -589,10 +591,14 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void sendSearchPrompt(long chatId, Lang lang) {
+        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "scope.global"));
+        global.setCallbackData(CB_VIEW_FOODS_GLOBAL);
         InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "scope.mine"));
         mine.setCallbackData(CB_VIEW_FOODS_MINE);
+        InlineKeyboardButton created = new InlineKeyboardButton(Messages.get(lang, "scope.created"));
+        created.setCallbackData(CB_VIEW_FOODS_CREATED);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "search.ask"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(mine))));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(global, mine), List.of(created))));
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -620,7 +626,8 @@ public class FoodBot extends TelegramLongPollingBot {
         Lang lang = lang(chatId);
         answerCallback(callbackQuery.getId(), null, false);
         String scope = data.equals(CB_VIEW_FOODS_MINE) ? SCOPE_MINE
-                : data.equals(CB_VIEW_FOODS_GLOBAL) ? SCOPE_GLOBAL : SCOPE_ALL;
+                : data.equals(CB_VIEW_FOODS_GLOBAL) ? SCOPE_GLOBAL
+                : data.equals(CB_VIEW_FOODS_CREATED) ? SCOPE_CREATED : SCOPE_ALL;
         sendFoodListPage(chatId, lang, scope, 0, null);
     }
 
@@ -1109,7 +1116,7 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (data.equals(CB_ADDFOOD_BACK)) {
             handleAddFoodBackCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_VIEW_FOODS_MINE) || data.equals(CB_VIEW_FOODS_GLOBAL)
-                || data.equals(CB_VIEW_FOODS_ALL)) {
+                || data.equals(CB_VIEW_FOODS_ALL) || data.equals(CB_VIEW_FOODS_CREATED)) {
             handleViewFoodsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_VIEW_FOODS_PAGE)) {
             handleViewFoodsPageCallback(callbackQuery, chatId, data);
@@ -2351,6 +2358,9 @@ public class FoodBot extends TelegramLongPollingBot {
             foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));
             foods.addAll(foodRepository.findGlobal(lang));
             headerText = Messages.get(lang, "foods.header.all");
+        } else if (scope.equals(SCOPE_CREATED)) {
+            foods = foodRepository.findCreatedBy(chatId, lang);
+            headerText = Messages.get(lang, "foods.header.created");
         } else {
             foods = scope.equals(SCOPE_MINE) ? foodRepository.findOwnedBy(chatId, lang) : foodRepository.findGlobal(lang);
             headerText = Messages.get(lang, scope.equals(SCOPE_MINE) ? "foods.header.mine" : "foods.header.global");

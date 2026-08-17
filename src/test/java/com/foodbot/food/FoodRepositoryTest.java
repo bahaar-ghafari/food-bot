@@ -91,6 +91,22 @@ class FoodRepositoryTest {
     }
 
     @Test
+    void findCreatedByReturnsFoodsRegardlessOfCurrentOwner(@TempDir Path tempDir) {
+        FoodRepository repo = newRepo(tempDir);
+        Food personal = new Food("id-personal", "Omelette", 10, "Breakfast", List.of("egg"), 111L, 111L, null, Lang.EN);
+        Food movedToGlobal = new Food("id-global", "Soup", 20, "MainCourse", List.of("water"), null, 111L, null, Lang.EN);
+        Food someoneElses = new Food("id-other", "Salad", 5, "Snack", List.of("lettuce"), 222L, 222L, null, Lang.EN);
+        repo.add(personal);
+        repo.add(movedToGlobal);
+        repo.add(someoneElses);
+
+        List<Food> createdByUser = repo.findCreatedBy(111L, Lang.EN);
+        assertTrue(createdByUser.contains(personal));
+        assertTrue(createdByUser.contains(movedToGlobal));
+        assertFalse(createdByUser.contains(someoneElses));
+    }
+
+    @Test
     void findAllIngredientsAggregatesAcrossVisibleFoodsCaseInsensitively(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
         repo.add(new Food("id-5", "Omelette", 10, "Breakfast", List.of("Egg", "cheese"), null, 111L, null, Lang.EN));
