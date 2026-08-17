@@ -32,7 +32,7 @@ The bot runs in production as a Docker Compose stack (`docker-compose.yml` + `Do
 - **`autoheal`** — restarts the `bot` container if it ever reports unhealthy, covering a hung-but-running process that the plain restart policy wouldn't catch on its own.
 - The container exposes an opt-in health endpoint (`HealthCheckServer`, only started when `HEALTH_ADDR` is set) at `/healthz`, which the Compose healthcheck polls every 30s.
 
-To deploy an update: sync the repo to the server (the deploy used `rsync`, since the GitHub repo is private and the server has no stored credentials for it — `git pull` would need a deploy key or PAT set up first), then from `/opt/foodbot`:
+To deploy an update: sync the repo to the server (the deploy uses `rsync`; the GitHub repo is now public, so `git pull` from `/opt/foodbot` is also an option if you'd rather track it with git directly), then from `/opt/foodbot`:
 ```bash
 docker compose up -d --build
 ```
