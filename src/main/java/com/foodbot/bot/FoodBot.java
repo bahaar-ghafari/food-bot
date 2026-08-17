@@ -267,7 +267,7 @@ public class FoodBot extends TelegramLongPollingBot {
             String query = text.toLowerCase().startsWith("/search ") ? text.substring(8).trim() : "";
             if (query.isEmpty()) {
                 awaitingSearch.add(chatId);
-                send(chatId, Messages.get(lang, "search.ask"));
+                sendSearchPrompt(chatId, lang);
             } else {
                 handleSearchQuery(chatId, query, lang);
             }
@@ -585,6 +585,18 @@ public class FoodBot extends TelegramLongPollingBot {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void sendSearchPrompt(long chatId, Lang lang) {
+        InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "scope.mine"));
+        mine.setCallbackData(CB_VIEW_FOODS_MINE);
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "search.ask"));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(mine))));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
