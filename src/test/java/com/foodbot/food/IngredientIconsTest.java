@@ -62,4 +62,13 @@ class IngredientIconsTest {
         assertNotNull(icon);
         assertEquals("", icon);
     }
+
+    @Test
+    void oilAndSpiceHaveIconsInBothLanguages() {
+        assertEquals("🫒", IngredientIcons.iconFor("oil"));
+        assertEquals("🫒", IngredientIcons.iconFor("روغن"));
+        assertEquals("🧂", IngredientIcons.iconFor("spice"));
+        assertEquals("🧂", IngredientIcons.iconFor("spices"));
+        assertEquals("🧂", IngredientIcons.iconFor("ادویه"));
+    }
 }

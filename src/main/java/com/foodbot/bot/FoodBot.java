@@ -4,6 +4,7 @@ import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.AmountEditorState;
+import com.foodbot.food.CookRanking;
 import com.foodbot.food.CookResultContext;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.EditFoodSession;
@@ -42,7 +43,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1497,29 +1497,30 @@ public class FoodBot extends TelegramLongPollingBot {
                 continue;
             }
             boolean hasEverything = food.getIngredients().stream()
-                    .allMatch(ing -> effectivelyHas(ctx.getHaveIngredients(), ing));
+                    .allMatch(ing -> CookRanking.effectivelyHas(ctx.getHaveIngredients(), ing));
             if (needsShopping) {
-                if (!hasEverything && ctx.isCanShop()) {
+                // Only suggest shopping for a dish that actually builds on something the user
+                // already has - otherwise "I have chicken" would keep surfacing unrelated fish
+                // or beef dishes that need every ingredient bought from scratch. If the user
+                // hasn't selected anything yet, skip this check so /cook can still browse the
+                // full list of shoppable dishes.
+                boolean groundedInWhatUserHas = ctx.getHaveIngredients().isEmpty()
+                        || CookRanking.buildsOnWhatUserHas(food, ctx.getHaveIngredients());
+                if (!hasEverything && ctx.isCanShop() && groundedInWhatUserHas) {
                     result.add(food);
                 }
             } else if (hasEverything) {
                 result.add(food);
             }
         }
-        if (needsShopping) {
-            result.sort(Comparator.comparingInt(food -> missingCount(food, ctx.getHaveIngredients())));
-        }
+        // Rank so dishes reusing more of what the user already has come first, not just
+        // whichever dish happens to need the fewest extra ingredients bought (see CookRanking).
+        CookRanking.sortByBestMatch(result, ctx.getHaveIngredients());
         return result;
     }
 
-    private int missingCount(Food food, Set<String> haveIngredients) {
-        return (int) food.getIngredients().stream()
-                .filter(ing -> !effectivelyHas(haveIngredients, ing))
-                .count();
-    }
-
     private boolean effectivelyHas(Set<String> haveIngredients, String ingredient) {
-        return PantryStaples.isStaple(ingredient) || haveIngredients.stream().anyMatch(h -> h.equalsIgnoreCase(ingredient));
+        return CookRanking.effectivelyHas(haveIngredients, ingredient);
     }
 
     private void addNonStapleIngredients(List<String> candidates, List<String> allIngredients) {
@@ -1561,6 +1562,18 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (ctx.getHaveIngredients().isEmpty()) {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches_no_shop_empty"));
+            return;
+        }
+        // Prefer suggesting a protein + carb combo (e.g. tuna + rice) over just the protein
+        // alone, since that's a real meal rather than eating one ingredient plain.
+        Optional<IngredientCategories.Combo> combo = IngredientCategories.pickProteinAndCarb(ctx.getHaveIngredients());
+        if (combo.isPresent()) {
+            String proteinLabel = iconPrefix(combo.get().protein())
+                    + IngredientTranslations.translate(combo.get().protein(), lang);
+            String carbLabel = iconPrefix(combo.get().carb())
+                    + IngredientTranslations.translate(combo.get().carb(), lang);
+            sendWithMainMenu(chatId, lang,
+                    Messages.get(lang, "cook.nothing_matches_no_shop_suggest_combo", proteinLabel, carbLabel));
             return;
         }
         Optional<String> pick = IngredientCategories.pickProteinOrCarb(ctx.getHaveIngredients());

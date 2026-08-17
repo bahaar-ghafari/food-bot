@@ -80,6 +80,7 @@ public final class IngredientTranslations {
         addPair("oil", "روغن");
         addPair("pepper", "فلفل");
         addPair("sunflower seeds", "تخمه");
+        addPair("spice", "ادویه");
     }
 
     private static void addPair(String en, String fa) {

@@ -22,6 +22,15 @@ class PantryStaplesTest {
     }
 
     @Test
+    void oilAndSpicesAreStaplesInBothLanguages() {
+        assertTrue(PantryStaples.isStaple("oil"));
+        assertTrue(PantryStaples.isStaple("روغن"));
+        assertTrue(PantryStaples.isStaple("spice"));
+        assertTrue(PantryStaples.isStaple("spices"));
+        assertTrue(PantryStaples.isStaple("ادویه"));
+    }
+
+    @Test
     void unrelatedIngredientsAreNotStaples() {
         assertFalse(PantryStaples.isStaple("chicken"));
         assertFalse(PantryStaples.isStaple("rice"));

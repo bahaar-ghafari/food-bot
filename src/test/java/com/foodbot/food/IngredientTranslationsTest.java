@@ -45,4 +45,12 @@ class IngredientTranslationsTest {
         assertEquals("salmon", IngredientTranslations.translate("ماهی سالمون", Lang.EN));
         assertEquals("تخمه", IngredientTranslations.translate("sunflower seeds", Lang.FA));
     }
+
+    @Test
+    void translatesOilAndSpice() {
+        assertEquals("روغن", IngredientTranslations.translate("oil", Lang.FA));
+        assertEquals("oil", IngredientTranslations.translate("روغن", Lang.EN));
+        assertEquals("ادویه", IngredientTranslations.translate("spice", Lang.FA));
+        assertEquals("spice", IngredientTranslations.translate("ادویه", Lang.EN));
+    }
 }

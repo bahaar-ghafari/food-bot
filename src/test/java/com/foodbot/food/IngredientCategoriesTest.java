@@ -51,4 +51,21 @@ class IngredientCategoriesTest {
         Set<String> have = new LinkedHashSet<>(Set.of("onion", "turmeric"));
         assertEquals(Optional.empty(), IngredientCategories.pickProteinOrCarb(have));
     }
+
+    @Test
+    void pickProteinAndCarbFindsBothWhenPresent() {
+        // e.g. "I have tuna and rice" - should surface both, not just the tuna.
+        Set<String> have = new LinkedHashSet<>(Set.of("tuna", "rice"));
+        assertEquals(Optional.of(new IngredientCategories.Combo("tuna", "rice")),
+                IngredientCategories.pickProteinAndCarb(have));
+    }
+
+    @Test
+    void pickProteinAndCarbIsEmptyWhenOnlyOneSidePresent() {
+        Set<String> proteinOnly = new LinkedHashSet<>(Set.of("tuna", "onion"));
+        assertEquals(Optional.empty(), IngredientCategories.pickProteinAndCarb(proteinOnly));
+
+        Set<String> carbOnly = new LinkedHashSet<>(Set.of("rice", "onion"));
+        assertEquals(Optional.empty(), IngredientCategories.pickProteinAndCarb(carbOnly));
+    }
 }

@@ -43,6 +43,9 @@ public final class IngredientIcons {
         ICONS.put("shrimp", "🦐");
         ICONS.put("pepper", "🌶️");
         ICONS.put("salt", "🧂");
+        ICONS.put("spice", "🧂");
+        ICONS.put("spices", "🧂");
+        ICONS.put("ادویه", "🧂");
         ICONS.put("sugar", "🍬");
         ICONS.put("شکر", "🍬");
         ICONS.put("butter", "🧈");

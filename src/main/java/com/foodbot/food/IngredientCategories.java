@@ -46,11 +46,37 @@ public final class IngredientCategories {
      * preserving their iteration order so the result is deterministic for a given input.
      */
     public static Optional<String> pickProteinOrCarb(Iterable<String> ingredients) {
+        Optional<String> protein = firstProtein(ingredients);
+        if (protein.isPresent()) {
+            return protein;
+        }
+        return firstCarb(ingredients);
+    }
+
+    /**
+     * Picks one protein AND one carb from the given ingredients, when both are present, so
+     * /cook can suggest combining them into a single meal (e.g. tuna + rice) instead of
+     * suggesting just the protein alone.
+     */
+    public static Optional<Combo> pickProteinAndCarb(Iterable<String> ingredients) {
+        Optional<String> protein = firstProtein(ingredients);
+        Optional<String> carb = firstCarb(ingredients);
+        if (protein.isPresent() && carb.isPresent()) {
+            return Optional.of(new Combo(protein.get(), carb.get()));
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<String> firstProtein(Iterable<String> ingredients) {
         for (String ingredient : ingredients) {
             if (isProtein(ingredient)) {
                 return Optional.of(ingredient);
             }
         }
+        return Optional.empty();
+    }
+
+    public static Optional<String> firstCarb(Iterable<String> ingredients) {
         for (String ingredient : ingredients) {
             if (isCarb(ingredient)) {
                 return Optional.of(ingredient);
@@ -62,6 +88,9 @@ public final class IngredientCategories {
     private static boolean matches(Set<String> set, String ingredient) {
         String trimmed = ingredient.trim();
         return set.stream().anyMatch(s -> s.equalsIgnoreCase(trimmed));
+    }
+
+    public record Combo(String protein, String carb) {
     }
 
     private IngredientCategories() {
