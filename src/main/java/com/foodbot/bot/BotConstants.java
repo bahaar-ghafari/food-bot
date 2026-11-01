@@ -88,6 +88,8 @@ final class BotConstants {
     static final String CB_FRIENDS_APPROVE = "fra:";
     static final String CB_FRIENDS_APPROVE_VISIBLE = "frav:";
     static final String CB_FRIENDS_DECLINE = "frd:";
+    static final String CB_FRIENDS_DIGEST = "frdg";
+    static final String CB_FRIENDS_MUTE = "frm:";
     /** Scope prefix for browsing a followed user's recipes; the rest is their chat id. */
     static final String SCOPE_USER = "usr";
     static final String CB_FOOD_VIEW = "fv:";

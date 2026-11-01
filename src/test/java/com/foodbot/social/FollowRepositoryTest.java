@@ -93,6 +93,45 @@ class FollowRepositoryTest {
         assertTrue(reloaded.approve(3L, 1L));
     }
 
+    @Test
+    void mutedFollowersAreSkippedButStillFollow(@TempDir Path dir) {
+        FollowRepository repo = new FollowRepository(dir.resolve("f.json"));
+        repo.follow(1L, 3L);
+        repo.follow(2L, 3L);
+        assertTrue(repo.setMuted(1L, 3L, true));
+        assertTrue(repo.isMuted(1L, 3L));
+        assertTrue(repo.isFollowing(1L, 3L));
+        assertEquals(List.of(2L), repo.notifiableFollowersOf(3L));
+        repo.setMuted(1L, 3L, false);
+        assertEquals(2, repo.notifiableFollowersOf(3L).size());
+    }
+
+    @Test
+    void cannotMuteSomeoneYouDontFollowAndUnfollowClearsMute(@TempDir Path dir) {
+        FollowRepository repo = new FollowRepository(dir.resolve("f.json"));
+        assertFalse(repo.setMuted(1L, 3L, true));
+        repo.follow(1L, 3L);
+        repo.setMuted(1L, 3L, true);
+        repo.unfollow(1L, 3L);
+        repo.follow(1L, 3L);
+        assertFalse(repo.isMuted(1L, 3L));
+    }
+
+    @Test
+    void digestQueueIsDrainedOnceAndSurvivesReload(@TempDir Path dir) {
+        Path file = dir.resolve("f.json");
+        FollowRepository repo = new FollowRepository(file);
+        repo.setDigest(1L, true);
+        repo.queueForDigest(1L, "a");
+        repo.queueForDigest(1L, "b");
+
+        FollowRepository reloaded = new FollowRepository(file);
+        assertTrue(reloaded.isDigest(1L));
+        assertEquals(List.of("a", "b"), reloaded.drainDigests().get(1L));
+        assertTrue(reloaded.drainDigests().isEmpty());
+        assertTrue(new FollowRepository(file).drainDigests().isEmpty());
+    }
+
     private static void runConcurrently(int n, java.util.function.IntConsumer task) throws Exception {
         java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(n);
         java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);

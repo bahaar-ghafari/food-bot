@@ -569,7 +569,11 @@ class AddFoodHandler extends FlowHandler {
 
     void notifyFollowers(long authorChatId, Food food, String authorName) {
         String who = authorName != null ? authorName : String.valueOf(authorChatId);
-        for (long follower : followRepository.followersOf(authorChatId)) {
+        for (long follower : followRepository.notifiableFollowersOf(authorChatId)) {
+            if (followRepository.isDigest(follower)) {
+                followRepository.queueForDigest(follower, food.getId());
+                continue;
+            }
             Lang followerLang = lang(follower);
             sendFoodPhoto(follower, food);
             send(follower, Messages.get(followerLang, "friends.new_recipe", who) + "\n\n"

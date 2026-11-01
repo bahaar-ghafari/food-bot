@@ -55,6 +55,30 @@ public class FoodBot extends TelegramLongPollingBot {
                 new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new ShoppingListRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
+        startDigestScheduler();
+    }
+
+    /** Sends queued follow digests once a day at 18:00 UTC. */
+    private void startDigestScheduler() {
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC);
+        java.time.ZonedDateTime next = now.withHour(18).withMinute(0).withSecond(0).withNano(0);
+        if (!next.isAfter(now)) {
+            next = next.plusDays(1);
+        }
+        java.util.concurrent.ScheduledExecutorService scheduler =
+                java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+                    Thread t = new Thread(r, "follow-digest");
+                    t.setDaemon(true);
+                    return t;
+                });
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                ctx.follow.sendDigests();
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            }
+        }, java.time.Duration.between(now, next).toSeconds(), java.time.Duration.ofDays(1).toSeconds(),
+                java.util.concurrent.TimeUnit.SECONDS);
     }
 
     @Override
@@ -282,7 +306,8 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (data.equals(CB_FRIENDS_FOLLOW) || data.equals(CB_FRIENDS_LIST) || data.equals(CB_FRIENDS_VISIBILITY)
                 || data.startsWith(CB_FRIENDS_USER) || data.startsWith(CB_FRIENDS_UNFOLLOW)
                 || data.startsWith(CB_FRIENDS_APPROVE) || data.startsWith(CB_FRIENDS_APPROVE_VISIBLE)
-                || data.startsWith(CB_FRIENDS_DECLINE)) {
+                || data.startsWith(CB_FRIENDS_DECLINE) || data.equals(CB_FRIENDS_DIGEST)
+                || data.startsWith(CB_FRIENDS_MUTE)) {
             ctx.follow.handleFriendsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADMIN_RELOAD)) {
             ctx.browse.handleAdminReloadCallback(callbackQuery, chatId, data);

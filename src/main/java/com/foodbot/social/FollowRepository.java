@@ -31,6 +31,12 @@ public class FollowRepository {
         Set<Long> hidden = new HashSet<>();
         Map<Long, Set<Long>> followers = new HashMap<>();
         Map<Long, Set<Long>> pending = new HashMap<>();
+        /** followee -> followers who muted them (still following, but no notifications). */
+        Map<Long, Set<Long>> muted = new HashMap<>();
+        /** Followers who want one daily digest instead of a message per recipe. */
+        Set<Long> digest = new HashSet<>();
+        /** follower -> ids of recipes waiting for their next digest. */
+        Map<Long, List<String>> queued = new HashMap<>();
     }
 
     private final Path dataFile;
@@ -102,8 +108,76 @@ public class FollowRepository {
         if (set.isEmpty()) {
             state.followers.remove(followee);
         }
+        Set<Long> mutedSet = state.muted.get(followee);
+        if (mutedSet != null && mutedSet.remove(follower) && mutedSet.isEmpty()) {
+            state.muted.remove(followee);
+        }
         save();
         return true;
+    }
+
+    public synchronized boolean isMuted(long follower, long followee) {
+        return followersOf(state.muted, followee).contains(follower);
+    }
+
+    /** Mutes or unmutes a followee. Returns false when the follower doesn't follow them. */
+    public synchronized boolean setMuted(long follower, long followee, boolean muted) {
+        if (!isFollowing(follower, followee)) {
+            return false;
+        }
+        if (muted) {
+            if (state.muted.computeIfAbsent(followee, k -> new HashSet<>()).add(follower)) {
+                save();
+            }
+        } else {
+            Set<Long> set = state.muted.get(followee);
+            if (set != null && set.remove(follower)) {
+                if (set.isEmpty()) {
+                    state.muted.remove(followee);
+                }
+                save();
+            }
+        }
+        return true;
+    }
+
+    /** Followers of the chat who should be told about a new recipe (everyone but the muted ones). */
+    public synchronized List<Long> notifiableFollowersOf(long chatId) {
+        Set<Long> mutedSet = followersOf(state.muted, chatId);
+        List<Long> result = new ArrayList<>();
+        for (long follower : followersOf(state.followers, chatId)) {
+            if (!mutedSet.contains(follower)) {
+                result.add(follower);
+            }
+        }
+        return result;
+    }
+
+    public synchronized boolean isDigest(long follower) {
+        return state.digest.contains(follower);
+    }
+
+    public synchronized void setDigest(long follower, boolean digest) {
+        boolean changed = digest ? state.digest.add(follower) : state.digest.remove(follower);
+        if (changed) {
+            save();
+        }
+    }
+
+    public synchronized void queueForDigest(long follower, String foodId) {
+        state.queued.computeIfAbsent(follower, k -> new ArrayList<>()).add(foodId);
+        save();
+    }
+
+    /** Removes and returns everything queued for every follower, keyed by follower. */
+    public synchronized Map<Long, List<String>> drainDigests() {
+        if (state.queued.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, List<String>> drained = new HashMap<>(state.queued);
+        state.queued.clear();
+        save();
+        return drained;
     }
 
     public synchronized boolean isFollowing(long follower, long followee) {
@@ -151,6 +225,9 @@ public class FollowRepository {
             if (loaded.hidden == null) loaded.hidden = new HashSet<>();
             if (loaded.followers == null) loaded.followers = new HashMap<>();
             if (loaded.pending == null) loaded.pending = new HashMap<>();
+            if (loaded.muted == null) loaded.muted = new HashMap<>();
+            if (loaded.digest == null) loaded.digest = new HashSet<>();
+            if (loaded.queued == null) loaded.queued = new HashMap<>();
             return loaded;
         } catch (IOException e) {
             throw new RuntimeException("Unable to load " + dataFile, e);

@@ -1,5 +1,6 @@
 package com.foodbot.bot;
 
+import com.foodbot.food.Food;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -31,7 +32,11 @@ class FollowHandler extends FlowHandler {
         toggle.setCallbackData(CB_FRIENDS_VISIBILITY);
         String text = Messages.get(lang, "friends.menu", chatId,
                 Messages.get(lang, visible ? "friends.visible" : "friends.hidden"), followRepository.followersOf(chatId).size());
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(List.of(List.of(follow, list), List.of(toggle)));
+        InlineKeyboardButton digest = new InlineKeyboardButton(Messages.get(lang,
+                followRepository.isDigest(chatId) ? "friends.btn_digest_on" : "friends.btn_digest_off"));
+        digest.setCallbackData(CB_FRIENDS_DIGEST);
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
+                List.of(List.of(follow, list), List.of(toggle), List.of(digest)));
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, text, markup);
             return;
@@ -107,6 +112,13 @@ class FollowHandler extends FlowHandler {
         } else if (data.equals(CB_FRIENDS_VISIBILITY)) {
             followRepository.setVisible(chatId, !followRepository.isVisible(chatId));
             sendFriendsMenu(chatId, lang, messageId);
+        } else if (data.equals(CB_FRIENDS_DIGEST)) {
+            followRepository.setDigest(chatId, !followRepository.isDigest(chatId));
+            sendFriendsMenu(chatId, lang, messageId);
+        } else if (data.startsWith(CB_FRIENDS_MUTE)) {
+            long userId = Long.parseLong(data.substring(CB_FRIENDS_MUTE.length()));
+            followRepository.setMuted(chatId, userId, !followRepository.isMuted(chatId, userId));
+            sendFollowingList(chatId, lang, messageId);
         } else if (data.equals(CB_FRIENDS_LIST)) {
             sendFollowingList(chatId, lang, messageId);
         } else if (data.startsWith(CB_FRIENDS_USER)) {
@@ -132,7 +144,10 @@ class FollowHandler extends FlowHandler {
             view.setCallbackData(CB_FRIENDS_USER + userId);
             InlineKeyboardButton unfollow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_unfollow"));
             unfollow.setCallbackData(CB_FRIENDS_UNFOLLOW + userId);
-            rows.add(List.of(view, unfollow));
+            InlineKeyboardButton mute = new InlineKeyboardButton(Messages.get(lang,
+                    followRepository.isMuted(chatId, userId) ? "friends.btn_unmute" : "friends.btn_mute"));
+            mute.setCallbackData(CB_FRIENDS_MUTE + userId);
+            rows.add(List.of(view, mute, unfollow));
         }
         String text = Messages.get(lang, following.isEmpty() ? "friends.list_empty" : "friends.list_header");
         editMessageTextAndMarkup(chatId, editMessageId, text, new InlineKeyboardMarkup(rows));
@@ -159,5 +174,31 @@ class FollowHandler extends FlowHandler {
         if (approve || makeVisible) {
             send(requester, Messages.get(lang(requester), "friends.request_accepted", displayName(chatId)));
         }
+    }
+
+    /** Sends each follower one message with every recipe queued for them since the last digest. */
+    void sendDigests() {
+        followRepository.drainDigests().forEach((follower, foodIds) -> {
+            Lang lang = lang(follower);
+            StringBuilder body = new StringBuilder();
+            int count = 0;
+            for (String foodId : foodIds) {
+                Food food = foodRepository.findById(foodId).orElse(null);
+                if (food == null) {
+                    continue; // deleted since it was queued
+                }
+                Long owner = food.getOwnerChatId();
+                String author = food.getAuthorName() != null ? food.getAuthorName()
+                        : owner != null ? displayName(owner) : "";
+                body.append("\n• ").append(food.getName());
+                if (!author.isEmpty()) {
+                    body.append(" — ").append(author);
+                }
+                count++;
+            }
+            if (count > 0) {
+                send(follower, Messages.get(lang, "friends.digest", count) + "\n" + body);
+            }
+        });
     }
 }

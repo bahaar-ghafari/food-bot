@@ -393,4 +393,46 @@ class FlowHandlersTest {
         assertEquals(1, photos.size());
         assertEquals("6", photos.get(0).getChatId());
     }
+
+    private AddFoodSession soupSession() {
+        AddFoodSession session = new AddFoodSession();
+        session.setName("Soup");
+        session.setPrepTimeMinutes(10);
+        session.setCategory("MainCourse");
+        session.getSelectedIngredients().add("water");
+        return session;
+    }
+
+    @Test
+    void mutedFollowerGetsNoNotification() {
+        ctx.languageRepository.set(6L, Lang.EN);
+        ctx.followRepository.follow(6L, 5L);
+        ctx.followRepository.setMuted(6L, 5L, true);
+
+        ctx.addFood.finalizeNewFood(5L, soupSession(), Lang.EN, null);
+
+        assertTrue(sentMessages().stream().noneMatch(m -> m.getChatId().equals("6")));
+    }
+
+    @Test
+    void digestFollowerGetsOneSummaryInsteadOfInstantMessages() {
+        ctx.languageRepository.set(6L, Lang.EN);
+        ctx.followRepository.follow(6L, 5L);
+        ctx.followRepository.setDigest(6L, true);
+
+        ctx.addFood.finalizeNewFood(5L, soupSession(), Lang.EN, null);
+        ctx.addFood.finalizeNewFood(5L, soupSession(), Lang.EN, null);
+        assertTrue(sentMessages().stream().noneMatch(m -> m.getChatId().equals("6")));
+
+        ctx.follow.sendDigests();
+
+        List<SendMessage> toFollower = sentMessages().stream().filter(m -> m.getChatId().equals("6")).toList();
+        assertEquals(1, toFollower.size());
+        assertTrue(toFollower.get(0).getText().contains("2 new recipe"));
+        assertTrue(toFollower.get(0).getText().contains("Soup"));
+
+        sent.clear();
+        ctx.follow.sendDigests();
+        assertTrue(sent.isEmpty());
+    }
 }
