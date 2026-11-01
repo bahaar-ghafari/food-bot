@@ -43,8 +43,12 @@ public class FoodRepository {
 
     public synchronized void update(Food updated) {
         for (int i = 0; i < foods.size(); i++) {
-            if (foods.get(i).getId().equals(updated.getId())) {
-                foods.set(i, updated);
+            Food existing = foods.get(i);
+            if (existing.getId().equals(updated.getId())) {
+                // edits rebuild the Food from its visible fields, so carry provenance over
+                boolean lacksProvenance = updated.getSource() == null && updated.getAuthorName() == null;
+                foods.set(i, lacksProvenance
+                        ? updated.withProvenance(existing.getSource(), existing.getAuthorName()) : updated);
                 save();
                 return;
             }
@@ -146,7 +150,7 @@ public class FoodRepository {
                 language = (language == null) ? inferLanguage(food.getName()) : language;
                 result.add(new Food(id, food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
                         food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
-                        language));
+                        language, food.getIngredientAmounts(), food.getSource(), food.getAuthorName()));
                 changed = true;
             } else {
                 result.add(food);

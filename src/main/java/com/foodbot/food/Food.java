@@ -16,6 +16,13 @@ public class Food {
     private final String recipe;
     private final Lang language;
     private final Map<String, String> ingredientAmounts;
+    /** {@link #SOURCE_BOT} or {@link #SOURCE_MANUAL}; null on foods saved before this field existed. */
+    private final String source;
+    /** Display name of whoever the recipe belongs to; null when unknown. */
+    private final String authorName;
+
+    public static final String SOURCE_BOT = "bot";
+    public static final String SOURCE_MANUAL = "manual";
 
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
                 Long ownerChatId, Long createdByChatId, String recipe, Lang language) {
@@ -26,6 +33,13 @@ public class Food {
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
                 Long ownerChatId, Long createdByChatId, String recipe, Lang language,
                 Map<String, String> ingredientAmounts) {
+        this(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe, language,
+                ingredientAmounts, null, null);
+    }
+
+    public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
+                Long ownerChatId, Long createdByChatId, String recipe, Lang language,
+                Map<String, String> ingredientAmounts, String source, String authorName) {
         this.id = id;
         this.name = name;
         this.prepTimeMinutes = prepTimeMinutes;
@@ -36,6 +50,8 @@ public class Food {
         this.recipe = recipe;
         this.language = language;
         this.ingredientAmounts = ingredientAmounts != null ? ingredientAmounts : Map.of();
+        this.source = source;
+        this.authorName = authorName;
     }
 
     public String getId() {
@@ -76,6 +92,28 @@ public class Food {
 
     public Map<String, String> getIngredientAmounts() {
         return ingredientAmounts != null ? ingredientAmounts : Map.of();
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    /**
+     * Whether this food was added through the bot's /addfood flow. Foods saved before {@code source}
+     * existed fall back on {@code createdByChatId}, which only the bot ever sets - foods typed
+     * straight into foods.json have none.
+     */
+    public boolean isAddedViaBot() {
+        return source != null ? SOURCE_BOT.equals(source) : createdByChatId != null;
+    }
+
+    public Food withProvenance(String source, String authorName) {
+        return new Food(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe,
+                language, ingredientAmounts, source, authorName);
     }
 
     @Override

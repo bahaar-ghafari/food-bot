@@ -63,6 +63,20 @@ class FoodRepositoryTest {
     }
 
     @Test
+    void updateKeepsProvenanceWhenEditedFoodLacksIt(@TempDir Path tempDir) {
+        FoodRepository repo = newRepo(tempDir);
+        repo.add(new Food("id-p", "Pasta", 15, "MainCourse", List.of("pasta"), null, 111L, null, Lang.EN)
+                .withProvenance(Food.SOURCE_BOT, "Sara"));
+
+        repo.update(new Food("id-p", "Pasta 2", 15, "MainCourse", List.of("pasta"), null, 111L, null, Lang.EN));
+
+        Food found = repo.findById("id-p").orElseThrow();
+        assertEquals("Pasta 2", found.getName());
+        assertEquals(Food.SOURCE_BOT, found.getSource());
+        assertEquals("Sara", found.getAuthorName());
+    }
+
+    @Test
     void updateReplacesFoodWithMatchingId(@TempDir Path tempDir) {
         FoodRepository repo = newRepo(tempDir);
         Food original = new Food("id-3", "Pasta", 15, "MainCourse", List.of("pasta"), null, 111L, null, Lang.EN);

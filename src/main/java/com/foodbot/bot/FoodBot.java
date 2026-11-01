@@ -1428,18 +1428,30 @@ public class FoodBot extends TelegramLongPollingBot {
             return;
         }
         answerCallback(callbackQuery.getId(), null, false);
-        finalizeNewFood(chatId, session, lang);
+        finalizeNewFood(chatId, session, lang, callbackQuery.getFrom());
     }
 
-    private void finalizeNewFood(long chatId, AddFoodSession session, Lang lang) {
+    private void finalizeNewFood(long chatId, AddFoodSession session, Lang lang, User from) {
         Map<String, String> amounts = filterAmounts(session.getIngredientAmounts(), session.getSelectedIngredients());
         Food food = new Food(UUID.randomUUID().toString(), session.getName(), session.getPrepTimeMinutes(),
                 session.getCategory(), new ArrayList<>(session.getSelectedIngredients()), session.getOwnerChatId(),
-                chatId, RecipeSteps.join(session.getRecipeSteps()), lang, amounts);
+                chatId, RecipeSteps.join(session.getRecipeSteps()), lang, amounts, Food.SOURCE_BOT, authorDisplayName(from));
         foodRepository.add(food);
         clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         addFoodSessions.remove(chatId);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "addfood.saved_message", formatFood(food, lang)));
+    }
+
+    private static String authorDisplayName(User from) {
+        if (from == null) {
+            return null;
+        }
+        String full = ((from.getFirstName() == null ? "" : from.getFirstName()) + " "
+                + (from.getLastName() == null ? "" : from.getLastName())).trim();
+        if (!full.isEmpty()) {
+            return full;
+        }
+        return from.getUserName() != null ? "@" + from.getUserName() : null;
     }
 
     private void handleCookIngredientCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -2451,7 +2463,18 @@ public class FoodBot extends TelegramLongPollingBot {
                 + "🏷️ " + Messages.get(lang, "food.detail_category", categoryLabel(food.getCategory(), lang)) + "\n"
                 + "⏱️ " + Messages.get(lang, "food.detail_time", timeText) + "\n"
                 + "🧾 " + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
-                + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n";
+                + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n\n"
+                + provenanceLine(food, lang) + "\n";
+    }
+
+    private String provenanceLine(Food food, Lang lang) {
+        String author = food.getAuthorName();
+        if (food.isAddedViaBot()) {
+            return author != null ? "🤖 " + Messages.get(lang, "food.source_bot_by", author)
+                    : "🤖 " + Messages.get(lang, "food.source_bot");
+        }
+        return author != null ? "✍️ " + Messages.get(lang, "food.source_manual_by", author)
+                : "✍️ " + Messages.get(lang, "food.source_manual");
     }
 
     private void handleFoodViewCallback(CallbackQuery callbackQuery, long chatId, String data) {
