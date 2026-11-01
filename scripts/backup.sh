@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Back up FoodBot's production data (everything in data/: foods.json,
-# languages.json, follows.json, favorites.json) to timestamped, gzipped tarballs, keeping the last N days.
+# languages.json, follows.json, favorites.json, shopping.json) to timestamped, gzipped tarballs, keeping the last N days.
 #
 # Run on the VPS (manually or via cron):
 #   bash /opt/foodbot/scripts/backup.sh

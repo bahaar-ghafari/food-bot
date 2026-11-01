@@ -34,6 +34,12 @@ final class BotConstants {
     static final String CB_COOK_TIME_PRESET = "ckt:";
     static final String CB_COOK_VIEW = "cv:";
     static final String CB_COOK_RESULT_PAGE = "ckrp:";
+    /** Followed by the food id: adds that dish's missing ingredients to the shopping list. */
+    static final String CB_SHOP_ADD = "shadd:";
+    static final String CB_SHOP_OPEN = "shl:open";
+    /** Followed by the item's index in the list. */
+    static final String CB_SHOP_TOGGLE = "shl:t:";
+    static final String CB_SHOP_CLEAR = "shl:clear";
     static final String GROUP_READY = "ready";
     static final String GROUP_SHOP = "shop";
     static final String[] COOK_TIME_PRESET_KEYS =

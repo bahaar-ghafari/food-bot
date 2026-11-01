@@ -337,7 +337,23 @@ class CookHandler extends FlowHandler {
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_COOK_RESULT_PAGE + ref.key() + ":" + ref.page());
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
-                new InlineKeyboardMarkup(List.of(List.of(back))));
+                new InlineKeyboardMarkup(buildCookDetailRows(foodOpt.get(), ctx, lang, back)));
+    }
+
+    /** Shopping-list buttons (only when something is missing) above the back button. */
+    List<List<InlineKeyboardButton>> buildCookDetailRows(Food food, CookResultContext cookCtx, Lang lang,
+                                                         InlineKeyboardButton back) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        if (!ctx.shopping.missingIngredients(food, cookCtx).isEmpty()) {
+            InlineKeyboardButton add = new InlineKeyboardButton(Messages.get(lang, "shop.btn_add"));
+            add.setCallbackData(CB_SHOP_ADD + food.getId());
+            rows.add(List.of(add));
+            InlineKeyboardButton view = new InlineKeyboardButton(Messages.get(lang, "shop.btn_view"));
+            view.setCallbackData(CB_SHOP_OPEN);
+            rows.add(List.of(view));
+        }
+        rows.add(List.of(back));
+        return rows;
     }
 
     String formatCookFoodDetail(Food food, CookResultContext ctx, Lang lang) {

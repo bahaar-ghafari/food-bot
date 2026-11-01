@@ -6,6 +6,7 @@ import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.FoodRepository;
+import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
@@ -36,7 +37,8 @@ public class FoodBot extends TelegramLongPollingBot {
         this.token = token;
         this.username = username;
         this.ctx = new BotContext(this::execute,superAdminChatId, feedbackChatId, new FoodRepository(),
-                new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new AiSuggestionService(anthropicApiKey),
+                new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new ShoppingListRepository(),
+                new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
     }
 
@@ -138,6 +140,12 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.awaitingSearch.remove(chatId);
             ctx.cookSessions.put(chatId, new CookSession());
             ctx.cook.sendCookTimePrompt(chatId, lang);
+        } else if (text.equalsIgnoreCase("/shopping")) {
+            ctx.addFoodSessions.remove(chatId);
+            ctx.cookSessions.remove(chatId);
+            ctx.editSessions.remove(chatId);
+            ctx.awaitingSearch.remove(chatId);
+            ctx.shopping.sendShoppingList(chatId, lang, null);
         } else if (text.equalsIgnoreCase("/feedback") || text.equals(Messages.get(lang, "btn.feedback"))) {
             ctx.addFoodSessions.remove(chatId);
             ctx.cookSessions.remove(chatId);
@@ -274,6 +282,10 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cook.handleCookResultPageCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_COOK_VIEW)) {
             ctx.cook.handleCookViewCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_SHOP_ADD)) {
+            ctx.shopping.handleAddMissingCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith("shl:")) {
+            ctx.shopping.handleListCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_FIELD)) {
             ctx.editFood.handleEditFieldCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_CATEGORY)) {

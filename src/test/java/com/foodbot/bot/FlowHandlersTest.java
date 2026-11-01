@@ -2,9 +2,11 @@ package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
+import com.foodbot.food.CookResultContext;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodRepository;
+import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.social.FollowRepository;
@@ -17,6 +19,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -50,6 +53,7 @@ class FlowHandlersTest {
                 new LanguageRepository(dir.resolve("languages.json")),
                 new FollowRepository(dir.resolve("follows.json")),
                 new FavoriteRepository(dir.resolve("favorites.json")),
+                new ShoppingListRepository(dir.resolve("shopping.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());
     }
 
@@ -253,5 +257,70 @@ class FlowHandlersTest {
 
         assertTrue(ctx.foodRepository.findById("f1").isPresent());
         assertTrue(sent.stream().noneMatch(EditMessageText.class::isInstance));
+    }
+
+    private Food addFoodWith(String id, List<String> ingredients) {
+        Food food = new Food(id, "Omelette " + id, 10, "Breakfast", ingredients, null, null, null, Lang.EN);
+        ctx.foodRepository.add(food);
+        return food;
+    }
+
+    @Test
+    void addMissingPutsOnlyIngredientsTheUserLacksOnTheList() {
+        addFoodWith("f1", List.of("egg", "milk", "flour"));
+        ctx.lastCookResults.put(5L, new CookResultContext(60, java.util.Set.of("egg"), true, null));
+
+        ctx.shopping.handleAddMissingCallback(callback(), 5L, "shadd:f1");
+
+        assertEquals(List.of("milk", "flour"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+    }
+
+    @Test
+    void addMissingWithoutACookContextChangesNothing() {
+        addFoodWith("f1", List.of("egg"));
+
+        ctx.shopping.handleAddMissingCallback(callback(), 5L, "shadd:f1");
+
+        assertTrue(ctx.shoppingListRepository.itemsOf(5L).isEmpty());
+    }
+
+    @Test
+    void cookDetailOffersShoppingButtonsOnlyWhenSomethingIsMissing() {
+        Food food = addFoodWith("f1", List.of("egg", "milk"));
+        InlineKeyboardButton back = new InlineKeyboardButton("back");
+
+        var missing = ctx.cook.buildCookDetailRows(food,
+                new CookResultContext(60, java.util.Set.of("egg"), true, null), Lang.EN, back);
+        var complete = ctx.cook.buildCookDetailRows(food,
+                new CookResultContext(60, java.util.Set.of("egg", "milk"), true, null), Lang.EN, back);
+
+        assertEquals("shadd:f1", missing.get(0).get(0).getCallbackData());
+        assertEquals("shl:open", missing.get(1).get(0).getCallbackData());
+        assertEquals(3, missing.size());
+        assertEquals(1, complete.size());
+    }
+
+    @Test
+    void togglingAndClearingUpdateTheListAndOfferClearOnlyWhenSomethingIsChecked() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        ctx.shoppingListRepository.addAll(5L, List.of("egg", "milk"));
+        assertEquals(2, ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN).size());
+
+        ctx.shopping.handleListCallback(callback(), 5L, "shl:t:0");
+        var rows = ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN);
+        assertTrue(rows.get(0).get(0).getText().startsWith("☑️"));
+        assertEquals("shl:clear", rows.get(2).get(0).getCallbackData());
+
+        ctx.shopping.handleListCallback(callback(), 5L, "shl:clear");
+        assertEquals(List.of("milk"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+    }
+
+    @Test
+    void emptyShoppingListSaysSo() {
+        ctx.shopping.sendShoppingList(5L, Lang.EN, null);
+
+        assertTrue(sentMessages().get(0).getText().contains("empty"));
     }
 }

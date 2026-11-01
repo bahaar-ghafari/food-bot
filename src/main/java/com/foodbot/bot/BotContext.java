@@ -10,6 +10,7 @@ import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.food.SearchResultContext;
+import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.social.FollowRepository;
 
@@ -28,6 +29,7 @@ class BotContext {
     final LanguageRepository languageRepository;
     final FollowRepository followRepository;
     final FavoriteRepository favoriteRepository;
+    final ShoppingListRepository shoppingListRepository;
     final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
     final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
@@ -49,10 +51,12 @@ class BotContext {
     final AddFoodHandler addFood;
     final EditFoodHandler editFood;
     final CookHandler cook;
+    final ShoppingHandler shopping;
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
-               FavoriteRepository favoriteRepository, AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
+               FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
+               AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
         this.sender = sender;
         this.superAdminChatId = superAdminChatId;
         this.feedbackChatId = feedbackChatId;
@@ -60,6 +64,7 @@ class BotContext {
         this.languageRepository = languageRepository;
         this.followRepository = followRepository;
         this.favoriteRepository = favoriteRepository;
+        this.shoppingListRepository = shoppingListRepository;
         this.aiSuggestionService = aiSuggestionService;
         this.mealDbSuggestionService = mealDbSuggestionService;
         this.ui = new FlowHandler(this);
@@ -70,5 +75,6 @@ class BotContext {
         this.addFood = new AddFoodHandler(this);
         this.editFood = new EditFoodHandler(this);
         this.cook = new CookHandler(this);
+        this.shopping = new ShoppingHandler(this);
     }
 }
