@@ -8,12 +8,12 @@
 # Tunables (env vars, with defaults):
 #   DATA_DIR        directory holding the JSON files (default: /opt/foodbot/data)
 #   BACKUP_DIR      where snapshots are written        (default: /opt/foodbot/backups)
-#   RETENTION_DAYS  delete snapshots older than this    (default: 14)
+#   RETENTION_DAYS  delete snapshots older than this    (default: 30)
 set -euo pipefail
 
 DATA_DIR="${DATA_DIR:-/opt/foodbot/data}"
 BACKUP_DIR="${BACKUP_DIR:-/opt/foodbot/backups}"
-RETENTION_DAYS="${RETENTION_DAYS:-14}"
+RETENTION_DAYS="${RETENTION_DAYS:-30}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="foodbot-data-${STAMP}.tar.gz"
 

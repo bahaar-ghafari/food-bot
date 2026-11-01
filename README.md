@@ -37,9 +37,9 @@ To deploy an update: sync the repo to the server (the deploy uses `rsync`; the G
 docker compose up -d --build
 ```
 
-**Backups:** `scripts/backup.sh` archives the whole `data/` directory to `/opt/foodbot/backups/foodbot-data-<timestamp>.tar.gz` and prunes archives older than 14 days. Run it nightly from the VPS's crontab (add it by hand with `crontab -e`):
+**Backups:** `scripts/backup.sh` archives the whole `data/` directory to `/opt/foodbot/backups/foodbot-data-<timestamp>.tar.gz` and prunes archives older than 30 days (one month). It runs nightly at 03:30 from the VPS root crontab (`crontab -e`):
 ```
-15 3 * * * mkdir -p /opt/foodbot/backups && bash /opt/foodbot/scripts/backup.sh >> /opt/foodbot/backups/backup.log 2>&1
+30 3 * * * bash /opt/foodbot/scripts/backup.sh >> /opt/foodbot/backup.log 2>&1
 ```
 Repository saves are also atomic (temp file + rename), so a crash mid-write can't leave a half-written JSON file.
 
