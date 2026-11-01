@@ -92,4 +92,33 @@ class FollowRepositoryTest {
         assertFalse(reloaded.isVisible(3L));
         assertTrue(reloaded.approve(3L, 1L));
     }
+
+    private static void runConcurrently(int n, java.util.function.IntConsumer task) throws Exception {
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(n);
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            int idx = i;
+            futures.add(pool.submit(() -> {
+                start.await();
+                task.accept(idx);
+                return null;
+            }));
+        }
+        start.countDown();
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(30, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+    }
+
+    @Test
+    void concurrentFollowsAreAllPersisted(@TempDir Path dir) throws Exception {
+        Path file = dir.resolve("f.json");
+        FollowRepository repo = new FollowRepository(file);
+        runConcurrently(50, i -> repo.follow(i + 100L, 1L));
+
+        assertEquals(50, repo.followersOf(1L).size());
+        assertEquals(50, new FollowRepository(file).followersOf(1L).size());
+    }
 }

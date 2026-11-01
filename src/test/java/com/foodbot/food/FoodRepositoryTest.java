@@ -251,4 +251,34 @@ class FoodRepositoryTest {
         assertTrue(found.isPresent());
         assertTrue(found.get().getIngredientAmounts().isEmpty());
     }
+
+    private static void runConcurrently(int n, java.util.function.IntConsumer task) throws Exception {
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(n);
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            int idx = i;
+            futures.add(pool.submit(() -> {
+                start.await();
+                task.accept(idx);
+                return null;
+            }));
+        }
+        start.countDown();
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(30, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+    }
+
+    @Test
+    void concurrentAddsAreAllPersisted(@TempDir Path tempDir) throws Exception {
+        Path file = tempDir.resolve("foods.json");
+        FoodRepository repo = new FoodRepository(file);
+        runConcurrently(50, i -> repo.add(
+                new Food("id-" + i, "Food " + i, 5, "Snack", List.of("x"), null, 1L, null, Lang.EN)));
+
+        assertEquals(50, repo.findGlobal(Lang.EN).size());
+        assertEquals(50, new FoodRepository(file).findGlobal(Lang.EN).size());
+    }
 }
