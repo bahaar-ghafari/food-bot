@@ -2,6 +2,8 @@ package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
+import com.foodbot.food.FavoriteRepository;
+import com.foodbot.food.Food;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
@@ -42,6 +44,7 @@ class FlowHandlersTest {
                 new FoodRepository(dir.resolve("foods.json")),
                 new LanguageRepository(dir.resolve("languages.json")),
                 new FollowRepository(dir.resolve("follows.json")),
+                new FavoriteRepository(dir.resolve("favorites.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());
     }
 
@@ -115,5 +118,58 @@ class FlowHandlersTest {
         assertEquals("mine", ref.key());
         assertEquals(3, ref.page());
         assertEquals("abc-123", ref.id());
+    }
+
+    private Food addFood(String id, Long owner) {
+        Food food = new Food(id, "Soup " + id, 20, "MainCourse", List.of("water"), owner, owner, null, Lang.EN);
+        ctx.foodRepository.add(food);
+        return food;
+    }
+
+    @Test
+    void detailRowShowsAnEmptyStarUntilFavorited() {
+        Food food = addFood("f1", null);
+
+        assertEquals("☆", ctx.browse.buildDetailRow(5L, Lang.EN, "global", 0, food).get(1).getText());
+        ctx.favoriteRepository.toggle(5L, "f1");
+        assertEquals("⭐", ctx.browse.buildDetailRow(5L, Lang.EN, "global", 0, food).get(1).getText());
+        assertEquals("ffav:global:0:f1", ctx.browse.buildDetailRow(5L, Lang.EN, "global", 0, food).get(1).getCallbackData());
+    }
+
+    @Test
+    void favoriteFoodsKeepsOnlyWhatTheUserCanStillSee() {
+        addFood("global", null);
+        addFood("mine", 5L);
+        addFood("theirs", 6L);
+        addFood("followed", 7L);
+        ctx.followRepository.follow(5L, 7L);
+        for (String id : List.of("global", "mine", "theirs", "followed", "deleted")) {
+            ctx.favoriteRepository.toggle(5L, id);
+        }
+
+        List<String> ids = ctx.browse.favoriteFoods(5L, Lang.EN).stream().map(Food::getId).toList();
+
+        assertEquals(List.of("global", "mine", "followed"), ids);
+        assertTrue(ctx.browse.favoriteFoods(5L, Lang.FA).isEmpty());
+    }
+
+    @Test
+    void emptyFavoritesListSaysSoInsteadOfGenericNothingHere() {
+        ctx.browse.sendFoodListPage(5L, Lang.EN, "fav", 0, null);
+
+        assertEquals(1, sentMessages().size());
+        assertTrue(sentMessages().get(0).getText().contains("No favorites yet"));
+    }
+
+    @Test
+    void favoritesListShowsStarredFoods() {
+        addFood("f1", null);
+        ctx.favoriteRepository.toggle(5L, "f1");
+
+        ctx.browse.sendFoodListPage(5L, Lang.EN, "fav", 0, null);
+
+        SendMessage message = sentMessages().get(0);
+        assertTrue(message.getText().startsWith("⭐"));
+        assertTrue(message.getReplyMarkup().toString().contains("Soup f1"));
     }
 }

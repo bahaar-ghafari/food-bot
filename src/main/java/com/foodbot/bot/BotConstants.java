@@ -13,6 +13,7 @@ final class BotConstants {
     static final String SCOPE_ALL = "all";
     static final String SCOPE_SEARCH = "search";
     static final String SCOPE_CREATED = "created";
+    static final String SCOPE_FAVORITES = "fav";
     static final String CB_SEARCH_FUZZY_YES = "srfy";
     static final String CB_SEARCH_FUZZY_NO = "srfn";
     static final String CB_SEARCH_OTHERLANG_YES = "sroy";
@@ -45,6 +46,7 @@ final class BotConstants {
     static final String CB_VIEW_FOODS_GLOBAL = "vf:global";
     static final String CB_VIEW_FOODS_ALL = "vf:all";
     static final String CB_VIEW_FOODS_CREATED = "vf:created";
+    static final String CB_VIEW_FOODS_FAVORITES = "vf:fav";
     static final String CB_VIEW_FOODS_PAGE = "vfp:";
     static final String CB_ADMIN_RELOAD = "adm:reload:";
 
@@ -82,6 +84,7 @@ final class BotConstants {
     static final String SCOPE_USER = "usr";
     static final String CB_FOOD_VIEW = "fv:";
     static final String CB_FOOD_SETTINGS = "fset:";
+    static final String CB_FOOD_FAVORITE = "ffav:";
     static final int RECIPE_STEP_CHAR_LIMIT = 150;
     static final int AMOUNT_CHAR_LIMIT = 30;
     static final String MAINTENANCE_MESSAGE =

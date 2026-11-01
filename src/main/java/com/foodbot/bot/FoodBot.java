@@ -4,6 +4,7 @@ import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookSession;
+import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
@@ -35,7 +36,7 @@ public class FoodBot extends TelegramLongPollingBot {
         this.token = token;
         this.username = username;
         this.ctx = new BotContext(this::execute,superAdminChatId, feedbackChatId, new FoodRepository(),
-                new LanguageRepository(), new FollowRepository(), new AiSuggestionService(anthropicApiKey),
+                new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
     }
 
@@ -235,7 +236,8 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (data.equals(CB_ADDFOOD_BACK)) {
             ctx.addFood.handleAddFoodBackCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_VIEW_FOODS_MINE) || data.equals(CB_VIEW_FOODS_GLOBAL)
-                || data.equals(CB_VIEW_FOODS_ALL) || data.equals(CB_VIEW_FOODS_CREATED)) {
+                || data.equals(CB_VIEW_FOODS_ALL) || data.equals(CB_VIEW_FOODS_CREATED)
+                || data.equals(CB_VIEW_FOODS_FAVORITES)) {
             ctx.browse.handleViewFoodsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_VIEW_FOODS_PAGE)) {
             ctx.browse.handleViewFoodsPageCallback(callbackQuery, chatId, data);
@@ -294,6 +296,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.editFood.handleDeleteConfirmNoCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_DELETE_START)) {
             ctx.editFood.handleDeleteStartCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_FOOD_FAVORITE)) {
+            ctx.browse.handleFavoriteToggleCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_SETTINGS)) {
             ctx.browse.handleFoodSettingsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_VIEW)) {

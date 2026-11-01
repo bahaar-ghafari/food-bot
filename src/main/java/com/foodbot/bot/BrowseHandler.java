@@ -8,6 +8,7 @@ import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
 import com.foodbot.lang.TimeFormat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -58,7 +59,8 @@ class BrowseHandler extends FlowHandler {
         answerCallback(callbackQuery.getId(), null, false);
         String scope = data.equals(CB_VIEW_FOODS_MINE) ? SCOPE_MINE
                 : data.equals(CB_VIEW_FOODS_GLOBAL) ? SCOPE_GLOBAL
-                : data.equals(CB_VIEW_FOODS_CREATED) ? SCOPE_CREATED : SCOPE_ALL;
+                : data.equals(CB_VIEW_FOODS_CREATED) ? SCOPE_CREATED
+                : data.equals(CB_VIEW_FOODS_FAVORITES) ? SCOPE_FAVORITES : SCOPE_ALL;
         sendFoodListPage(chatId, lang, scope, 0, null);
     }
 
@@ -79,6 +81,9 @@ class BrowseHandler extends FlowHandler {
             SearchResultContext ctx = lastSearchResults.get(chatId);
             foods = ctx != null ? ctx.getFoods() : List.of();
             headerText = Messages.get(lang, "search.results_header", ctx != null ? ctx.getQuery() : "");
+        } else if (scope.equals(SCOPE_FAVORITES)) {
+            foods = favoriteFoods(chatId, lang);
+            headerText = Messages.get(lang, "foods.header.favorites");
         } else if (scope.startsWith(SCOPE_USER)) {
             long userId = Long.parseLong(scope.substring(SCOPE_USER.length()));
             // a follow can outlive its own approval (e.g. unfollowed in another message)
@@ -97,7 +102,8 @@ class BrowseHandler extends FlowHandler {
         }
 
         if (foods.isEmpty()) {
-            sendWithMainMenu(chatId, lang, Messages.get(lang, "foods.none"));
+            sendWithMainMenu(chatId, lang,
+                    Messages.get(lang, scope.equals(SCOPE_FAVORITES) ? "favorites.none" : "foods.none"));
             return;
         }
 
@@ -149,6 +155,49 @@ class BrowseHandler extends FlowHandler {
         message.setReplyMarkup(markup);
         try {
             execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Starred foods that this chat can still see (global, their own, or a followed user's) and
+     * that are in {@code lang}, oldest star first. Deleted foods and lost access drop out quietly.
+     */
+    List<Food> favoriteFoods(long chatId, Lang lang) {
+        List<Food> foods = new ArrayList<>();
+        for (String id : favoriteRepository.idsOf(chatId)) {
+            foodRepository.findById(id)
+                    .filter(food -> food.getLanguage() == lang)
+                    .filter(food -> canView(food, chatId))
+                    .ifPresent(foods::add);
+        }
+        return foods;
+    }
+
+    private boolean canView(Food food, long chatId) {
+        Long owner = food.getOwnerChatId();
+        return owner == null || owner == chatId || followRepository.isFollowing(chatId, owner);
+    }
+
+    void handleFavoriteToggleCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        PagedRef ref = parsePagedRef(data.substring(CB_FOOD_FAVORITE.length()));
+        Optional<Food> foodOpt = foodRepository.findById(ref.id());
+        if (foodOpt.isEmpty() || !canView(foodOpt.get(), chatId)) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        boolean nowFavorite = favoriteRepository.toggle(chatId, ref.id());
+        answerCallback(callbackQuery.getId(),
+                Messages.get(lang, nowFavorite ? "favorites.added" : "favorites.removed"), false);
+        List<InlineKeyboardButton> row = buildDetailRow(chatId, lang, ref.key(), ref.page(), foodOpt.get());
+        EditMessageReplyMarkup edit = new EditMessageReplyMarkup();
+        edit.setChatId(String.valueOf(chatId));
+        edit.setMessageId(callbackQuery.getMessage().getMessageId());
+        edit.setReplyMarkup(new InlineKeyboardMarkup(List.of(row)));
+        try {
+            execute(edit);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -216,6 +265,10 @@ class BrowseHandler extends FlowHandler {
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_VIEW_FOODS_PAGE + scope + ":" + page);
         row.add(back);
+        boolean favorite = favoriteRepository.isFavorite(chatId, food.getId());
+        InlineKeyboardButton star = new InlineKeyboardButton(favorite ? "⭐" : "☆");
+        star.setCallbackData(CB_FOOD_FAVORITE + scope + ":" + page + ":" + food.getId());
+        row.add(star);
         if (canModify(food, chatId)) {
             InlineKeyboardButton settings = new InlineKeyboardButton(Messages.get(lang, "btn.settings"));
             settings.setCallbackData(CB_FOOD_SETTINGS + scope + ":" + page + ":" + food.getId());

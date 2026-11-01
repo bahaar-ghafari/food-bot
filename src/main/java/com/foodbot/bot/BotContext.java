@@ -6,6 +6,7 @@ import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookResultContext;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.EditFoodSession;
+import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.food.SearchResultContext;
@@ -26,6 +27,7 @@ class BotContext {
     final FoodRepository foodRepository;
     final LanguageRepository languageRepository;
     final FollowRepository followRepository;
+    final FavoriteRepository favoriteRepository;
     final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
     final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
@@ -50,13 +52,14 @@ class BotContext {
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
-               AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
+               FavoriteRepository favoriteRepository, AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
         this.sender = sender;
         this.superAdminChatId = superAdminChatId;
         this.feedbackChatId = feedbackChatId;
         this.foodRepository = foodRepository;
         this.languageRepository = languageRepository;
         this.followRepository = followRepository;
+        this.favoriteRepository = favoriteRepository;
         this.aiSuggestionService = aiSuggestionService;
         this.mealDbSuggestionService = mealDbSuggestionService;
         this.ui = new FlowHandler(this);

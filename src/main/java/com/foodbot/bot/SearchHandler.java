@@ -162,8 +162,10 @@ class SearchHandler extends FlowHandler {
         mine.setCallbackData(CB_VIEW_FOODS_MINE);
         InlineKeyboardButton created = new InlineKeyboardButton(Messages.get(lang, "scope.created"));
         created.setCallbackData(CB_VIEW_FOODS_CREATED);
+        InlineKeyboardButton favorites = new InlineKeyboardButton(Messages.get(lang, "scope.favorites"));
+        favorites.setCallbackData(CB_VIEW_FOODS_FAVORITES);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "search.ask"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(global, mine), List.of(created))));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(global, mine), List.of(created, favorites))));
         try {
             execute(message);
         } catch (TelegramApiException e) {

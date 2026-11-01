@@ -7,6 +7,7 @@ import com.foodbot.food.AmountEditorState;
 import com.foodbot.food.CookResultContext;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.EditFoodSession;
+import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodCategories;
 import com.foodbot.food.FoodNameTranslations;
@@ -55,6 +56,7 @@ class FlowHandler {
     protected final FoodRepository foodRepository;
     protected final LanguageRepository languageRepository;
     protected final FollowRepository followRepository;
+    protected final FavoriteRepository favoriteRepository;
     protected final Map<Long, AddFoodSession> addFoodSessions;
     protected final Map<Long, CookSession> cookSessions;
     protected final Map<Long, EditFoodSession> editSessions;
@@ -75,6 +77,7 @@ class FlowHandler {
         this.foodRepository = ctx.foodRepository;
         this.languageRepository = ctx.languageRepository;
         this.followRepository = ctx.followRepository;
+        this.favoriteRepository = ctx.favoriteRepository;
         this.addFoodSessions = ctx.addFoodSessions;
         this.cookSessions = ctx.cookSessions;
         this.editSessions = ctx.editSessions;
