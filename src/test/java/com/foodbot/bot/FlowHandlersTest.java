@@ -13,6 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -171,5 +175,59 @@ class FlowHandlersTest {
         SendMessage message = sentMessages().get(0);
         assertTrue(message.getText().startsWith("⭐"));
         assertTrue(message.getReplyMarkup().toString().contains("Soup f1"));
+    }
+
+    private CallbackQuery callback() {
+        Message message = new Message();
+        message.setMessageId(42);
+        CallbackQuery query = new CallbackQuery();
+        query.setId("cb1");
+        query.setMessage(message);
+        return query;
+    }
+
+    @Test
+    void deleteStartAsksForConfirmationAndKeepsTheFood() {
+        addFood("f1", 5L);
+        ctx.languageRepository.set(5L, Lang.EN);
+
+        ctx.editFood.handleDeleteStartCallback(callback(), 5L, "fd:mine:0:f1");
+
+        assertTrue(ctx.foodRepository.findById("f1").isPresent());
+        EditMessageText edit = sent.stream().filter(EditMessageText.class::isInstance)
+                .map(EditMessageText.class::cast).findFirst().orElseThrow();
+        assertTrue(edit.getText().contains("permanent"));
+        String buttons = ((InlineKeyboardMarkup) edit.getReplyMarkup()).getKeyboard().toString();
+        assertTrue(buttons.contains("fdy:f1"));
+        assertTrue(buttons.contains("fdn:mine:0:f1"));
+    }
+
+    @Test
+    void deleteConfirmYesRemovesTheFood() {
+        addFood("f1", 5L);
+
+        ctx.editFood.handleDeleteConfirmYesCallback(callback(), 5L, "fdy:f1");
+
+        assertTrue(ctx.foodRepository.findById("f1").isEmpty());
+    }
+
+    @Test
+    void deleteConfirmNoKeepsTheFood() {
+        addFood("f1", 5L);
+
+        ctx.editFood.handleDeleteConfirmNoCallback(callback(), 5L, "fdn:mine:0:f1");
+
+        assertTrue(ctx.foodRepository.findById("f1").isPresent());
+    }
+
+    @Test
+    void nonOwnerCannotStartOrConfirmDelete() {
+        addFood("f1", 5L);
+
+        ctx.editFood.handleDeleteStartCallback(callback(), 6L, "fd:mine:0:f1");
+        ctx.editFood.handleDeleteConfirmYesCallback(callback(), 6L, "fdy:f1");
+
+        assertTrue(ctx.foodRepository.findById("f1").isPresent());
+        assertTrue(sent.stream().noneMatch(EditMessageText.class::isInstance));
     }
 }
