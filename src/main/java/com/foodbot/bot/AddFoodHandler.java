@@ -60,6 +60,54 @@ class AddFoodHandler extends FlowHandler {
                 Messages.get(lang, "addfood.ask_category"), session.getKeyboardMessageId(), back);
     }
 
+    void sendAddFoodPhotoPrompt(long chatId, AddFoodSession session, Lang lang) {
+        InlineKeyboardButton skip = new InlineKeyboardButton(Messages.get(lang, "addfood.photo_skip"));
+        skip.setCallbackData(CB_ADDFOOD_PHOTO_SKIP);
+        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
+        back.setCallbackData(CB_ADDFOOD_BACK);
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        rows.add(List.of(skip));
+        if (session.getPhotoFileId() != null) {
+            InlineKeyboardButton remove = new InlineKeyboardButton(Messages.get(lang, "addfood.photo_remove"));
+            remove.setCallbackData(CB_ADDFOOD_PHOTO_REMOVE);
+            rows.add(List.of(remove));
+        }
+        rows.add(List.of(back));
+        sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.ask_photo"), new InlineKeyboardMarkup(rows));
+    }
+
+    void handleAddFoodPhoto(long chatId, String fileId, Lang lang) {
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null) {
+            return;
+        }
+        if (session.getStep() != AddFoodSession.Step.AWAITING_PHOTO) {
+            send(chatId, Messages.get(lang, "addfood.photo_not_now"));
+            return;
+        }
+        session.setPhotoFileId(fileId);
+        session.setReturnToReview(false);
+        session.setStep(AddFoodSession.Step.REVIEW);
+        renderAddFoodReview(chatId, session, lang);
+    }
+
+    /** Skip keeps whatever photo is already attached (none, on a first pass); Remove drops it. */
+    void handleAddFoodPhotoButtonCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null || session.getStep() != AddFoodSession.Step.AWAITING_PHOTO) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        if (data.equals(CB_ADDFOOD_PHOTO_REMOVE)) {
+            session.setPhotoFileId(null);
+        }
+        session.setReturnToReview(false);
+        session.setStep(AddFoodSession.Step.REVIEW);
+        answerCallback(callbackQuery.getId(), null, false);
+        renderAddFoodReview(chatId, session, lang);
+    }
+
     void handleAddFoodScopeCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
         AddFoodSession session = addFoodSessions.get(chatId);
@@ -124,9 +172,13 @@ class AddFoodHandler extends FlowHandler {
                 session.setEditingRecipeStepIndex(null);
                 renderAddFoodAmountsManager(chatId, session, lang);
                 break;
-            case REVIEW:
+            case AWAITING_PHOTO:
                 session.setStep(AddFoodSession.Step.AWAITING_RECIPE);
                 renderAddFoodRecipeManager(chatId, session, lang);
+                break;
+            case REVIEW:
+                session.setStep(AddFoodSession.Step.AWAITING_PHOTO);
+                sendAddFoodPhotoPrompt(chatId, session, lang);
                 break;
             default:
                 break;
@@ -215,6 +267,10 @@ class AddFoodHandler extends FlowHandler {
                     session.getRecipeSteps().add(text);
                 }
                 renderAddFoodRecipeManager(chatId, session, lang);
+                break;
+
+            case AWAITING_PHOTO:
+                send(chatId, Messages.get(lang, "addfood.photo_send_or_skip"));
                 break;
 
             case REVIEW:
@@ -384,11 +440,17 @@ class AddFoodHandler extends FlowHandler {
             answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
             return;
         }
+        boolean fromReview = session.isReturnToReview();
         session.setReturnToReview(false);
         session.setEditingRecipeStepIndex(null);
-        session.setStep(AddFoodSession.Step.REVIEW);
         answerCallback(callbackQuery.getId(), null, false);
-        renderAddFoodReview(chatId, session, lang);
+        if (fromReview) {
+            session.setStep(AddFoodSession.Step.REVIEW);
+            renderAddFoodReview(chatId, session, lang);
+        } else {
+            session.setStep(AddFoodSession.Step.AWAITING_PHOTO);
+            sendAddFoodPhotoPrompt(chatId, session, lang);
+        }
     }
 
     String formatAddFoodReview(AddFoodSession session, Lang lang) {
@@ -404,7 +466,9 @@ class AddFoodHandler extends FlowHandler {
                 + "🏷️ " + categoryLabel(session.getCategory(), lang) + "\n"
                 + "⏱️ " + Messages.get(lang, "food.detail_time", timeText) + "\n"
                 + "🧾 " + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
-                + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n";
+                + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n"
+                + "📷 " + Messages.get(lang, session.getPhotoFileId() != null ? "addfood.photo_attached"
+                        : "addfood.photo_none") + "\n";
     }
 
     void renderAddFoodReview(long chatId, AddFoodSession session, Lang lang) {
@@ -418,6 +482,8 @@ class AddFoodHandler extends FlowHandler {
         editIngredients.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "ingredients");
         InlineKeyboardButton editRecipe = new InlineKeyboardButton(Messages.get(lang, "edit.field.recipe"));
         editRecipe.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "recipe");
+        InlineKeyboardButton editPhoto = new InlineKeyboardButton(Messages.get(lang, "edit.field.photo"));
+        editPhoto.setCallbackData(CB_ADDFOOD_REVIEW_EDIT + "photo");
         InlineKeyboardButton confirm = new InlineKeyboardButton(Messages.get(lang, "addfood.confirm_save"));
         confirm.setCallbackData(CB_ADDFOOD_CONFIRM);
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
@@ -425,7 +491,7 @@ class AddFoodHandler extends FlowHandler {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(List.of(
                 List.of(editName, editTime),
                 List.of(editCategory, editIngredients),
-                List.of(editRecipe),
+                List.of(editRecipe, editPhoto),
                 List.of(confirm),
                 List.of(back)));
         sendOrEditAddFood(chatId, session, formatAddFoodReview(session, lang), markup);
@@ -467,6 +533,11 @@ class AddFoodHandler extends FlowHandler {
                 session.setEditingRecipeStepIndex(null);
                 renderAddFoodRecipeManager(chatId, session, lang);
                 break;
+            case "photo":
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.AWAITING_PHOTO);
+                sendAddFoodPhotoPrompt(chatId, session, lang);
+                break;
             default:
                 break;
         }
@@ -487,7 +558,8 @@ class AddFoodHandler extends FlowHandler {
         Map<String, String> amounts = filterAmounts(session.getIngredientAmounts(), session.getSelectedIngredients());
         Food food = new Food(UUID.randomUUID().toString(), session.getName(), session.getPrepTimeMinutes(),
                 session.getCategory(), new ArrayList<>(session.getSelectedIngredients()), session.getOwnerChatId(),
-                chatId, RecipeSteps.join(session.getRecipeSteps()), lang, amounts, Food.SOURCE_BOT, authorDisplayName(from));
+                chatId, RecipeSteps.join(session.getRecipeSteps()), lang, amounts, Food.SOURCE_BOT, authorDisplayName(from),
+                session.getPhotoFileId());
         foodRepository.add(food);
         clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         addFoodSessions.remove(chatId);
@@ -499,6 +571,7 @@ class AddFoodHandler extends FlowHandler {
         String who = authorName != null ? authorName : String.valueOf(authorChatId);
         for (long follower : followRepository.followersOf(authorChatId)) {
             Lang followerLang = lang(follower);
+            sendFoodPhoto(follower, food);
             send(follower, Messages.get(followerLang, "friends.new_recipe", who) + "\n\n"
                     + ctx.browse.formatFoodDetail(food, followerLang));
         }

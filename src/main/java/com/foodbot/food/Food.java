@@ -20,6 +20,8 @@ public class Food {
     private final String source;
     /** Display name of whoever the recipe belongs to; null when unknown. */
     private final String authorName;
+    /** Telegram {@code file_id} of the recipe's photo; null when it has none. */
+    private final String photoFileId;
 
     public static final String SOURCE_BOT = "bot";
     public static final String SOURCE_MANUAL = "manual";
@@ -40,6 +42,13 @@ public class Food {
     public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
                 Long ownerChatId, Long createdByChatId, String recipe, Lang language,
                 Map<String, String> ingredientAmounts, String source, String authorName) {
+        this(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe, language,
+                ingredientAmounts, source, authorName, null);
+    }
+
+    public Food(String id, String name, int prepTimeMinutes, String category, List<String> ingredients,
+                Long ownerChatId, Long createdByChatId, String recipe, Lang language,
+                Map<String, String> ingredientAmounts, String source, String authorName, String photoFileId) {
         this.id = id;
         this.name = name;
         this.prepTimeMinutes = prepTimeMinutes;
@@ -52,6 +61,7 @@ public class Food {
         this.ingredientAmounts = ingredientAmounts != null ? ingredientAmounts : Map.of();
         this.source = source;
         this.authorName = authorName;
+        this.photoFileId = photoFileId;
     }
 
     public String getId() {
@@ -102,6 +112,10 @@ public class Food {
         return authorName;
     }
 
+    public String getPhotoFileId() {
+        return photoFileId;
+    }
+
     /**
      * Whether this food was added through the bot's /addfood flow. Foods saved before {@code source}
      * existed fall back on {@code createdByChatId}, which only the bot ever sets - foods typed
@@ -113,7 +127,12 @@ public class Food {
 
     public Food withProvenance(String source, String authorName) {
         return new Food(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe,
-                language, ingredientAmounts, source, authorName);
+                language, ingredientAmounts, source, authorName, photoFileId);
+    }
+
+    public Food withPhoto(String photoFileId) {
+        return new Food(id, name, prepTimeMinutes, category, ingredients, ownerChatId, createdByChatId, recipe,
+                language, ingredientAmounts, source, authorName, photoFileId);
     }
 
     @Override

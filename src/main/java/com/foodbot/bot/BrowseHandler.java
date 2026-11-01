@@ -31,6 +31,7 @@ class BrowseHandler extends FlowHandler {
     }
 
     void sendFoodDetailMessage(long chatId, Lang lang, String scope, int page, Food food) {
+        sendFoodPhoto(chatId, food);
         String text = formatFoodDetail(food, lang);
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
         message.setReplyMarkup(buildDetailMarkup(chatId, lang, scope, page, food));
@@ -319,6 +320,7 @@ class BrowseHandler extends FlowHandler {
         }
         Food food = foodOpt.get();
         answerCallback(callbackQuery.getId(), null, false);
+        sendFoodPhoto(chatId, food);
         String text = formatFoodDetail(food, lang);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
                 buildDetailMarkup(chatId, lang, ref.key(), ref.page(), food));

@@ -281,4 +281,18 @@ class FoodRepositoryTest {
         assertEquals(50, repo.findGlobal(Lang.EN).size());
         assertEquals(50, new FoodRepository(file).findGlobal(Lang.EN).size());
     }
+
+    @Test
+    void editingAFoodKeepsItsPhotoAcrossReload(@TempDir Path tempDir) {
+        FoodRepository repo = newRepo(tempDir);
+        Food food = new Food("id-p", "Soup", 20, "MainCourse", List.of("water"), null, 111L, null, Lang.EN)
+                .withPhoto("FILE1");
+        repo.add(food);
+
+        // edit flows rebuild the Food from its visible fields, so the photo is absent on the update
+        repo.update(new Food("id-p", "Better soup", 20, "MainCourse", List.of("water"), null, 111L, null, Lang.EN));
+
+        assertEquals("FILE1", repo.findById("id-p").orElseThrow().getPhotoFileId());
+        assertEquals("FILE1", newRepo(tempDir).findById("id-p").orElseThrow().getPhotoFileId());
+    }
 }

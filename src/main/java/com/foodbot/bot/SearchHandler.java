@@ -114,6 +114,7 @@ class SearchHandler extends FlowHandler {
         }
         answerCallback(callbackQuery.getId(), null, false);
         lastSearchResults.put(chatId, new SearchResultContext(List.of(food), query == null ? "" : query));
+        sendFoodPhoto(chatId, food);
         String text = ctx.browse.formatFoodDetail(food, lang);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
                 ctx.browse.buildDetailMarkup(chatId, lang, SCOPE_SEARCH, 0, food));
@@ -138,6 +139,7 @@ class SearchHandler extends FlowHandler {
         }
         answerCallback(callbackQuery.getId(), null, false);
         lastSearchResults.put(chatId, new SearchResultContext(List.of(food), query == null ? "" : query));
+        sendFoodPhoto(chatId, food);
         String text = ctx.browse.formatFoodDetail(food, food.getLanguage());
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
                 ctx.browse.buildDetailMarkup(chatId, lang, SCOPE_SEARCH, 0, food));

@@ -2,6 +2,7 @@ package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
+import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookResultContext;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -37,6 +39,7 @@ class FlowHandlersTest {
     private static final long FEEDBACK_CHAT = 99L;
 
     private final List<BotApiMethod<?>> sent = new ArrayList<>();
+    private final List<SendPhoto> photos = new ArrayList<>();
     private BotContext ctx;
 
     @BeforeEach
@@ -45,6 +48,12 @@ class FlowHandlersTest {
             @Override
             public <T extends Serializable, M extends BotApiMethod<T>> T execute(M method) {
                 sent.add(method);
+                return null;
+            }
+
+            @Override
+            public Message sendPhoto(SendPhoto photo) {
+                photos.add(photo);
                 return null;
             }
         };
@@ -322,5 +331,66 @@ class FlowHandlersTest {
         ctx.shopping.sendShoppingList(5L, Lang.EN, null);
 
         assertTrue(sentMessages().get(0).getText().contains("empty"));
+    }
+
+    @Test
+    void photoIsSentBeforeTheDetailOnlyWhenTheFoodHasOne() {
+        Food plain = addFood("p1", null);
+        Food pictured = addFood("p2", null).withPhoto("FILE123");
+
+        ctx.browse.sendFoodDetailMessage(5L, Lang.EN, "all", 0, plain);
+        assertTrue(photos.isEmpty());
+
+        ctx.browse.sendFoodDetailMessage(5L, Lang.EN, "all", 0, pictured);
+        assertEquals(1, photos.size());
+        assertEquals("5", photos.get(0).getChatId());
+        assertEquals("FILE123", photos.get(0).getPhoto().getAttachName().replace("attach://", ""));
+    }
+
+    @Test
+    void addFoodPhotoStepStoresTheFileIdAndMovesToReview() {
+        AddFoodSession session = new AddFoodSession();
+        session.setName("Soup");
+        session.setCategory("MainCourse");
+        session.setStep(AddFoodSession.Step.AWAITING_PHOTO);
+        session.setKeyboardMessageId(42); // the recorder returns no Message, so edit in place
+        ctx.addFoodSessions.put(5L, session);
+
+        ctx.addFood.handleAddFoodPhoto(5L, "FILE9", Lang.EN);
+
+        assertEquals("FILE9", session.getPhotoFileId());
+        assertEquals(AddFoodSession.Step.REVIEW, session.getStep());
+    }
+
+    @Test
+    void addFoodPhotoOutsideThePhotoStepIsRejected() {
+        AddFoodSession session = new AddFoodSession();
+        session.setStep(AddFoodSession.Step.AWAITING_NAME);
+        ctx.addFoodSessions.put(5L, session);
+
+        ctx.addFood.handleAddFoodPhoto(5L, "FILE9", Lang.EN);
+
+        assertNull(session.getPhotoFileId());
+        assertEquals(AddFoodSession.Step.AWAITING_NAME, session.getStep());
+        assertEquals(1, sentMessages().size());
+    }
+
+    @Test
+    void savedFoodKeepsThePhotoAndFollowersGetItToo() {
+        ctx.languageRepository.set(6L, Lang.EN);
+        ctx.followRepository.follow(6L, 5L);
+        AddFoodSession session = new AddFoodSession();
+        session.setName("Soup");
+        session.setPrepTimeMinutes(10);
+        session.setCategory("MainCourse");
+        session.getSelectedIngredients().add("water");
+        session.setPhotoFileId("FILE7");
+
+        ctx.addFood.finalizeNewFood(5L, session, Lang.EN, null);
+
+        Food saved = ctx.foodRepository.findCreatedBy(5L, Lang.EN).get(0);
+        assertEquals("FILE7", saved.getPhotoFileId());
+        assertEquals(1, photos.size());
+        assertEquals("6", photos.get(0).getChatId());
     }
 }

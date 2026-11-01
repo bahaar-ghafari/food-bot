@@ -29,9 +29,11 @@ import com.foodbot.social.FollowRepository;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -545,6 +547,19 @@ class FlowHandler {
         message.setReplyMarkup(mainMenuKeyboard(lang, chatId));
         try {
             execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Sends the recipe's photo, if it has one; a stale or rejected file_id must not block the text that follows. */
+    void sendFoodPhoto(long chatId, Food food) {
+        if (food.getPhotoFileId() == null) {
+            return;
+        }
+        SendPhoto photo = new SendPhoto(String.valueOf(chatId), new InputFile(food.getPhotoFileId()));
+        try {
+            ctx.sender.sendPhoto(photo);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

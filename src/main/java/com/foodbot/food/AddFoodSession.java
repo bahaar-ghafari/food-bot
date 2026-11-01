@@ -10,7 +10,7 @@ import java.util.Set;
 public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState, AmountEditorState {
     public enum Step {
         ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_AMOUNTS,
-        AWAITING_RECIPE, REVIEW
+        AWAITING_RECIPE, AWAITING_PHOTO, REVIEW
     }
 
     private Step step = Step.ASK_SCOPE;
@@ -19,6 +19,7 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
     private String category;
     private Long ownerChatId;
     private final List<String> recipeSteps = new ArrayList<>();
+    private String photoFileId;
     private Integer editingRecipeStepIndex;
     private boolean returnToReview;
     private final List<String> candidateIngredients = new ArrayList<>();
@@ -67,6 +68,14 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
 
     public void setOwnerChatId(Long ownerChatId) {
         this.ownerChatId = ownerChatId;
+    }
+
+    public String getPhotoFileId() {
+        return photoFileId;
+    }
+
+    public void setPhotoFileId(String photoFileId) {
+        this.photoFileId = photoFileId;
     }
 
     public List<String> getRecipeSteps() {

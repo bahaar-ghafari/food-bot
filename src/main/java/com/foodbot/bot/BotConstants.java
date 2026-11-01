@@ -74,6 +74,8 @@ final class BotConstants {
     static final String CB_ADDFOOD_RECIPE_STEP = "afrs:";
     static final String CB_ADDFOOD_AMOUNT = "afam:";
     static final String CB_ADDFOOD_AMOUNT_DONE = "afam:done";
+    static final String CB_ADDFOOD_PHOTO_SKIP = "afpskip";
+    static final String CB_ADDFOOD_PHOTO_REMOVE = "afpdel";
     static final String CB_ADDFOOD_BACK = "afback";
     static final String CB_ADDFOOD_CANCEL = "afcancel";
     static final String CB_ADDFOOD_REVIEW_EDIT = "afrv:";

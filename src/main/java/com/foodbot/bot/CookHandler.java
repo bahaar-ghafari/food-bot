@@ -333,6 +333,7 @@ class CookHandler extends FlowHandler {
             return;
         }
         answerCallback(callbackQuery.getId(), null, false);
+        sendFoodPhoto(chatId, foodOpt.get());
         String text = formatCookFoodDetail(foodOpt.get(), ctx, lang);
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_COOK_RESULT_PAGE + ref.key() + ":" + ref.page());

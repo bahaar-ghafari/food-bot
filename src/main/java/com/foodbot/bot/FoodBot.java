@@ -12,9 +12,13 @@ import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
 import com.foodbot.social.FollowRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -36,7 +40,18 @@ public class FoodBot extends TelegramLongPollingBot {
     public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId, String anthropicApiKey) {
         this.token = token;
         this.username = username;
-        this.ctx = new BotContext(this::execute,superAdminChatId, feedbackChatId, new FoodRepository(),
+        this.ctx = new BotContext(new ApiExecutor() {
+            @Override
+            public <T extends java.io.Serializable, M extends BotApiMethod<T>> T execute(M method)
+                    throws TelegramApiException {
+                return FoodBot.this.execute(method);
+            }
+
+            @Override
+            public Message sendPhoto(SendPhoto photo) throws TelegramApiException {
+                return FoodBot.this.execute(photo);
+            }
+        }, superAdminChatId, feedbackChatId, new FoodRepository(),
                 new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new ShoppingListRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
@@ -81,6 +96,10 @@ public class FoodBot extends TelegramLongPollingBot {
             } else {
                 handleCallback(callbackQuery);
             }
+            return;
+        }
+        if (update.hasMessage() && update.getMessage().hasPhoto()) {
+            handlePhotoMessage(update.getMessage());
             return;
         }
         if (!update.hasMessage() || !update.getMessage().hasText()) {
@@ -204,6 +223,17 @@ public class FoodBot extends TelegramLongPollingBot {
         }
     }
 
+    private void handlePhotoMessage(Message message) {
+        long chatId = message.getChatId();
+        Lang lang = ctx.languageRepository.get(chatId);
+        if (lang == null || !ctx.addFoodSessions.containsKey(chatId)) {
+            return;
+        }
+        // Telegram sends several sizes of the same photo; the last is the largest
+        List<PhotoSize> sizes = message.getPhoto();
+        ctx.addFood.handleAddFoodPhoto(chatId, sizes.get(sizes.size() - 1).getFileId(), lang);
+    }
+
     private void handleLanguageCallback(CallbackQuery callbackQuery) {
         long chatId = callbackQuery.getMessage().getChatId();
         String code = callbackQuery.getData().substring(CB_LANG.length());
@@ -264,6 +294,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.addFood.handleAddFoodRecipeDoneCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_RECIPE_STEP)) {
             ctx.addFood.handleAddFoodRecipeStepCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_ADDFOOD_PHOTO_SKIP) || data.equals(CB_ADDFOOD_PHOTO_REMOVE)) {
+            ctx.addFood.handleAddFoodPhotoButtonCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_REVIEW_EDIT)) {
             ctx.addFood.handleAddFoodReviewEditCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_ADDFOOD_CONFIRM)) {

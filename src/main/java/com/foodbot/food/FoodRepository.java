@@ -49,8 +49,10 @@ public class FoodRepository {
             if (existing.getId().equals(updated.getId())) {
                 // edits rebuild the Food from its visible fields, so carry provenance over
                 boolean lacksProvenance = updated.getSource() == null && updated.getAuthorName() == null;
-                foods.set(i, lacksProvenance
-                        ? updated.withProvenance(existing.getSource(), existing.getAuthorName()) : updated);
+                Food merged = lacksProvenance
+                        ? updated.withProvenance(existing.getSource(), existing.getAuthorName()) : updated;
+                // same for the photo: no edit flow touches it, so a rebuilt Food must not drop it
+                foods.set(i, merged.getPhotoFileId() == null ? merged.withPhoto(existing.getPhotoFileId()) : merged);
                 save();
                 return;
             }
@@ -152,7 +154,8 @@ public class FoodRepository {
                 language = (language == null) ? inferLanguage(food.getName()) : language;
                 result.add(new Food(id, food.getName(), food.getPrepTimeMinutes(), food.getCategory(),
                         food.getIngredients(), food.getOwnerChatId(), food.getCreatedByChatId(), food.getRecipe(),
-                        language, food.getIngredientAmounts(), food.getSource(), food.getAuthorName()));
+                        language, food.getIngredientAmounts(), food.getSource(), food.getAuthorName(),
+                        food.getPhotoFileId()));
                 changed = true;
             } else {
                 result.add(food);
