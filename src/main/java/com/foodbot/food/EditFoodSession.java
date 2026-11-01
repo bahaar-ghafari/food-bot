@@ -9,12 +9,18 @@ import java.util.Set;
 
 public class EditFoodSession implements IngredientPickerState, RecipeStepEditorState, AmountEditorState {
     public enum Step {
-        CHOOSING_FIELD, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS, EDITING_AMOUNTS,
-        EDITING_RECIPE
+        REVIEW, EDITING_NAME, EDITING_TIME, EDITING_CATEGORY, EDITING_INGREDIENTS, EDITING_AMOUNTS,
+        EDITING_RECIPE, EDITING_PHOTO
     }
 
     private final String foodId;
-    private Step step = Step.CHOOSING_FIELD;
+    private Step step = Step.REVIEW;
+    private String name;
+    private int prepTimeMinutes;
+    private String category;
+    private String photoFileId;
+    /** Callback that leaves the editor without saving (the Settings screen it was opened from). */
+    private String exitCallback;
     private final List<String> recipeSteps = new ArrayList<>();
     private Integer editingRecipeStepIndex;
     private final List<String> candidateIngredients = new ArrayList<>();
@@ -39,6 +45,46 @@ public class EditFoodSession implements IngredientPickerState, RecipeStepEditorS
 
     public void setStep(Step step) {
         this.step = step;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getPrepTimeMinutes() {
+        return prepTimeMinutes;
+    }
+
+    public void setPrepTimeMinutes(int prepTimeMinutes) {
+        this.prepTimeMinutes = prepTimeMinutes;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getPhotoFileId() {
+        return photoFileId;
+    }
+
+    public void setPhotoFileId(String photoFileId) {
+        this.photoFileId = photoFileId;
+    }
+
+    public String getExitCallback() {
+        return exitCallback;
+    }
+
+    public void setExitCallback(String exitCallback) {
+        this.exitCallback = exitCallback;
     }
 
     public List<String> getRecipeSteps() {

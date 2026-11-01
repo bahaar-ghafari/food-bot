@@ -4,6 +4,7 @@ import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookResultContext;
+import com.foodbot.food.EditFoodSession;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodRepository;
@@ -434,5 +435,148 @@ class FlowHandlersTest {
         sent.clear();
         ctx.follow.sendDigests();
         assertTrue(sent.isEmpty());
+    }
+
+    private EditFoodSession startEdit(String id, long chat) {
+        ctx.languageRepository.set(chat, Lang.EN);
+        ctx.editFood.handleEditStartCallback(callback(), chat, "fe:mine:0:" + id);
+        return ctx.editSessions.get(chat);
+    }
+
+    @Test
+    void editStartShowsReviewScreenWithoutChangingAnything() {
+        addFood("f1", 5L);
+
+        EditFoodSession session = startEdit("f1", 5L);
+
+        assertEquals(EditFoodSession.Step.REVIEW, session.getStep());
+        EditMessageText review = sent.stream().filter(EditMessageText.class::isInstance)
+                .map(EditMessageText.class::cast).findFirst().orElseThrow();
+        assertTrue(review.getText().contains("Soup f1"));
+        String buttons = ((InlineKeyboardMarkup) review.getReplyMarkup()).getKeyboard().toString();
+        assertTrue(buttons.contains("fesave"));
+        assertTrue(buttons.contains("fef:photo"));
+    }
+
+    @Test
+    void editingSeveralFieldsIsOnlySavedOnSave() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:name");
+        ctx.editFood.handleEditText(5L, "Stew", Lang.EN);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:time");
+        ctx.editFood.handleEditText(5L, "45", Lang.EN);
+
+        assertEquals(EditFoodSession.Step.REVIEW, session.getStep());
+        assertEquals("Soup f1", ctx.foodRepository.findById("f1").orElseThrow().getName());
+
+        ctx.editFood.handleEditSaveCallback(callback(), 5L, "fesave");
+
+        Food saved = ctx.foodRepository.findById("f1").orElseThrow();
+        assertEquals("Stew", saved.getName());
+        assertEquals(45, saved.getPrepTimeMinutes());
+        assertFalse(ctx.editSessions.containsKey(5L));
+    }
+
+    @Test
+    void invalidTimeKeepsEditingTheField() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:time");
+
+        ctx.editFood.handleEditText(5L, "soon", Lang.EN);
+
+        assertEquals(EditFoodSession.Step.EDITING_TIME, session.getStep());
+    }
+
+    @Test
+    void backFromAFieldReturnsToReviewKeepingTheDraft() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:name");
+
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:back");
+
+        assertEquals(EditFoodSession.Step.REVIEW, session.getStep());
+        assertEquals("Soup f1", session.getName());
+    }
+
+    @Test
+    void leavingTheEditorDiscardsTheDraft() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+        session.setName("Changed");
+
+        ctx.editFood.handleEditExitCallback(callback(), 5L, "feexit");
+
+        assertFalse(ctx.editSessions.containsKey(5L));
+        assertEquals("Soup f1", ctx.foodRepository.findById("f1").orElseThrow().getName());
+    }
+
+    @Test
+    void editingThePhotoAttachesRemovesAndSurvivesOtherEdits() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:photo");
+        ctx.editFood.handleEditPhoto(5L, "FILE1", Lang.EN);
+        ctx.editFood.handleEditSaveCallback(callback(), 5L, "fesave");
+        assertEquals("FILE1", ctx.foodRepository.findById("f1").orElseThrow().getPhotoFileId());
+
+        startEdit("f1", 5L);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:name");
+        ctx.editFood.handleEditText(5L, "Stew", Lang.EN);
+        ctx.editFood.handleEditSaveCallback(callback(), 5L, "fesave");
+        assertEquals("FILE1", ctx.foodRepository.findById("f1").orElseThrow().getPhotoFileId());
+
+        startEdit("f1", 5L);
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:photo");
+        ctx.editFood.handleEditPhotoButtonCallback(callback(), 5L, "fephrm");
+        ctx.editFood.handleEditSaveCallback(callback(), 5L, "fesave");
+        assertNull(ctx.foodRepository.findById("f1").orElseThrow().getPhotoFileId());
+    }
+
+    @Test
+    void editPhotoOutsideThePhotoStepIsRejected() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+
+        ctx.editFood.handleEditPhoto(5L, "FILE1", Lang.EN);
+
+        assertNull(session.getPhotoFileId());
+    }
+
+    @Test
+    void editingIngredientsAndRecipeComesBackToReviewNotSave() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:ingredients");
+        assertEquals(EditFoodSession.Step.EDITING_INGREDIENTS, session.getStep());
+        ctx.editFood.handleEditIngredientCallback(callback(), 5L, "fei:done");
+        assertEquals(EditFoodSession.Step.EDITING_AMOUNTS, session.getStep());
+        ctx.editFood.handleEditAmountCallback(callback(), 5L, "feam:done");
+        assertEquals(EditFoodSession.Step.REVIEW, session.getStep());
+
+        ctx.editFood.handleEditFieldCallback(callback(), 5L, "fef:recipe");
+        ctx.editFood.handleEditText(5L, "Boil it", Lang.EN);
+        ctx.editFood.handleEditRecipeDoneCallback(callback(), 5L, "ferdone");
+
+        assertEquals(EditFoodSession.Step.REVIEW, session.getStep());
+        assertNull(ctx.foodRepository.findById("f1").orElseThrow().getRecipe());
+        ctx.editFood.handleEditSaveCallback(callback(), 5L, "fesave");
+        assertTrue(ctx.foodRepository.findById("f1").orElseThrow().getRecipe().contains("Boil it"));
+    }
+
+    @Test
+    void nonOwnerCannotSaveAnEdit() {
+        addFood("f1", 5L);
+        EditFoodSession session = startEdit("f1", 5L);
+        session.setName("Hijacked");
+        ctx.editSessions.put(6L, session);
+
+        ctx.editFood.handleEditSaveCallback(callback(), 6L, "fesave");
+
+        assertEquals("Soup f1", ctx.foodRepository.findById("f1").orElseThrow().getName());
     }
 }

@@ -357,14 +357,18 @@ class BrowseHandler extends FlowHandler {
             return;
         }
         answerCallback(callbackQuery.getId(), null, false);
+        renderSettings(chatId, lang, ref, callbackQuery.getMessage().getMessageId());
+    }
+
+    /** The Edit / Delete / Back screen for one recipe, drawn over the message {@code messageId}. */
+    void renderSettings(long chatId, Lang lang, PagedRef ref, Integer messageId) {
         InlineKeyboardButton edit = new InlineKeyboardButton(Messages.get(lang, "btn.edit"));
         edit.setCallbackData(CB_FOOD_EDIT_START + ref.key() + ":" + ref.page() + ":" + ref.id());
         InlineKeyboardButton delete = new InlineKeyboardButton(Messages.get(lang, "btn.delete"));
         delete.setCallbackData(CB_FOOD_DELETE_START + ref.key() + ":" + ref.page() + ":" + ref.id());
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_FOOD_VIEW + ref.key() + ":" + ref.page() + ":" + ref.id());
-        editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(),
-                Messages.get(lang, "settings.choose_action"),
+        editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, "settings.choose_action"),
                 new InlineKeyboardMarkup(List.of(List.of(edit, delete), List.of(back))));
     }
 }

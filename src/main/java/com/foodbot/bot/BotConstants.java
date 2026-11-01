@@ -65,6 +65,10 @@ final class BotConstants {
     static final String CB_FOOD_EDIT_RECIPE_CLEAR = "ferclear";
     static final String CB_FOOD_EDIT_RECIPE_DONE = "ferdone";
     static final String CB_FOOD_EDIT_RECIPE_STEP = "fers:";
+    static final String CB_FOOD_EDIT_SAVE = "fesave";
+    static final String CB_FOOD_EDIT_EXIT = "feexit";
+    static final String CB_FOOD_EDIT_PHOTO_SKIP = "fephskip";
+    static final String CB_FOOD_EDIT_PHOTO_REMOVE = "fephrm";
     static final String CB_FOOD_EDIT_AMOUNT = "feam:";
     static final String CB_FOOD_EDIT_AMOUNT_DONE = "feam:done";
     static final String CB_FOOD_DELETE_START = "fd:";

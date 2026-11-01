@@ -250,12 +250,21 @@ public class FoodBot extends TelegramLongPollingBot {
     private void handlePhotoMessage(Message message) {
         long chatId = message.getChatId();
         Lang lang = ctx.languageRepository.get(chatId);
-        if (lang == null || !ctx.addFoodSessions.containsKey(chatId)) {
+        if (lang == null) {
+            return;
+        }
+        boolean adding = ctx.addFoodSessions.containsKey(chatId);
+        if (!adding && !ctx.editSessions.containsKey(chatId)) {
             return;
         }
         // Telegram sends several sizes of the same photo; the last is the largest
         List<PhotoSize> sizes = message.getPhoto();
-        ctx.addFood.handleAddFoodPhoto(chatId, sizes.get(sizes.size() - 1).getFileId(), lang);
+        String fileId = sizes.get(sizes.size() - 1).getFileId();
+        if (adding) {
+            ctx.addFood.handleAddFoodPhoto(chatId, fileId, lang);
+        } else {
+            ctx.editFood.handleEditPhoto(chatId, fileId, lang);
+        }
     }
 
     private void handleLanguageCallback(CallbackQuery callbackQuery) {
@@ -343,6 +352,12 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.shopping.handleAddMissingCallback(callbackQuery, chatId, data);
         } else if (data.startsWith("shl:")) {
             ctx.shopping.handleListCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_FOOD_EDIT_SAVE)) {
+            ctx.editFood.handleEditSaveCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_FOOD_EDIT_EXIT)) {
+            ctx.editFood.handleEditExitCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_FOOD_EDIT_PHOTO_SKIP) || data.equals(CB_FOOD_EDIT_PHOTO_REMOVE)) {
+            ctx.editFood.handleEditPhotoButtonCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_FIELD)) {
             ctx.editFood.handleEditFieldCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_EDIT_CATEGORY)) {

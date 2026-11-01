@@ -44,6 +44,11 @@ public class FoodRepository {
     }
 
     public synchronized void update(Food updated) {
+        update(updated, false);
+    }
+
+    /** With {@code photoEdited}, the photo on {@code updated} is authoritative, so null removes it. */
+    public synchronized void update(Food updated, boolean photoEdited) {
         for (int i = 0; i < foods.size(); i++) {
             Food existing = foods.get(i);
             if (existing.getId().equals(updated.getId())) {
@@ -51,8 +56,9 @@ public class FoodRepository {
                 boolean lacksProvenance = updated.getSource() == null && updated.getAuthorName() == null;
                 Food merged = lacksProvenance
                         ? updated.withProvenance(existing.getSource(), existing.getAuthorName()) : updated;
-                // same for the photo: no edit flow touches it, so a rebuilt Food must not drop it
-                foods.set(i, merged.getPhotoFileId() == null ? merged.withPhoto(existing.getPhotoFileId()) : merged);
+                // same for the photo unless the editor handled it: a rebuilt Food must not drop it
+                boolean keepPhoto = !photoEdited && merged.getPhotoFileId() == null;
+                foods.set(i, keepPhoto ? merged.withPhoto(existing.getPhotoFileId()) : merged);
                 save();
                 return;
             }
