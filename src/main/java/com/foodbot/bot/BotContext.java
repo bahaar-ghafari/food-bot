@@ -52,6 +52,7 @@ class BotContext {
     final EditFoodHandler editFood;
     final CookHandler cook;
     final ShoppingHandler shopping;
+    final InlineQueryHandler inline;
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
@@ -76,5 +77,6 @@ class BotContext {
         this.editFood = new EditFoodHandler(this);
         this.cook = new CookHandler(this);
         this.shopping = new ShoppingHandler(this);
+        this.inline = new InlineQueryHandler(this);
     }
 }

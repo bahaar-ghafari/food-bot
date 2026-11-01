@@ -113,6 +113,10 @@ public class FoodBot extends TelegramLongPollingBot {
     }
 
     private void processUpdate(Update update) {
+        if (update.hasInlineQuery()) {
+            ctx.inline.handleInlineQuery(update.getInlineQuery());
+            return;
+        }
         if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             if (callbackQuery.getData().startsWith(CB_LANG)) {
