@@ -27,12 +27,15 @@ import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
 import com.foodbot.lang.TimeFormat;
+import com.foodbot.social.FollowRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -118,6 +121,16 @@ public class FoodBot extends TelegramLongPollingBot {
     private static final String CB_ADDFOOD_CANCEL = "afcancel";
     private static final String CB_ADDFOOD_REVIEW_EDIT = "afrv:";
     private static final String CB_ADDFOOD_CONFIRM = "afconfirm";
+    private static final String CB_FRIENDS_FOLLOW = "frf";
+    private static final String CB_FRIENDS_LIST = "frl";
+    private static final String CB_FRIENDS_VISIBILITY = "frv";
+    private static final String CB_FRIENDS_USER = "fru:";
+    private static final String CB_FRIENDS_UNFOLLOW = "frun:";
+    private static final String CB_FRIENDS_APPROVE = "fra:";
+    private static final String CB_FRIENDS_APPROVE_VISIBLE = "frav:";
+    private static final String CB_FRIENDS_DECLINE = "frd:";
+    /** Scope prefix for browsing a followed user's recipes; the rest is their chat id. */
+    private static final String SCOPE_USER = "usr";
     private static final String CB_FOOD_VIEW = "fv:";
     private static final String CB_FOOD_SETTINGS = "fset:";
     private static final int RECIPE_STEP_CHAR_LIMIT = 150;
@@ -141,6 +154,8 @@ public class FoodBot extends TelegramLongPollingBot {
     private final Map<Long, String> pendingSearchQuery = new ConcurrentHashMap<>();
     private final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
     private final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
+    private final Set<Long> awaitingFollowId = ConcurrentHashMap.newKeySet();
+    private final FollowRepository followRepository = new FollowRepository();
     private final AiSuggestionService aiSuggestionService;
     private final MealDbSuggestionService mealDbSuggestionService = new MealDbSuggestionService();
 
@@ -243,6 +258,7 @@ public class FoodBot extends TelegramLongPollingBot {
             editSessions.remove(chatId);
             awaitingFeedback.remove(chatId);
             awaitingSearch.remove(chatId);
+            awaitingFollowId.remove(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
         } else if (isSuperAdmin(chatId)
                 && (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods")))) {
@@ -273,6 +289,27 @@ public class FoodBot extends TelegramLongPollingBot {
             } else {
                 handleSearchQuery(chatId, query, lang);
             }
+        } else if (text.equalsIgnoreCase("/friends") || text.equals(Messages.get(lang, "btn.friends"))) {
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
+            awaitingSearch.remove(chatId);
+            awaitingFollowId.remove(chatId);
+            sendFriendsMenu(chatId, lang, null);
+        } else if (text.equalsIgnoreCase("/follow") || text.toLowerCase().startsWith("/follow ")) {
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
+            awaitingSearch.remove(chatId);
+            String arg = text.length() > 7 ? text.substring(7).trim() : "";
+            if (arg.isEmpty()) {
+                awaitingFollowId.add(chatId);
+                send(chatId, Messages.get(lang, "friends.ask_id"));
+            } else {
+                handleFollowId(chatId, arg, lang, update.getMessage().getFrom());
+            }
         } else if (addFoodSessions.containsKey(chatId)) {
             handleAddFoodText(chatId, text, lang);
         } else if (cookSessions.containsKey(chatId)) {
@@ -283,6 +320,8 @@ public class FoodBot extends TelegramLongPollingBot {
             handleFeedbackText(chatId, text, lang, update.getMessage().getFrom());
         } else if (awaitingSearch.contains(chatId)) {
             handleSearchQuery(chatId, text, lang);
+        } else if (awaitingFollowId.contains(chatId)) {
+            handleFollowId(chatId, text, lang, update.getMessage().getFrom());
         } else {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "fallback"));
         }
@@ -1120,6 +1159,11 @@ public class FoodBot extends TelegramLongPollingBot {
             handleViewFoodsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_VIEW_FOODS_PAGE)) {
             handleViewFoodsPageCallback(callbackQuery, chatId, data);
+        } else if (data.equals(CB_FRIENDS_FOLLOW) || data.equals(CB_FRIENDS_LIST) || data.equals(CB_FRIENDS_VISIBILITY)
+                || data.startsWith(CB_FRIENDS_USER) || data.startsWith(CB_FRIENDS_UNFOLLOW)
+                || data.startsWith(CB_FRIENDS_APPROVE) || data.startsWith(CB_FRIENDS_APPROVE_VISIBLE)
+                || data.startsWith(CB_FRIENDS_DECLINE)) {
+            handleFriendsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADMIN_RELOAD)) {
             handleAdminReloadCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADDFOOD_INGREDIENT)) {
@@ -1440,6 +1484,16 @@ public class FoodBot extends TelegramLongPollingBot {
         clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         addFoodSessions.remove(chatId);
         sendWithMainMenu(chatId, lang, Messages.get(lang, "addfood.saved_message", formatFood(food, lang)));
+        notifyFollowers(chatId, food, authorDisplayName(from));
+    }
+
+    private void notifyFollowers(long authorChatId, Food food, String authorName) {
+        String who = authorName != null ? authorName : String.valueOf(authorChatId);
+        for (long follower : followRepository.followersOf(authorChatId)) {
+            Lang followerLang = lang(follower);
+            send(follower, Messages.get(followerLang, "friends.new_recipe", who) + "\n\n"
+                    + formatFoodDetail(food, followerLang));
+        }
     }
 
     private static String authorDisplayName(User from) {
@@ -2366,6 +2420,11 @@ public class FoodBot extends TelegramLongPollingBot {
             SearchResultContext ctx = lastSearchResults.get(chatId);
             foods = ctx != null ? ctx.getFoods() : List.of();
             headerText = Messages.get(lang, "search.results_header", ctx != null ? ctx.getQuery() : "");
+        } else if (scope.startsWith(SCOPE_USER)) {
+            long userId = Long.parseLong(scope.substring(SCOPE_USER.length()));
+            // a follow can outlive its own approval (e.g. unfollowed in another message)
+            foods = followRepository.isFollowing(chatId, userId) ? foodRepository.findOwnedBy(userId, lang) : List.of();
+            headerText = Messages.get(lang, "friends.recipes_header", displayName(userId));
         } else if (scope.equals(SCOPE_ALL)) {
             foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));
             foods.addAll(foodRepository.findGlobal(lang));
@@ -2526,6 +2585,170 @@ public class FoodBot extends TelegramLongPollingBot {
                 new InlineKeyboardMarkup(List.of(List.of(edit, delete), List.of(back))));
     }
 
+    private String displayName(long userId) {
+        try {
+            Chat chat = execute(new GetChat(String.valueOf(userId)));
+            String full = ((chat.getFirstName() == null ? "" : chat.getFirstName()) + " "
+                    + (chat.getLastName() == null ? "" : chat.getLastName())).trim();
+            if (!full.isEmpty()) {
+                return full + " (" + userId + ")";
+            }
+            if (chat.getUserName() != null) {
+                return "@" + chat.getUserName() + " (" + userId + ")";
+            }
+        } catch (TelegramApiException ignored) {
+            // fall through to the bare id
+        }
+        return String.valueOf(userId);
+    }
+
+    private void sendFriendsMenu(long chatId, Lang lang, Integer editMessageId) {
+        boolean visible = followRepository.isVisible(chatId);
+        InlineKeyboardButton follow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_follow"));
+        follow.setCallbackData(CB_FRIENDS_FOLLOW);
+        InlineKeyboardButton list = new InlineKeyboardButton(
+                Messages.get(lang, "friends.btn_list", followRepository.followingOf(chatId).size()));
+        list.setCallbackData(CB_FRIENDS_LIST);
+        InlineKeyboardButton toggle = new InlineKeyboardButton(
+                Messages.get(lang, visible ? "friends.btn_hide" : "friends.btn_show"));
+        toggle.setCallbackData(CB_FRIENDS_VISIBILITY);
+        String text = Messages.get(lang, "friends.menu", chatId,
+                Messages.get(lang, visible ? "friends.visible" : "friends.hidden"), followRepository.followersOf(chatId).size());
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(List.of(List.of(follow, list), List.of(toggle)));
+        if (editMessageId != null) {
+            editMessageTextAndMarkup(chatId, editMessageId, text, markup);
+            return;
+        }
+        SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setReplyMarkup(markup);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleFollowId(long chatId, String text, Lang lang, User from) {
+        long target;
+        try {
+            target = Long.parseLong(text.trim());
+        } catch (NumberFormatException e) {
+            send(chatId, Messages.get(lang, "friends.bad_id"));
+            return;
+        }
+        awaitingFollowId.remove(chatId);
+        if (target != chatId && languageRepository.get(target) == null) {
+            send(chatId, Messages.get(lang, "friends.unknown_user"));
+            return;
+        }
+        switch (followRepository.follow(chatId, target)) {
+            case SELF -> send(chatId, Messages.get(lang, "friends.self"));
+            case ALREADY_FOLLOWING -> send(chatId, Messages.get(lang, "friends.already", displayName(target)));
+            case ALREADY_REQUESTED -> send(chatId, Messages.get(lang, "friends.already_requested"));
+            case FOLLOWING -> {
+                send(chatId, Messages.get(lang, "friends.followed", displayName(target)));
+                Lang targetLang = lang(target);
+                send(target, Messages.get(targetLang, "friends.new_follower", authorDisplayNameOrId(from, chatId)));
+            }
+            case REQUESTED -> {
+                send(chatId, Messages.get(lang, "friends.request_sent"));
+                sendFollowRequest(target, chatId, authorDisplayNameOrId(from, chatId));
+            }
+        }
+    }
+
+    private static String authorDisplayNameOrId(User from, long chatId) {
+        String name = authorDisplayName(from);
+        return (name != null ? name + " (" + chatId + ")" : String.valueOf(chatId));
+    }
+
+    private void sendFollowRequest(long targetChatId, long requesterChatId, String requesterName) {
+        Lang lang = lang(targetChatId);
+        InlineKeyboardButton allow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_allow"));
+        allow.setCallbackData(CB_FRIENDS_APPROVE + requesterChatId);
+        InlineKeyboardButton allowVisible = new InlineKeyboardButton(Messages.get(lang, "friends.btn_allow_visible"));
+        allowVisible.setCallbackData(CB_FRIENDS_APPROVE_VISIBLE + requesterChatId);
+        InlineKeyboardButton decline = new InlineKeyboardButton(Messages.get(lang, "friends.btn_decline"));
+        decline.setCallbackData(CB_FRIENDS_DECLINE + requesterChatId);
+        SendMessage message = new SendMessage(String.valueOf(targetChatId),
+                Messages.get(lang, "friends.request", requesterName));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(allow, decline), List.of(allowVisible))));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleFriendsCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        Integer messageId = callbackQuery.getMessage().getMessageId();
+        answerCallback(callbackQuery.getId(), null, false);
+        if (data.equals(CB_FRIENDS_FOLLOW)) {
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
+            awaitingSearch.remove(chatId);
+            awaitingFollowId.add(chatId);
+            send(chatId, Messages.get(lang, "friends.ask_id"));
+        } else if (data.equals(CB_FRIENDS_VISIBILITY)) {
+            followRepository.setVisible(chatId, !followRepository.isVisible(chatId));
+            sendFriendsMenu(chatId, lang, messageId);
+        } else if (data.equals(CB_FRIENDS_LIST)) {
+            sendFollowingList(chatId, lang, messageId);
+        } else if (data.startsWith(CB_FRIENDS_USER)) {
+            long userId = Long.parseLong(data.substring(CB_FRIENDS_USER.length()));
+            if (!followRepository.isFollowing(chatId, userId)) {
+                sendFollowingList(chatId, lang, messageId);
+                return;
+            }
+            sendFoodListPage(chatId, lang, SCOPE_USER + userId, 0, null);
+        } else if (data.startsWith(CB_FRIENDS_UNFOLLOW)) {
+            followRepository.unfollow(chatId, Long.parseLong(data.substring(CB_FRIENDS_UNFOLLOW.length())));
+            sendFollowingList(chatId, lang, messageId);
+        } else {
+            handleFollowRequestAnswer(chatId, lang, messageId, data);
+        }
+    }
+
+    private void sendFollowingList(long chatId, Lang lang, Integer editMessageId) {
+        List<Long> following = followRepository.followingOf(chatId);
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (long userId : following) {
+            InlineKeyboardButton view = new InlineKeyboardButton("🍽️ " + displayName(userId));
+            view.setCallbackData(CB_FRIENDS_USER + userId);
+            InlineKeyboardButton unfollow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_unfollow"));
+            unfollow.setCallbackData(CB_FRIENDS_UNFOLLOW + userId);
+            rows.add(List.of(view, unfollow));
+        }
+        String text = Messages.get(lang, following.isEmpty() ? "friends.list_empty" : "friends.list_header");
+        editMessageTextAndMarkup(chatId, editMessageId, text, new InlineKeyboardMarkup(rows));
+    }
+
+    private void handleFollowRequestAnswer(long chatId, Lang lang, Integer messageId, String data) {
+        boolean approve = data.startsWith(CB_FRIENDS_APPROVE);
+        boolean makeVisible = data.startsWith(CB_FRIENDS_APPROVE_VISIBLE);
+        String prefix = makeVisible ? CB_FRIENDS_APPROVE_VISIBLE : approve ? CB_FRIENDS_APPROVE : CB_FRIENDS_DECLINE;
+        long requester = Long.parseLong(data.substring(prefix.length()));
+        boolean handled = (approve || makeVisible)
+                ? followRepository.approve(chatId, requester) : followRepository.decline(chatId, requester);
+        if (!handled) {
+            editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, "friends.request_gone"),
+                    new InlineKeyboardMarkup(List.of()));
+            return;
+        }
+        if (makeVisible) {
+            followRepository.setVisible(chatId, true);
+        }
+        String resultKey = (approve || makeVisible) ? "friends.request_allowed" : "friends.request_declined";
+        editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, resultKey, displayName(requester)),
+                new InlineKeyboardMarkup(List.of()));
+        if (approve || makeVisible) {
+            send(requester, Messages.get(lang(requester), "friends.request_accepted", displayName(chatId)));
+        }
+    }
+
     private ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.add_food"));
@@ -2539,6 +2762,7 @@ public class FoodBot extends TelegramLongPollingBot {
         row3.add(Messages.get(lang, "btn.change_lang"));
         row3.add(Messages.get(lang, "btn.help"));
         KeyboardRow row4 = new KeyboardRow();
+        row4.add(Messages.get(lang, "btn.friends"));
         row4.add(Messages.get(lang, "btn.feedback"));
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3, row4));
         markup.setResizeKeyboard(true);
