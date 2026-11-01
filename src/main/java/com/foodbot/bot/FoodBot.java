@@ -298,6 +298,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.editFood.handleDeleteStartCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_FAVORITE)) {
             ctx.browse.handleFavoriteToggleCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_FOOD_SCALE)) {
+            ctx.browse.handleFoodScaleCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_SETTINGS)) {
             ctx.browse.handleFoodSettingsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_FOOD_VIEW)) {

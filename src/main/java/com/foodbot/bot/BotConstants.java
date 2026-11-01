@@ -85,6 +85,9 @@ final class BotConstants {
     static final String CB_FOOD_VIEW = "fv:";
     static final String CB_FOOD_SETTINGS = "fset:";
     static final String CB_FOOD_FAVORITE = "ffav:";
+    /** Followed by {@code <factor>:<scope>:<page>:<id>}; factor is one of {@link #SCALE_FACTORS}. */
+    static final String CB_FOOD_SCALE = "fsc:";
+    static final double[] SCALE_FACTORS = {0.5, 1, 2, 3};
     static final int RECIPE_STEP_CHAR_LIMIT = 150;
     static final int AMOUNT_CHAR_LIMIT = 30;
     static final String MAINTENANCE_MESSAGE =

@@ -1,5 +1,6 @@
 package com.foodbot.bot;
 
+import com.foodbot.food.Amount;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodNameTranslations;
 import com.foodbot.food.Paginator;
@@ -10,12 +11,15 @@ import com.foodbot.lang.TimeFormat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,9 +32,8 @@ class BrowseHandler extends FlowHandler {
 
     void sendFoodDetailMessage(long chatId, Lang lang, String scope, int page, Food food) {
         String text = formatFoodDetail(food, lang);
-        List<InlineKeyboardButton> row = buildDetailRow(chatId, lang, scope, page, food);
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(row)));
+        message.setReplyMarkup(buildDetailMarkup(chatId, lang, scope, page, food));
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -195,7 +198,13 @@ class BrowseHandler extends FlowHandler {
         EditMessageReplyMarkup edit = new EditMessageReplyMarkup();
         edit.setChatId(String.valueOf(chatId));
         edit.setMessageId(callbackQuery.getMessage().getMessageId());
-        edit.setReplyMarkup(new InlineKeyboardMarkup(List.of(row)));
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        rows.add(row);
+        Message message = callbackQuery.getMessage();
+        if (message.getReplyMarkup() != null) {
+            rows.addAll(message.getReplyMarkup().getKeyboard().stream().skip(1).toList());
+        }
+        edit.setReplyMarkup(new InlineKeyboardMarkup(rows));
         try {
             execute(edit);
         } catch (TelegramApiException e) {
@@ -219,8 +228,13 @@ class BrowseHandler extends FlowHandler {
     }
 
     String formatFoodDetail(Food food, Lang lang) {
+        return formatFoodDetail(food, lang, 1.0);
+    }
+
+    String formatFoodDetail(Food food, Lang lang, double factor) {
+        Map<String, String> amounts = scaleAmounts(food.getIngredientAmounts(), factor);
         String ingredients = food.getIngredients().stream()
-                .map(i -> formatIngredientWithAmount(i, food.getIngredientAmounts(), lang))
+                .map(i -> formatIngredientWithAmount(i, amounts, lang))
                 .collect(Collectors.joining(", "));
         String timeText = TimeFormat.format(food.getPrepTimeMinutes(), lang);
         String recipeText = (food.getRecipe() == null || food.getRecipe().isBlank())
@@ -232,6 +246,57 @@ class BrowseHandler extends FlowHandler {
                 + "🧾 " + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
                 + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n\n"
                 + provenanceLine(food, lang) + "\n";
+    }
+
+    Map<String, String> scaleAmounts(Map<String, String> amounts, double factor) {
+        Map<String, String> scaled = new LinkedHashMap<>();
+        amounts.forEach((ingredient, amount) -> scaled.put(ingredient, Amount.scale(amount, factor)));
+        return scaled;
+    }
+
+    /** Row of serving-scale buttons for a recipe detail view; the active factor is marked. */
+    List<InlineKeyboardButton> buildScaleRow(String scope, int page, Food food, double activeFactor) {
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        for (double factor : SCALE_FACTORS) {
+            String label = factor == 0.5 ? "½×" : ((int) factor) + "×";
+            InlineKeyboardButton button = new InlineKeyboardButton(factor == activeFactor ? "• " + label : label);
+            button.setCallbackData(CB_FOOD_SCALE + Amount.format(factor) + ":" + scope + ":" + page + ":" + food.getId());
+            row.add(button);
+        }
+        return row;
+    }
+
+    void handleFoodScaleCallback(CallbackQuery callbackQuery, long chatId, String data) {
+        Lang lang = lang(chatId);
+        String remainder = data.substring(CB_FOOD_SCALE.length());
+        int split = remainder.indexOf(':');
+        double factor;
+        try {
+            factor = Double.parseDouble(remainder.substring(0, split));
+        } catch (NumberFormatException e) {
+            factor = 0;
+        }
+        PagedRef ref = parsePagedRef(remainder.substring(split + 1));
+        Optional<Food> foodOpt = foodRepository.findById(ref.id());
+        if (foodOpt.isEmpty() || !canView(foodOpt.get(), chatId) || !isScaleFactor(factor)) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        Food food = foodOpt.get();
+        answerCallback(callbackQuery.getId(), null, false);
+        editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(),
+                formatFoodDetail(food, lang, factor),
+                new InlineKeyboardMarkup(List.of(buildDetailRow(chatId, lang, ref.key(), ref.page(), food),
+                        buildScaleRow(ref.key(), ref.page(), food, factor))));
+    }
+
+    private static boolean isScaleFactor(double factor) {
+        for (double allowed : SCALE_FACTORS) {
+            if (allowed == factor) {
+                return true;
+            }
+        }
+        return false;
     }
 
     String provenanceLine(Food food, Lang lang) {
@@ -255,9 +320,13 @@ class BrowseHandler extends FlowHandler {
         Food food = foodOpt.get();
         answerCallback(callbackQuery.getId(), null, false);
         String text = formatFoodDetail(food, lang);
-        List<InlineKeyboardButton> row = buildDetailRow(chatId, lang, ref.key(), ref.page(), food);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
-                new InlineKeyboardMarkup(List.of(row)));
+                buildDetailMarkup(chatId, lang, ref.key(), ref.page(), food));
+    }
+
+    InlineKeyboardMarkup buildDetailMarkup(long chatId, Lang lang, String scope, int page, Food food) {
+        return new InlineKeyboardMarkup(List.of(buildDetailRow(chatId, lang, scope, page, food),
+                buildScaleRow(scope, page, food, 1.0)));
     }
 
     List<InlineKeyboardButton> buildDetailRow(long chatId, Lang lang, String scope, int page, Food food) {

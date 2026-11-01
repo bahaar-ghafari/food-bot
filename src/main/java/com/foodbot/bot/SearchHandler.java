@@ -115,9 +115,8 @@ class SearchHandler extends FlowHandler {
         answerCallback(callbackQuery.getId(), null, false);
         lastSearchResults.put(chatId, new SearchResultContext(List.of(food), query == null ? "" : query));
         String text = ctx.browse.formatFoodDetail(food, lang);
-        List<InlineKeyboardButton> row = ctx.browse.buildDetailRow(chatId, lang, SCOPE_SEARCH, 0, food);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
-                new InlineKeyboardMarkup(List.of(row)));
+                ctx.browse.buildDetailMarkup(chatId, lang, SCOPE_SEARCH, 0, food));
     }
 
     void handleSearchFuzzyNoCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -140,9 +139,8 @@ class SearchHandler extends FlowHandler {
         answerCallback(callbackQuery.getId(), null, false);
         lastSearchResults.put(chatId, new SearchResultContext(List.of(food), query == null ? "" : query));
         String text = ctx.browse.formatFoodDetail(food, food.getLanguage());
-        List<InlineKeyboardButton> row = ctx.browse.buildDetailRow(chatId, lang, SCOPE_SEARCH, 0, food);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(), text,
-                new InlineKeyboardMarkup(List.of(row)));
+                ctx.browse.buildDetailMarkup(chatId, lang, SCOPE_SEARCH, 0, food));
     }
 
     void handleSearchOtherLangNoCallback(CallbackQuery callbackQuery, long chatId, String data) {

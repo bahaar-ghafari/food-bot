@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -138,6 +139,29 @@ class FlowHandlersTest {
         ctx.favoriteRepository.toggle(5L, "f1");
         assertEquals("⭐", ctx.browse.buildDetailRow(5L, Lang.EN, "global", 0, food).get(1).getText());
         assertEquals("ffav:global:0:f1", ctx.browse.buildDetailRow(5L, Lang.EN, "global", 0, food).get(1).getCallbackData());
+    }
+
+    @Test
+    void foodDetailScalesNumericAmountsOnly() {
+        Food food = new Food("f9", "Omelette", 10, "Breakfast", List.of("egg", "salt"), null, null, null, Lang.EN,
+                Map.of("egg", "2", "salt", "a pinch"));
+
+        String scaled = ctx.browse.formatFoodDetail(food, Lang.EN, 3);
+
+        assertTrue(scaled.contains("(6)"));
+        assertTrue(scaled.contains("(a pinch)"));
+        assertTrue(ctx.browse.formatFoodDetail(food, Lang.EN).contains("(2)"));
+    }
+
+    @Test
+    void scaleRowMarksTheActiveFactorAndEncodesTheRecipe() {
+        Food food = addFood("f1", null);
+
+        var row = ctx.browse.buildScaleRow("global", 2, food, 2.0);
+
+        assertEquals(List.of("½×", "1×", "• 2×", "3×"), row.stream().map(b -> b.getText()).toList());
+        assertEquals("fsc:0.5:global:2:f1", row.get(0).getCallbackData());
+        assertEquals("fsc:3:global:2:f1", row.get(3).getCallbackData());
     }
 
     @Test
