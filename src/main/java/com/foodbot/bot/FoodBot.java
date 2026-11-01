@@ -55,6 +55,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new ShoppingListRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
+        this.ctx.botUsername = username;
         startDigestScheduler();
     }
 
@@ -148,13 +149,19 @@ public class FoodBot extends TelegramLongPollingBot {
             return;
         }
 
+        String sharedRecipeId = sharedRecipeId(text);
         Lang lang = ctx.languageRepository.get(chatId);
         if (lang == null) {
+            if (sharedRecipeId != null) {
+                ctx.pendingSharedRecipe.put(chatId, sharedRecipeId);
+            }
             sendLanguagePrompt(chatId);
             return;
         }
 
-        if (text.equalsIgnoreCase("/start")) {
+        if (sharedRecipeId != null) {
+            ctx.browse.openSharedRecipe(chatId, lang, sharedRecipeId);
+        } else if (text.equalsIgnoreCase("/start")) {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "help.text"));
@@ -284,6 +291,22 @@ public class FoodBot extends TelegramLongPollingBot {
         ctx.languageRepository.set(chatId, lang);
         ctx.ui.answerCallback(callbackQuery.getId(), null, false);
         ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "lang.confirmed") + " " + Messages.get(lang, "welcome"));
+        String pendingRecipe = ctx.pendingSharedRecipe.remove(chatId);
+        if (pendingRecipe != null) {
+            ctx.browse.openSharedRecipe(chatId, lang, pendingRecipe);
+        }
+    }
+
+    /** The recipe id in a {@code /start recipe_<id>} deep link, or null for any other text. */
+    static String sharedRecipeId(String text) {
+        String[] parts = text.trim().split("\\s+");
+        if (parts.length != 2 || !(parts[0].equalsIgnoreCase("/start")
+                || parts[0].toLowerCase().startsWith("/start@"))
+                || !parts[1].startsWith(START_RECIPE_PREFIX)) {
+            return null;
+        }
+        String id = parts[1].substring(START_RECIPE_PREFIX.length());
+        return id.isEmpty() ? null : id;
     }
 
     private void sendLanguagePrompt(long chatId) {

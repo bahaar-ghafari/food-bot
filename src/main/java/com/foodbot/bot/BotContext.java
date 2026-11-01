@@ -37,6 +37,10 @@ class BotContext {
     final Map<Long, SearchResultContext> lastSearchResults = new ConcurrentHashMap<>();
     final Map<Long, Food> pendingSearchSuggestion = new ConcurrentHashMap<>();
     final Map<Long, String> pendingSearchQuery = new ConcurrentHashMap<>();
+    /** Recipe id from a deep link opened before the user had picked a language; shown once they do. */
+    final Map<Long, String> pendingSharedRecipe = new ConcurrentHashMap<>();
+    /** The bot's @username, used to build share links; share buttons are hidden while it is unset. */
+    volatile String botUsername;
     final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingFollowId = ConcurrentHashMap.newKeySet();

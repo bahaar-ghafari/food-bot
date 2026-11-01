@@ -16,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -340,12 +342,45 @@ class BrowseHandler extends FlowHandler {
         InlineKeyboardButton star = new InlineKeyboardButton(favorite ? "⭐" : "☆");
         star.setCallbackData(CB_FOOD_FAVORITE + scope + ":" + page + ":" + food.getId());
         row.add(star);
+        if (ctx.botUsername != null && !ctx.botUsername.isBlank()) {
+            InlineKeyboardButton share = new InlineKeyboardButton(Messages.get(lang, "btn.share"));
+            share.setUrl(shareUrl(food, lang));
+            row.add(share);
+        }
         if (canModify(food, chatId)) {
             InlineKeyboardButton settings = new InlineKeyboardButton(Messages.get(lang, "btn.settings"));
             settings.setCallbackData(CB_FOOD_SETTINGS + scope + ":" + page + ":" + food.getId());
             row.add(settings);
         }
         return row;
+    }
+
+    String deepLink(Food food) {
+        return "https://t.me/" + ctx.botUsername + "?start=" + START_RECIPE_PREFIX + food.getId();
+    }
+
+    /** Telegram's chat picker, prefilled with the recipe's name and its deep link. */
+    String shareUrl(Food food, Lang lang) {
+        return "https://t.me/share/url?url=" + URLEncoder.encode(deepLink(food), StandardCharsets.UTF_8)
+                + "&text=" + URLEncoder.encode("🍽️ " + FoodNameTranslations.translate(food.getName(), lang),
+                StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Opens the recipe behind a {@code recipe_<id>} deep link. Follows the same visibility rule as browsing
+     * (global, own, or a followed user's), so a link never exposes a personal recipe to someone who couldn't
+     * open it in the bot; missing and hidden recipes get the same reply so ids can't be probed.
+     */
+    void openSharedRecipe(long chatId, Lang lang, String foodId) {
+        Optional<Food> foodOpt = foodRepository.findById(foodId).filter(food -> canView(food, chatId));
+        if (foodOpt.isEmpty()) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "share.unavailable"));
+            return;
+        }
+        Food food = foodOpt.get();
+        Long owner = food.getOwnerChatId();
+        String scope = owner != null && owner != chatId ? SCOPE_USER + owner : SCOPE_ALL;
+        sendFoodDetailMessage(chatId, lang, scope, 0, food);
     }
 
     void handleFoodSettingsCallback(CallbackQuery callbackQuery, long chatId, String data) {

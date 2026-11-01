@@ -96,6 +96,8 @@ final class BotConstants {
     static final String CB_FRIENDS_MUTE = "frm:";
     /** Scope prefix for browsing a followed user's recipes; the rest is their chat id. */
     static final String SCOPE_USER = "usr";
+    /** Prefix of the {@code /start} payload that opens a shared recipe: {@code recipe_<id>}. */
+    static final String START_RECIPE_PREFIX = "recipe_";
     static final String CB_FOOD_VIEW = "fv:";
     static final String CB_FOOD_SETTINGS = "fset:";
     static final String CB_FOOD_FAVORITE = "ffav:";
