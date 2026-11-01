@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import com.foodbot.util.AtomicFiles;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -52,7 +54,7 @@ public class LanguageRepository {
 
     private void save() {
         try {
-            Files.writeString(dataFile, GSON.toJson(languages, MAP_TYPE));
+            AtomicFiles.writeString(dataFile, GSON.toJson(languages, MAP_TYPE));
         } catch (IOException e) {
             throw new RuntimeException("Unable to save " + dataFile, e);
         }

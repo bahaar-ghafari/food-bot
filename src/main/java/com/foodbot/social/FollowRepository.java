@@ -3,6 +3,8 @@ package com.foodbot.social;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.foodbot.util.AtomicFiles;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -157,7 +159,7 @@ public class FollowRepository {
 
     private void save() {
         try {
-            Files.writeString(dataFile, GSON.toJson(state));
+            AtomicFiles.writeString(dataFile, GSON.toJson(state));
         } catch (IOException e) {
             throw new RuntimeException("Unable to save " + dataFile, e);
         }
