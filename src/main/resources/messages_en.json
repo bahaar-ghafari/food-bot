@@ -213,11 +213,15 @@
   "friends.followers_header": "People who follow you — tap a name to see their profile:",
   "friends.followers_empty": "Nobody follows you yet. Share your profile so friends can follow you!",
   "friends.followers_more": "(showing the first %s of %s)",
-  "profile.card": "👤 %s\n\n🍽️ Recipes: %s\n🙋 Followers: %s\n➡️ Following: %s",
-  "profile.latest": "Latest recipes:",
-  "profile.you": "This is how others see your profile.",
+  "profile.card": "🪪 %s\n━━━━━━━━━━━━━━\n🍽️ Recipes: %s  ·  🙋 Followers: %s  ·  ➡️ Following: %s",
+  "profile.latest": "👨‍🍳 Fresh from their kitchen:",
+  "profile.you": "👀 This is how others see your profile.",
   "profile.btn_follow": "➕ Follow",
   "profile.btn_recipes": "🍽️ View recipes",
   "profile.unavailable": "I can't find that profile. They need to have started this bot first.",
-  "profile.share_text": "👤 %s on Dishcover — %s recipes, %s followers. Tap to follow!"
+  "profile.share_text": "👋 Meet %s on Dishcover!\n🍽️ %s recipes · 🙋 %s followers\nTap to follow and get a ping on every new recipe 🔔",
+  "profile.item": "🍴 %s · ⏱ %s",
+  "profile.locked": "🔒 Follow to peek at their recipes and get a ping whenever they cook up something new!",
+  "profile.empty": "🌱 No recipes yet — a fresh kitchen!",
+  "profile.features": "✨ What you can do on Dishcover\n🔗 Share recipes with friends in one tap\n🛒 Turn missing ingredients into a shopping list\n🍳 Find what to cook from what you have\n🔔 Follow friends, get new-recipe pings"
 }

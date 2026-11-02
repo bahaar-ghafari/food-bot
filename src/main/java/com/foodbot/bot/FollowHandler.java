@@ -3,6 +3,7 @@ package com.foodbot.bot;
 import com.foodbot.food.Food;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
+import com.foodbot.lang.TimeFormat;
 import com.foodbot.social.UsernameRepository;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -290,13 +291,22 @@ class FollowHandler extends FlowHandler {
                 followRepository.followingOf(userId).size()));
         if (self || following) {
             List<Food> owned = foodRepository.findOwnedBy(userId, lang);
-            if (!owned.isEmpty()) {
-                text.append("\n\n").append(Messages.get(lang, "profile.latest"));
-                for (Food food : owned.subList(Math.max(0, owned.size() - 3), owned.size())) {
-                    text.append("\n• ").append(food.getName());
+            text.append("\n\n");
+            if (owned.isEmpty()) {
+                text.append(Messages.get(lang, "profile.empty"));
+            } else {
+                text.append(Messages.get(lang, "profile.latest"));
+                List<Food> latest = owned.subList(Math.max(0, owned.size() - 3), owned.size());
+                for (int i = latest.size() - 1; i >= 0; i--) {
+                    Food food = latest.get(i);
+                    text.append("\n").append(Messages.get(lang, "profile.item", food.getName(),
+                            TimeFormat.format(food.getPrepTimeMinutes(), lang)));
                 }
             }
+        } else {
+            text.append("\n\n").append(Messages.get(lang, "profile.locked"));
         }
+        text.append("\n\n").append(Messages.get(lang, "profile.features"));
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         if (self) {
             text.append("\n\n").append(Messages.get(lang, "profile.you"));

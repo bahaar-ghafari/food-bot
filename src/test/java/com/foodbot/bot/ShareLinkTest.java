@@ -152,6 +152,8 @@ class ShareLinkTest {
         ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
         assertTrue(lastText().contains("Recipes: 1"));
         assertFalse(lastText().contains("Soup"), "recipe names are only for followers");
+        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.locked")));
+        assertTrue(lastText().contains("shopping list"), "card briefly explains the features");
         assertTrue(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
         InlineKeyboardMarkup markup = (InlineKeyboardMarkup) ((SendMessage) sent.get(sent.size() - 1)).getReplyMarkup();
         String url = markup.getKeyboard().stream().flatMap(List::stream).map(InlineKeyboardButton::getUrl)
@@ -166,6 +168,7 @@ class ShareLinkTest {
         ctx.followRepository.follow(5L, 7L);
         ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
         assertTrue(lastText().contains("Soup"));
+        assertTrue(lastText().contains("⏱"), "recipe previews show prep time");
         assertTrue(callbacks().contains(BotConstants.CB_PROFILE_UNFOLLOW + 7L));
         assertFalse(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
     }
