@@ -390,7 +390,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 || data.startsWith(CB_FRIENDS_USER) || data.startsWith(CB_FRIENDS_UNFOLLOW)
                 || data.startsWith(CB_FRIENDS_APPROVE) || data.startsWith(CB_FRIENDS_APPROVE_VISIBLE)
                 || data.startsWith(CB_FRIENDS_DECLINE) || data.equals(CB_FRIENDS_DIGEST)
-                || data.startsWith(CB_FRIENDS_MUTE) || data.equals(CB_FRIENDS_FOLLOWERS)
+                || data.startsWith(CB_FRIENDS_MUTE) || data.equals(CB_FRIENDS_FOLLOWERS) || data.equals(CB_FRIENDS_MENU)
                 || data.startsWith(CB_PROFILE_VIEW) || data.startsWith(CB_PROFILE_FOLLOW)
                 || data.startsWith(CB_PROFILE_UNFOLLOW)) {
             ctx.follow.handleFriendsCallback(callbackQuery, chatId, data);

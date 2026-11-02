@@ -95,6 +95,7 @@ final class BotConstants {
     static final String CB_FRIENDS_DIGEST = "frdg";
     static final String CB_FRIENDS_MUTE = "frm:";
     static final String CB_FRIENDS_FOLLOWERS = "frfs";
+    static final String CB_FRIENDS_MENU = "frb";
     /** Followed by a chat id: shows that user's profile card. */
     static final String CB_PROFILE_VIEW = "frp:";
     static final String CB_PROFILE_FOLLOW = "frpf:";

@@ -180,6 +180,8 @@ class FollowHandler extends FlowHandler {
             long userId = Long.parseLong(data.substring(CB_FRIENDS_MUTE.length()));
             followRepository.setMuted(chatId, userId, !followRepository.isMuted(chatId, userId));
             sendFollowingList(chatId, lang, messageId);
+        } else if (data.equals(CB_FRIENDS_MENU)) {
+            sendFriendsMenu(chatId, lang, messageId);
         } else if (data.equals(CB_FRIENDS_LIST)) {
             sendFollowingList(chatId, lang, messageId);
         } else if (data.equals(CB_FRIENDS_FOLLOWERS)) {
@@ -213,6 +215,12 @@ class FollowHandler extends FlowHandler {
         }
     }
 
+    private InlineKeyboardButton backToFriendsButton(Lang lang) {
+        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
+        back.setCallbackData(CB_FRIENDS_MENU);
+        return back;
+    }
+
     void sendFollowingList(long chatId, Lang lang, Integer editMessageId) {
         List<Long> following = followRepository.followingOf(chatId);
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -226,6 +234,7 @@ class FollowHandler extends FlowHandler {
             mute.setCallbackData(CB_FRIENDS_MUTE + userId);
             rows.add(List.of(view, mute, unfollow));
         }
+        rows.add(List.of(backToFriendsButton(lang)));
         String text = Messages.get(lang, following.isEmpty() ? "friends.list_empty" : "friends.list_header");
         editMessageTextAndMarkup(chatId, editMessageId, text, new InlineKeyboardMarkup(rows));
     }
@@ -241,6 +250,7 @@ class FollowHandler extends FlowHandler {
             profile.setCallbackData(CB_PROFILE_VIEW + userId);
             rows.add(List.of(profile));
         }
+        rows.add(List.of(backToFriendsButton(lang)));
         String text = followers.isEmpty() ? Messages.get(lang, "friends.followers_empty")
                 : Messages.get(lang, "friends.followers_header")
                 + (followers.size() > MAX_LISTED_FOLLOWERS
@@ -303,6 +313,7 @@ class FollowHandler extends FlowHandler {
             share.setUrl(profileShareUrl(userId, lang));
             rows.add(List.of(share));
         }
+        rows.add(List.of(backToFriendsButton(lang)));
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, text.toString(), markup);
