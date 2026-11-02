@@ -33,6 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FlowHandlersTest {
@@ -62,6 +63,7 @@ class FlowHandlersTest {
                 new FoodRepository(dir.resolve("foods.json")),
                 new LanguageRepository(dir.resolve("languages.json")),
                 new FollowRepository(dir.resolve("follows.json")),
+                new com.foodbot.social.UsernameRepository(dir.resolve("usernames.json")),
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());
@@ -591,5 +593,37 @@ class FlowHandlersTest {
         ctx.editFood.handleEditSaveCallback(callback(), 6L, "fesave");
 
         assertEquals("Soup f1", ctx.foodRepository.findById("f1").orElseThrow().getName());
+    }
+
+    @Test
+    void followPromptOffersTheContactPicker() {
+        ctx.follow.sendFollowPrompt(5L, Lang.EN);
+
+        org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup keyboard =
+                (org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup)
+                        sentMessages().get(0).getReplyMarkup();
+        assertNotNull(keyboard.getKeyboard().get(0).get(0).getRequestUser());
+    }
+
+    @Test
+    void followingByUsernameResolvesTheRememberedUser() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        ctx.languageRepository.set(6L, Lang.EN);
+        ctx.usernameRepository.record(6L, "Chef_Anna");
+        ctx.awaitingFollowId.add(5L);
+
+        ctx.follow.handleFollowId(5L, "@chef_anna", Lang.EN, null);
+
+        assertTrue(ctx.followRepository.isFollowing(5L, 6L));
+        assertFalse(ctx.awaitingFollowId.contains(5L));
+    }
+
+    @Test
+    void followingAnUnknownUsernameFollowsNobody() {
+        ctx.languageRepository.set(5L, Lang.EN);
+
+        ctx.follow.handleFollowId(5L, "@nobody_here", Lang.EN, null);
+
+        assertTrue(ctx.followRepository.followingOf(5L).isEmpty());
     }
 }

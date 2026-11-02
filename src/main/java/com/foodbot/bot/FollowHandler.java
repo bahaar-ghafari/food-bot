@@ -3,10 +3,15 @@ package com.foodbot.bot;
 import com.foodbot.food.Food;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
+import com.foodbot.social.UsernameRepository;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonRequestUser;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -61,20 +66,60 @@ class FollowHandler extends FlowHandler {
         }
     }
 
-    void handleFollowId(long chatId, String text, Lang lang, User from) {
-        long target;
+    /** Asks who to follow, offering Telegram's contact picker alongside typing an @username or ID. */
+    void sendFollowPrompt(long chatId, Lang lang) {
+        KeyboardButton pick = new KeyboardButton(Messages.get(lang, "friends.btn_pick_contact"));
+        pick.setRequestUser(new KeyboardButtonRequestUser("1", false, null));
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(pick))));
+        keyboard.setResizeKeyboard(true);
+        keyboard.setOneTimeKeyboard(true);
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "friends.ask_id"));
+        message.setReplyMarkup(keyboard);
         try {
-            target = Long.parseLong(text.trim());
-        } catch (NumberFormatException e) {
-            send(chatId, Messages.get(lang, "friends.bad_id"));
-            return;
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
+    }
+
+    /** The user picked someone with the contact picker. */
+    void handleUserShared(long chatId, long target, Lang lang, User from) {
         awaitingFollowId.remove(chatId);
         if (target != chatId && languageRepository.get(target) == null) {
-            send(chatId, Messages.get(lang, "friends.unknown_user"));
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_user"));
             return;
         }
         followAndNotify(chatId, target, lang, from);
+        sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.menu_hint"));
+    }
+
+    /** Accepts a numeric Telegram ID, or an @username / t.me link of someone who has used the bot. */
+    void handleFollowId(long chatId, String text, Lang lang, User from) {
+        long target;
+        String trimmed = text.trim();
+        if (trimmed.matches("\\d+")) {
+            target = Long.parseLong(trimmed);
+        } else {
+            String username = UsernameRepository.normalize(trimmed);
+            if (username == null || !username.matches("[a-z][a-z0-9_]{3,31}")) {
+                send(chatId, Messages.get(lang, "friends.bad_id"));
+                return;
+            }
+            Long found = ctx.usernameRepository.findChatId(username);
+            if (found == null) {
+                awaitingFollowId.remove(chatId);
+                sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_username", username));
+                return;
+            }
+            target = found;
+        }
+        awaitingFollowId.remove(chatId);
+        if (target != chatId && languageRepository.get(target) == null) {
+            sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_user"));
+            return;
+        }
+        followAndNotify(chatId, target, lang, from);
+        sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.menu_hint"));
     }
 
     /** Follows (or requests to follow) {@code target}, replying to the follower and notifying the target. */
@@ -124,7 +169,7 @@ class FollowHandler extends FlowHandler {
             awaitingFeedback.remove(chatId);
             awaitingSearch.remove(chatId);
             awaitingFollowId.add(chatId);
-            send(chatId, Messages.get(lang, "friends.ask_id"));
+            sendFollowPrompt(chatId, lang);
         } else if (data.equals(CB_FRIENDS_VISIBILITY)) {
             followRepository.setVisible(chatId, !followRepository.isVisible(chatId));
             sendFriendsMenu(chatId, lang, messageId);

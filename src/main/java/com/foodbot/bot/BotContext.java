@@ -13,6 +13,7 @@ import com.foodbot.food.SearchResultContext;
 import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.social.FollowRepository;
+import com.foodbot.social.UsernameRepository;
 
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,7 @@ class BotContext {
     final FoodRepository foodRepository;
     final LanguageRepository languageRepository;
     final FollowRepository followRepository;
+    final UsernameRepository usernameRepository;
     final FavoriteRepository favoriteRepository;
     final ShoppingListRepository shoppingListRepository;
     final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
@@ -62,7 +64,7 @@ class BotContext {
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
-               FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
+               UsernameRepository usernameRepository, FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
                AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
         this.sender = sender;
         this.superAdminChatId = superAdminChatId;
@@ -70,6 +72,7 @@ class BotContext {
         this.foodRepository = foodRepository;
         this.languageRepository = languageRepository;
         this.followRepository = followRepository;
+        this.usernameRepository = usernameRepository;
         this.favoriteRepository = favoriteRepository;
         this.shoppingListRepository = shoppingListRepository;
         this.aiSuggestionService = aiSuggestionService;

@@ -45,6 +45,7 @@ class ShareLinkTest {
                 new FoodRepository(dir.resolve("foods.json")),
                 new LanguageRepository(dir.resolve("languages.json")),
                 new FollowRepository(dir.resolve("follows.json")),
+                new com.foodbot.social.UsernameRepository(dir.resolve("usernames.json")),
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());

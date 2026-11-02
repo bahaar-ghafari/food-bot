@@ -11,6 +11,7 @@ import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
 import com.foodbot.social.FollowRepository;
+import com.foodbot.social.UsernameRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -52,7 +54,8 @@ public class FoodBot extends TelegramLongPollingBot {
                 return FoodBot.this.execute(photo);
             }
         }, superAdminChatId, feedbackChatId, new FoodRepository(),
-                new LanguageRepository(), new FollowRepository(), new FavoriteRepository(), new ShoppingListRepository(),
+                new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
+                new FavoriteRepository(), new ShoppingListRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
         this.ctx.botUsername = username;
@@ -113,7 +116,17 @@ public class FoodBot extends TelegramLongPollingBot {
         return null;
     }
 
+    private void rememberUsername(Update update) {
+        User from = update.hasMessage() ? update.getMessage().getFrom()
+                : update.hasCallbackQuery() ? update.getCallbackQuery().getFrom()
+                : update.hasInlineQuery() ? update.getInlineQuery().getFrom() : null;
+        if (from != null && !Boolean.TRUE.equals(from.getIsBot())) {
+            ctx.usernameRepository.record(from.getId(), from.getUserName());
+        }
+    }
+
     private void processUpdate(Update update) {
+        rememberUsername(update);
         if (update.hasInlineQuery()) {
             ctx.inline.handleInlineQuery(update.getInlineQuery());
             return;
@@ -124,6 +137,15 @@ public class FoodBot extends TelegramLongPollingBot {
                 handleLanguageCallback(callbackQuery);
             } else {
                 handleCallback(callbackQuery);
+            }
+            return;
+        }
+        if (update.hasMessage() && update.getMessage().getUserShared() != null) {
+            long sharer = update.getMessage().getChatId();
+            Lang sharerLang = ctx.languageRepository.get(sharer);
+            if (sharerLang != null) {
+                ctx.follow.handleUserShared(sharer, update.getMessage().getUserShared().getUserId(), sharerLang,
+                        update.getMessage().getFrom());
             }
             return;
         }
@@ -243,7 +265,7 @@ public class FoodBot extends TelegramLongPollingBot {
             String arg = text.length() > 7 ? text.substring(7).trim() : "";
             if (arg.isEmpty()) {
                 ctx.awaitingFollowId.add(chatId);
-                ctx.ui.send(chatId, Messages.get(lang, "friends.ask_id"));
+                ctx.follow.sendFollowPrompt(chatId, lang);
             } else {
                 ctx.follow.handleFollowId(chatId, arg, lang, update.getMessage().getFrom());
             }
