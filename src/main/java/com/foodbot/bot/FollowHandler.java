@@ -299,38 +299,34 @@ class FollowHandler extends FlowHandler {
         }
         boolean self = userId == chatId;
         boolean following = followRepository.isFollowing(chatId, userId);
-        StringBuilder text = new StringBuilder(Messages.get(lang, "profile.card", displayName(userId),
+        // intro first, then the most popular recipes, then the name and counts
+        StringBuilder text = new StringBuilder(Messages.get(lang, "profile.features"));
+        List<Food> owned = foodRepository.findCreatedBy(userId, lang);
+        text.append("\n\n");
+        if (owned.isEmpty()) {
+            text.append(Messages.get(lang, "profile.empty"));
+        } else {
+            // most-starred first; recipes nobody starred yet fall back to newest first
+            List<Food> ranked = new ArrayList<>(owned);
+            java.util.Collections.reverse(ranked);
+            ranked.sort(java.util.Comparator.comparingInt(
+                    (Food f) -> ctx.favoriteRepository.countFavorites(f.getId())).reversed());
+            boolean anyStarred = ctx.favoriteRepository.countFavorites(ranked.get(0).getId()) > 0;
+            text.append(Messages.get(lang, anyStarred ? "profile.popular" : "profile.latest"));
+            for (Food food : ranked.subList(0, Math.min(3, ranked.size()))) {
+                int stars = ctx.favoriteRepository.countFavorites(food.getId());
+                text.append("\n").append(stars > 0
+                        ? Messages.get(lang, "profile.item_stars", food.getName(),
+                                TimeFormat.format(food.getPrepTimeMinutes(), lang), stars)
+                        : Messages.get(lang, "profile.item", food.getName(),
+                                TimeFormat.format(food.getPrepTimeMinutes(), lang)));
+            }
+        }
+        text.append("\n\n").append(Messages.get(lang, "profile.card", displayName(userId),
                 foodRepository.countCreatedBy(userId), followRepository.followersOf(userId).size(),
                 followRepository.followingOf(userId).size()));
         if (ctx.botUsername != null) {
             text.append("\n🔗 ").append(profileDeepLink(userId));
-        }
-        // your own card previews what a non-follower sees, so recipes show only to followers
-        if (following) {
-            List<Food> owned = foodRepository.findCreatedBy(userId, lang);
-            text.append("\n\n");
-            if (owned.isEmpty()) {
-                text.append(Messages.get(lang, "profile.empty"));
-            } else {
-                // most-starred first; recipes nobody starred yet fall back to newest first
-                List<Food> ranked = new ArrayList<>(owned);
-                java.util.Collections.reverse(ranked);
-                ranked.sort(java.util.Comparator.comparingInt(
-                        (Food f) -> ctx.favoriteRepository.countFavorites(f.getId())).reversed());
-                boolean anyStarred = ctx.favoriteRepository.countFavorites(ranked.get(0).getId()) > 0;
-                text.append(Messages.get(lang, anyStarred ? "profile.popular" : "profile.latest"));
-                for (Food food : ranked.subList(0, Math.min(3, ranked.size()))) {
-                    int stars = ctx.favoriteRepository.countFavorites(food.getId());
-                    text.append("\n").append(stars > 0
-                            ? Messages.get(lang, "profile.item_stars", food.getName(),
-                                    TimeFormat.format(food.getPrepTimeMinutes(), lang), stars)
-                            : Messages.get(lang, "profile.item", food.getName(),
-                                    TimeFormat.format(food.getPrepTimeMinutes(), lang)));
-                }
-            }
-        }
-        if (!following) {
-            text.append("\n\n").append(Messages.get(lang, "profile.features"));
         }
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         if (self) {

@@ -151,9 +151,9 @@ class ShareLinkTest {
         addFood("p1", 7L);
         ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
         assertTrue(lastText().contains("Recipes: 1"));
-        assertFalse(lastText().contains("Soup"), "recipe names are only for followers");
-        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.features")));
-        assertTrue(lastText().contains("shopping list"), "card briefly explains the features");
+        assertTrue(lastText().startsWith(Messages.get(Lang.EN, "profile.features")), "card starts with the intro");
+        assertTrue(lastText().contains("Soup"), "popular recipes are visible to everyone");
+        assertTrue(lastText().indexOf("Soup") < lastText().indexOf("Recipes: 1"), "recipes come before the counts");
         assertTrue(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
         InlineKeyboardMarkup markup = (InlineKeyboardMarkup) ((SendMessage) sent.get(sent.size() - 1)).getReplyMarkup();
         String url = markup.getKeyboard().stream().flatMap(List::stream).map(InlineKeyboardButton::getUrl)
@@ -190,8 +190,8 @@ class ShareLinkTest {
         ctx.languageRepository.set(5L, Lang.EN);
         addFood("p1", 5L);
         ctx.follow.sendProfile(5L, Lang.EN, 5L, null);
-        assertFalse(lastText().contains("Soup"), "own card previews the non-follower view");
-        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.features")));
+        assertTrue(lastText().startsWith(Messages.get(Lang.EN, "profile.features")));
+        assertTrue(lastText().contains("Soup"));
     }
 
     private static final String SCOPE_ALL = BotConstants.SCOPE_ALL;

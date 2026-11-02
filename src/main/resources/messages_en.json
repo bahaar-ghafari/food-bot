@@ -213,16 +213,16 @@
   "friends.followers_empty": "Nobody follows you yet. Share your profile so friends can follow you!",
   "friends.followers_more": "(showing the first %s of %s)",
   "profile.card": "🪪 %s\n━━━━━━━━━━━━━━\n🍽️ Recipes: %s  ·  🙋 Followers: %s  ·  ➡️ Following: %s",
-  "profile.latest": "👨‍🍳 Fresh from their kitchen:",
-  "profile.you": "👀 This is how people who don't follow you yet see your profile. Followers also see your recipes.",
+  "profile.latest": "👨‍🍳 Fresh from my kitchen:",
+  "profile.you": "👀 This is how your profile looks to others.",
   "profile.btn_follow": "➕ Follow",
   "profile.btn_recipes": "🍽️ View recipes",
   "profile.unavailable": "I can't find that profile. They need to have started this bot first.",
   "profile.share_text": "👋 Meet %s on Dishcover!\n🍽️ %s recipes · 🙋 %s followers\nTap to follow and get a ping on every new recipe 🔔",
   "profile.unknown_name": "Someone",
-  "profile.popular": "🔥 Most popular from their kitchen:",
+  "profile.popular": "🔥 Most popular from my kitchen:",
   "profile.item_stars": "🍴 %s · ⏱ %s · ⭐ %s",
   "profile.item": "🍴 %s · ⏱ %s",
   "profile.empty": "🌱 No recipes yet — a fresh kitchen!",
-  "profile.features": "👋 I keep my recipes here — follow me to see all of them, now and in the future!\nAnd that's not all, you can also:\n🔗 share recipes with friends in one tap\n🛒 turn missing ingredients into a shopping list\n🍳 find what to cook from what's in your kitchen\n🔔 get a ping whenever I add something new"
+  "profile.features": "👋 Hi! I keep my recipes here. Let's follow each other and get each other's new recipes!\n🔗 share recipes in one tap · 🛒 turn missing ingredients into a shopping list · 🍳 find what to cook from what's in your kitchen"
 }
