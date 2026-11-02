@@ -305,7 +305,8 @@ class FollowHandler extends FlowHandler {
         if (ctx.botUsername != null) {
             text.append("\n🔗 ").append(profileDeepLink(userId));
         }
-        if (self || following) {
+        // your own card previews what a non-follower sees, so recipes show only to followers
+        if (following) {
             List<Food> owned = foodRepository.findCreatedBy(userId, lang);
             text.append("\n\n");
             if (owned.isEmpty()) {

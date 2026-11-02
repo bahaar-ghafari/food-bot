@@ -185,5 +185,14 @@ class ShareLinkTest {
         assertTrue(callbacks().stream().noneMatch(c -> c != null && c.startsWith("frp")));
     }
 
+    @Test
+    void ownProfileMatchesWhatAStrangerSees() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        addFood("p1", 5L);
+        ctx.follow.sendProfile(5L, Lang.EN, 5L, null);
+        assertFalse(lastText().contains("Soup"), "own card previews the non-follower view");
+        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.features")));
+    }
+
     private static final String SCOPE_ALL = BotConstants.SCOPE_ALL;
 }
