@@ -136,6 +136,17 @@ public class FoodRepository {
         return result;
     }
 
+    /** Number of recipes this chat created, across all languages and regardless of personal/global. */
+    public synchronized int countCreatedBy(long chatId) {
+        int count = 0;
+        for (Food food : foods) {
+            if (food.getCreatedByChatId() != null && food.getCreatedByChatId() == chatId) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public synchronized List<String> findAllIngredients(long chatId, Lang lang) {
         TreeSet<String> ingredients = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (Food food : findVisibleTo(chatId, lang)) {

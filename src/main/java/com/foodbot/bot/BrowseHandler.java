@@ -95,7 +95,7 @@ class BrowseHandler extends FlowHandler {
         } else if (scope.startsWith(SCOPE_USER)) {
             long userId = Long.parseLong(scope.substring(SCOPE_USER.length()));
             // a follow can outlive its own approval (e.g. unfollowed in another message)
-            foods = followRepository.isFollowing(chatId, userId) ? foodRepository.findOwnedBy(userId, lang) : List.of();
+            foods = followRepository.isFollowing(chatId, userId) ? foodRepository.findCreatedBy(userId, lang) : List.of();
             headerText = Messages.get(lang, "friends.recipes_header", displayName(userId));
         } else if (scope.equals(SCOPE_ALL)) {
             foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));

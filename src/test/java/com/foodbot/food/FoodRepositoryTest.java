@@ -118,6 +118,7 @@ class FoodRepositoryTest {
         assertTrue(createdByUser.contains(personal));
         assertTrue(createdByUser.contains(movedToGlobal));
         assertFalse(createdByUser.contains(someoneElses));
+        assertEquals(2, repo.countCreatedBy(111L));
     }
 
     @Test

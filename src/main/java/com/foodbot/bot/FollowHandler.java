@@ -283,7 +283,7 @@ class FollowHandler extends FlowHandler {
     String profileShareUrl(long userId, Lang lang) {
         String name = plainName(userId);
         String text = Messages.get(lang, "profile.share_text", name != null ? name : Messages.get(lang, "profile.unknown_name"),
-                foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size());
+                foodRepository.countCreatedBy(userId), followRepository.followersOf(userId).size());
         return "https://t.me/share/url?url=" + URLEncoder.encode(profileDeepLink(userId), StandardCharsets.UTF_8)
                 + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
@@ -300,13 +300,13 @@ class FollowHandler extends FlowHandler {
         boolean self = userId == chatId;
         boolean following = followRepository.isFollowing(chatId, userId);
         StringBuilder text = new StringBuilder(Messages.get(lang, "profile.card", displayName(userId),
-                foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size(),
+                foodRepository.countCreatedBy(userId), followRepository.followersOf(userId).size(),
                 followRepository.followingOf(userId).size()));
         if (ctx.botUsername != null) {
             text.append("\n🔗 ").append(profileDeepLink(userId));
         }
         if (self || following) {
-            List<Food> owned = foodRepository.findOwnedBy(userId, lang);
+            List<Food> owned = foodRepository.findCreatedBy(userId, lang);
             text.append("\n\n");
             if (owned.isEmpty()) {
                 text.append(Messages.get(lang, "profile.empty"));
