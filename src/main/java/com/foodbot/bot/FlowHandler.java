@@ -536,9 +536,7 @@ class FlowHandler {
     ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.add_food"));
-        if (isSuperAdmin(chatId)) {
-            row1.add(Messages.get(lang, "btn.all_foods"));
-        }
+        row1.add(Messages.get(lang, "btn.all_foods"));
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.what_can_cook"));
         row2.add(Messages.get(lang, "btn.search"));

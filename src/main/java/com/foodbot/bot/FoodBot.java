@@ -216,8 +216,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingFollowId.remove(chatId);
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
-        } else if (ctx.ui.isSuperAdmin(chatId)
-                && (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods")))) {
+        } else if (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods"))) {
             ctx.browse.sendViewFoodsPrompt(chatId, lang);
         } else if (text.equalsIgnoreCase("/cook") || text.equals(Messages.get(lang, "btn.what_can_cook"))) {
             ctx.addFoodSessions.remove(chatId);

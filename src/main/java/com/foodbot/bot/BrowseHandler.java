@@ -45,14 +45,16 @@ class BrowseHandler extends FlowHandler {
     }
 
     void sendViewFoodsPrompt(long chatId, Lang lang) {
-        InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "scope.mine"));
-        mine.setCallbackData(CB_VIEW_FOODS_MINE);
-        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "scope.global"));
+        InlineKeyboardButton favorites = new InlineKeyboardButton(Messages.get(lang, "scope.favorites"));
+        favorites.setCallbackData(CB_VIEW_FOODS_FAVORITES);
+        InlineKeyboardButton created = new InlineKeyboardButton(Messages.get(lang, "scope.created"));
+        created.setCallbackData(CB_VIEW_FOODS_CREATED);
+        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "scope.public"));
         global.setCallbackData(CB_VIEW_FOODS_GLOBAL);
         InlineKeyboardButton all = new InlineKeyboardButton(Messages.get(lang, "scope.all"));
         all.setCallbackData(CB_VIEW_FOODS_ALL);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "foods.ask_scope"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(mine, global), List.of(all))));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(favorites, created), List.of(global, all))));
         try {
             execute(message);
         } catch (TelegramApiException e) {
