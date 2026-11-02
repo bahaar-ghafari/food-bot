@@ -309,9 +309,14 @@ class CookHandler extends FlowHandler {
         int clampedPage = Paginator.clampPage(page, totalPages);
         List<Food> pageItems = Paginator.pageSlice(matches, clampedPage, FOODS_PER_PAGE);
 
+        int separatorAt = separatorPosition(chatId, matches, clampedPage * FOODS_PER_PAGE, pageItems.size());
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        for (Food food : pageItems) {
-            String label = icon + " " + FoodNameTranslations.translate(food.getName(), lang) + " ("
+        for (int i = 0; i < pageItems.size(); i++) {
+            Food food = pageItems.get(i);
+            if (i == separatorAt) {
+                rows.add(separatorRow(lang));
+            }
+            String label = icon + " "+ FoodNameTranslations.translate(food.getName(), lang) + " ("
                     + TimeFormat.format(food.getPrepTimeMinutes(), lang) + ")";
             InlineKeyboardButton button = new InlineKeyboardButton(label);
             button.setCallbackData(CB_COOK_VIEW + group + ":" + clampedPage + ":" + food.getId());

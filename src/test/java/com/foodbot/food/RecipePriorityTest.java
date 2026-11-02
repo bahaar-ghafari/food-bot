@@ -27,4 +27,14 @@ class RecipePriorityTest {
 
         assertEquals(List.of(mine, fav, followed, publicFood, publicByStranger), result);
     }
+
+    @Test
+    void publicStartMarksFirstPublicFoodOnlyWhenPriorityFoodsPrecedeIt() {
+        Food mine = food("mine", 1L, 1L);
+        Food pub = food("pub", null, null);
+
+        assertEquals(1, RecipePriority.publicStart(List.of(mine, pub), 1L, Set.of(), Set.of()));
+        assertEquals(-1, RecipePriority.publicStart(List.of(pub, pub), 1L, Set.of(), Set.of()));
+        assertEquals(-1, RecipePriority.publicStart(List.of(mine, mine), 1L, Set.of(), Set.of()));
+    }
 }

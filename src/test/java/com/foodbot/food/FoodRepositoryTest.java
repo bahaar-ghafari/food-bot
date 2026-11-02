@@ -296,4 +296,29 @@ class FoodRepositoryTest {
         assertEquals("FILE1", repo.findById("id-p").orElseThrow().getPhotoFileId());
         assertEquals("FILE1", newRepo(tempDir).findById("id-p").orElseThrow().getPhotoFileId());
     }
+
+    @Test
+    void seedAddsBundledPublicFoodsOnceAndDoesNotRestoreDeletedOnes(@TempDir Path tempDir) {
+        FoodRepository repo = newRepo(tempDir);
+        int added = repo.seedFrom("/seed_foods.json");
+        assertTrue(added > 0);
+        assertFalse(repo.findGlobal(Lang.FA).isEmpty());
+        assertFalse(repo.findGlobal(Lang.EN).isEmpty());
+
+        assertEquals(0, repo.seedFrom("/seed_foods.json"));
+
+        Food seeded = repo.findGlobal(Lang.EN).get(0);
+        repo.delete(seeded.getId());
+        FoodRepository restarted = newRepo(tempDir);
+        assertEquals(0, restarted.seedFrom("/seed_foods.json"));
+        assertFalse(restarted.findById(seeded.getId()).isPresent());
+    }
+
+    @Test
+    void seedSkipsPublicFoodWithSameNameAndLanguage(@TempDir Path tempDir) {
+        FoodRepository repo = newRepo(tempDir);
+        repo.add(new Food("mine", "Sholeh Zard", 5, "Dessert", List.of("rice"), null, null, null, Lang.EN));
+        repo.seedFrom("/seed_foods.json");
+        assertEquals(1, repo.findGlobal(Lang.EN).stream().filter(f -> f.getName().equals("Sholeh Zard")).count());
+    }
 }

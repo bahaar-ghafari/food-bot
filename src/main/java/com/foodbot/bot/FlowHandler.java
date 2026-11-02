@@ -65,6 +65,27 @@ class FlowHandler {
                 new HashSet<>(followRepository.followingOf(chatId)));
     }
 
+    /**
+     * Adds a non-clickable "Bot suggestions" divider row before the first public food on this page,
+     * when the list (ordered by {@link #publicLast}) also holds the user's own recipes before it.
+     * Returns the row to insert at {@code pageItems}-relative position, or -1 for none.
+     */
+    protected int separatorPosition(long chatId, List<Food> foods, int pageStart, int pageSize) {
+        int start = RecipePriority.publicStart(foods, chatId, new HashSet<>(favoriteRepository.idsOf(chatId)),
+                new HashSet<>(followRepository.followingOf(chatId)));
+        if (start < 0) {
+            return -1;
+        }
+        int position = Math.max(start, pageStart) - pageStart;
+        return position < pageSize ? position : -1;
+    }
+
+    protected List<InlineKeyboardButton> separatorRow(Lang lang) {
+        InlineKeyboardButton separator = new InlineKeyboardButton(Messages.get(lang, "foods.bot_suggestions"));
+        separator.setCallbackData("noop");
+        return List.of(separator);
+    }
+
     protected final BotContext ctx;
     protected final FoodRepository foodRepository;
     protected final LanguageRepository languageRepository;

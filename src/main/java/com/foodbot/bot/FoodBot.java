@@ -53,13 +53,19 @@ public class FoodBot extends TelegramLongPollingBot {
             public Message sendPhoto(SendPhoto photo) throws TelegramApiException {
                 return FoodBot.this.execute(photo);
             }
-        }, superAdminChatId, feedbackChatId, new FoodRepository(),
+        }, superAdminChatId, feedbackChatId, seededFoodRepository(),
                 new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
                 new FavoriteRepository(), new ShoppingListRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
         this.ctx.botUsername = username;
         startDigestScheduler();
+    }
+
+    private static FoodRepository seededFoodRepository() {
+        FoodRepository repository = new FoodRepository();
+        repository.seedFrom("/seed_foods.json");
+        return repository;
     }
 
     /** Sends queued follow digests once a day at 18:00 UTC. */

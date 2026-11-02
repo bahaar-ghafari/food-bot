@@ -104,6 +104,8 @@ From a food's detail view → "⚙️ Settings" → "✏️ Edit", you (the food
 
 Whenever you're building or editing a recipe (in `/addfood` or via "✏️ Edit" → recipe), each step is shown numbered with its own row of controls: "✏️" to retype that step's text, "⬆️"/"⬇️" to move it earlier/later (omitted at the first/last position), and "🗑️" to delete it. Type anything to add it as a new step (max 150 characters). Tap "✅ Done" when finished, or "🗑️ Clear recipe" (edit flow only) to empty the recipe (still applied only when you Save). Editing an existing food's recipe starts from its current steps, not from scratch.
 
+Public foods are seeded from `src/main/resources/seed_foods.json` (Iranian dishes in Persian and English): on startup, any seed id the install has never had is added to `foods.json`, and ids are remembered in `seeded-foods.json` beside it, so a seed food an admin deletes or edits is never restored or overwritten. In mixed lists (search, "All foods", /cook results), a "🤖 Bot suggestions" divider row separates your own, favorite and followed recipes from public ones.
+
 Saved foods (name, category, prep time, ingredients with their optional amounts, and an optional recipe) are persisted to `foods.json`, and each chat's language choice to `languages.json`, both in the working directory. The ingredient buttons shown are built from ingredients already used in foods visible to you, so the list grows as you add more.
 
 ### Language separation

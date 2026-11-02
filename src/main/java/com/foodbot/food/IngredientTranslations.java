@@ -81,6 +81,22 @@ public final class IngredientTranslations {
         addPair("pepper", "فلفل");
         addPair("sunflower seeds", "تخمه");
         addPair("spice", "ادویه");
+        addPair("almonds", "بادام");
+        addPair("bell pepper", "فلفل دلمه");
+        addPair("cardamom", "هل");
+        addPair("dates", "خرما");
+        addPair("fava beans", "باقالی");
+        addPair("green beans", "لوبیا سبز");
+        addPair("kashk", "کشک");
+        addPair("mayonnaise", "مایونز");
+        addPair("tomato paste", "رب گوجه فرنگی");
+        addPair("green peas", "نخود فرنگی");
+        addPair("pickles", "خیارشور");
+        addPair("pistachio", "پسته");
+        addPair("pomegranate molasses", "رب انار");
+        addPair("rice flour", "آرد برنج");
+        addPair("vinegar", "سرکه");
+        addPair("yeast", "خمیرمایه");
     }
 
     private static void addPair(String en, String fa) {

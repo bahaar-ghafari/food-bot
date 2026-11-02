@@ -32,6 +32,19 @@ public final class RecipePriority {
         return first;
     }
 
+    /**
+     * Index of the first plain public food in a list already ordered by {@link #publicLast}, or -1
+     * when there is nothing to separate (no public foods, or none of the user's own before them).
+     */
+    public static int publicStart(List<Food> foods, long chatId, Set<String> favoriteIds, Set<Long> followedIds) {
+        for (int i = 0; i < foods.size(); i++) {
+            if (!isPriority(foods.get(i), chatId, favoriteIds, followedIds)) {
+                return i == 0 ? -1 : i;
+            }
+        }
+        return -1;
+    }
+
     private RecipePriority() {
     }
 }

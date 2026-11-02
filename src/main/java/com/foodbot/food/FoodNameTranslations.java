@@ -20,6 +20,36 @@ public final class FoodNameTranslations {
         addPair("زرشک پلو با مرغ", "Zereshk Polo ba Morgh");
         addPair("دوغ", "Doogh");
         addPair("فالوده", "Faloodeh");
+addPair("باقالی پلو با مرغ", "Baghali Polo ba Morgh");
+        addPair("سبزی پلو با ماهی", "Sabzi Polo ba Mahi");
+        addPair("عدس پلو", "Adas Polo");
+        addPair("لوبیا پلو", "Loobia Polo");
+        addPair("شیرین پلو", "Shirin Polo");
+        addPair("چلو کباب", "Chelo Kabab");
+        addPair("کباب برگ", "Kabab Barg");
+        addPair("خورشت کرفس", "Khoresht Karafs");
+        addPair("خورشت بادمجان", "Khoresht Bademjan");
+        addPair("دلمه برگ مو", "Dolmeh Barg-e Mo");
+        addPair("دلمه فلفل", "Dolmeh Felfel");
+        addPair("کوفته تبریزی", "Kofteh Tabrizi");
+        addPair("کتلت", "Kotlet");
+        addPair("شامی", "Shami");
+        addPair("آبگوشت", "Abgoosht");
+        addPair("کشک بادمجان", "Kashk Bademjan");
+        addPair("ماست و خیار", "Mast-o-Khiar");
+        addPair("سالاد شیرازی", "Salad Shirazi");
+        addPair("سالاد الویه", "Salad Olivieh");
+        addPair("کوکو سیب‌زمینی", "Kuku Sibzamini");
+        addPair("بورانی اسفناج", "Borani Esfenaj");
+        addPair("نرگسی اسفناج", "Nargesi Esfenaj");
+        addPair("آش انار", "Ash Anar");
+        addPair("سوپ جو", "Soup Jo");
+        addPair("شله زرد", "Sholeh Zard");
+        addPair("شیر برنج", "Shir Berenj");
+        addPair("حلوا", "Halva");
+        addPair("حلوا ارده", "Halva Ardeh");
+        addPair("زولبیا بامیه", "Zoolbia Bamieh");
+        addPair("شربت سکنجبین", "Sekanjabin");
     }
 
     private static void addPair(String fa, String en) {

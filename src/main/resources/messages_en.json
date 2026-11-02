@@ -105,6 +105,7 @@
   "food.source_manual": "Added manually",
   "food.source_manual_by": "Added manually · recipe by %s",
   "foods.ask_scope": "What do you want to see?",
+  "foods.bot_suggestions": "──── 🤖 Bot suggestions ────",
   "foods.header.all": "🌐 All foods (yours + global) — tap one for details:",
   "foods.header.created": "🍽️ Recipes you've added (personal or global) — tap one for details:",
   "foods.header.favorites": "⭐ Your favorite recipes — tap one for details:",

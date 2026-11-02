@@ -136,8 +136,14 @@ class BrowseHandler extends FlowHandler {
         int clampedPage = Paginator.clampPage(page, totalPages);
         List<Food> pageItems = Paginator.pageSlice(foods, clampedPage, FOODS_PER_PAGE);
 
+        int separatorAt = scope.equals(SCOPE_ALL) || scope.equals(SCOPE_SEARCH)
+                ? separatorPosition(chatId, foods, clampedPage * FOODS_PER_PAGE, pageItems.size()) : -1;
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        for (Food food : pageItems) {
+        for (int i = 0; i < pageItems.size(); i++) {
+            Food food = pageItems.get(i);
+            if (i == separatorAt) {
+                rows.add(separatorRow(lang));
+            }
             String label = FoodNameTranslations.translate(food.getName(), lang) + " ("
                     + TimeFormat.format(food.getPrepTimeMinutes(), lang) + ")";
             InlineKeyboardButton button = new InlineKeyboardButton(label);

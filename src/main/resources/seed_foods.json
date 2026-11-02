@@ -1,0 +1,1060 @@
+[
+ {
+  "id": "seed-ir-baghali-polo-fa",
+  "name": "باقالی پلو با مرغ",
+  "prepTimeMinutes": 75,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "باقالی",
+   "شیوید",
+   "مرغ",
+   "پیاز",
+   "زعفران",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. مرغ را با پیاز، زردچوبه و نمک بپزید.\n2. برنج را نیم‌پز کنید و باقالی پاک‌شده را به آن اضافه کنید.\n3. برنج و باقالی را لایه‌لایه با شیوید خرد‌شده در قابلمه بریزید.\n4. روی آن زعفران دم‌کرده بپاشید و ۴۰ دقیقه دم بگذارید. با مرغ سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-baghali-polo-en",
+  "name": "Baghali Polo ba Morgh",
+  "prepTimeMinutes": 75,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "fava beans",
+   "dill",
+   "chicken",
+   "onion",
+   "saffron",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Cook the chicken with onion, turmeric and salt.\n2. Parboil the rice and add the shelled fava beans.\n3. Layer rice and beans with chopped dill in the pot.\n4. Sprinkle with brewed saffron and steam for 40 minutes. Serve with the chicken.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-sabzi-polo-mahi-fa",
+  "name": "سبزی پلو با ماهی",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "جعفری",
+   "شیوید",
+   "تره",
+   "سیر",
+   "ماهی",
+   "زعفران",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. سبزی‌ها را ریز خرد کنید.\n2. برنج را نیم‌پز کنید و لایه‌لایه با سبزی در قابلمه بریزید.\n3. ۴۰ دقیقه دم بگذارید.\n4. ماهی را با نمک و زردچوبه سرخ کنید و کنار پلو سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-sabzi-polo-mahi-en",
+  "name": "Sabzi Polo ba Mahi",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "parsley",
+   "dill",
+   "leek",
+   "garlic",
+   "fish",
+   "saffron",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Finely chop the herbs.\n2. Parboil the rice and layer it with the herbs in the pot.\n3. Steam for 40 minutes.\n4. Fry the fish with salt and serve alongside the rice.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-adas-polo-fa",
+  "name": "عدس پلو",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "عدس",
+   "کشمش",
+   "پیاز",
+   "زعفران",
+   "دارچین",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. عدس را نیم‌پز کنید.\n2. پیاز را سرخ کنید و کشمش را کمی تفت دهید.\n3. برنج را نیم‌پز کنید و با عدس لایه‌لایه در قابلمه بریزید.\n4. ۴۰ دقیقه دم بگذارید و با کشمش و زعفران تزیین کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-adas-polo-en",
+  "name": "Adas Polo",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "lentil",
+   "raisins",
+   "onion",
+   "saffron",
+   "cinnamon",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Partly cook the lentils.\n2. Fry the onion and lightly sauté the raisins.\n3. Parboil the rice and layer it with the lentils in the pot.\n4. Steam for 40 minutes and top with raisins and saffron.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-loobia-polo-fa",
+  "name": "لوبیا پلو",
+  "prepTimeMinutes": 70,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "لوبیا سبز",
+   "گوشت",
+   "رب گوجه فرنگی",
+   "پیاز",
+   "زردچوبه",
+   "دارچین",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. گوشت و پیاز را با زردچوبه تفت دهید.\n2. رب و لوبیا سبز خرد‌شده را اضافه کنید و بپزید.\n3. برنج را نیم‌پز کنید و با مخلوط گوشت و لوبیا لایه‌لایه بریزید.\n4. ۴۰ دقیقه دم بگذارید و با دارچین سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-loobia-polo-en",
+  "name": "Loobia Polo",
+  "prepTimeMinutes": 70,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "green beans",
+   "meat",
+   "tomato paste",
+   "onion",
+   "turmeric",
+   "cinnamon",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Sauté the meat and onion with turmeric.\n2. Add tomato paste and chopped green beans and cook through.\n3. Parboil the rice and layer it with the meat and beans.\n4. Steam for 40 minutes and serve with cinnamon.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-shirin-polo-fa",
+  "name": "شیرین پلو",
+  "prepTimeMinutes": 80,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "مرغ",
+   "هویج",
+   "بادام",
+   "پسته",
+   "زرشک",
+   "شکر",
+   "زعفران",
+   "کره"
+  ],
+  "recipe": "1. پوست هویج را به نوارهای نازک ببرید و با شکر و کره تفت دهید.\n2. بادام، پسته و زرشک را اضافه کنید.\n3. برنج را نیم‌پز و با مخلوط شیرین لایه‌لایه دم کنید.\n4. با مرغ پخته سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-shirin-polo-en",
+  "name": "Shirin Polo",
+  "prepTimeMinutes": 80,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "chicken",
+   "carrot",
+   "almonds",
+   "pistachio",
+   "barberries",
+   "sugar",
+   "saffron",
+   "butter"
+  ],
+  "recipe": "1. Cut the carrot into thin strips and sauté with sugar and butter.\n2. Add the almonds, pistachios and barberries.\n3. Parboil the rice and steam it layered with the sweet mix.\n4. Serve with cooked chicken.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-chelo-kabab-fa",
+  "name": "چلو کباب",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "برنج",
+   "گوشت",
+   "پیاز",
+   "گوجه فرنگی",
+   "کره",
+   "زعفران",
+   "نمک"
+  ],
+  "recipe": "1. گوشت چرخ‌کرده را با پیاز رنده‌شده و نمک ورز دهید.\n2. به شکل کوبیده روی سیخ بکشید و روی آتش کباب کنید.\n3. برنج را آبکش و دم کنید.\n4. با گوجه کبابی، کره و زعفران سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-chelo-kabab-en",
+  "name": "Chelo Kabab",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "rice",
+   "meat",
+   "onion",
+   "tomato",
+   "butter",
+   "saffron",
+   "salt"
+  ],
+  "recipe": "1. Knead minced meat with grated onion and salt.\n2. Mold onto skewers and grill over fire.\n3. Boil, drain and steam the rice.\n4. Serve with grilled tomato, butter and saffron.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-kabab-barg-fa",
+  "name": "کباب برگ",
+  "prepTimeMinutes": 45,
+  "category": "MainCourse",
+  "ingredients": [
+   "گوشت",
+   "پیاز",
+   "زعفران",
+   "ماست",
+   "نمک",
+   "فلفل"
+  ],
+  "recipe": "1. گوشت را به برگ‌های نازک برش دهید.\n2. با پیاز رنده‌شده، ماست، زعفران و نمک ۴ ساعت مرینیت کنید.\n3. روی سیخ بکشید و کباب کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-kabab-barg-en",
+  "name": "Kabab Barg",
+  "prepTimeMinutes": 45,
+  "category": "MainCourse",
+  "ingredients": [
+   "meat",
+   "onion",
+   "saffron",
+   "yogurt",
+   "salt",
+   "pepper"
+  ],
+  "recipe": "1. Slice the meat into thin pieces.\n2. Marinate with grated onion, yogurt, saffron and salt for 4 hours.\n3. Thread onto skewers and grill.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-khoresht-karafs-fa",
+  "name": "خورشت کرفس",
+  "prepTimeMinutes": 120,
+  "category": "MainCourse",
+  "ingredients": [
+   "کرفس",
+   "گوشت",
+   "جعفری",
+   "نعنا",
+   "پیاز",
+   "لیمو",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. گوشت و پیاز را با زردچوبه تفت دهید و آب اضافه کنید تا بپزد.\n2. جعفری، نعنا و کرفس را جداگانه سرخ کنید.\n3. سبزی‌ها را به گوشت اضافه کنید و ۱ ساعت بپزید.\n4. در آخر آب‌لیمو اضافه کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-khoresht-karafs-en",
+  "name": "Khoresht Karafs",
+  "prepTimeMinutes": 120,
+  "category": "MainCourse",
+  "ingredients": [
+   "celery",
+   "meat",
+   "parsley",
+   "mint",
+   "onion",
+   "lemon",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Sauté meat and onion with turmeric and add water to simmer.\n2. Fry the parsley, mint and celery separately.\n3. Add the herbs to the meat and simmer for 1 hour.\n4. Finish with lemon juice.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-khoresht-bademjan-fa",
+  "name": "خورشت بادمجان",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "بادمجان",
+   "گوشت",
+   "گوجه فرنگی",
+   "پیاز",
+   "زردچوبه",
+   "لیمو",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. بادمجان‌ها را پوست بگیرید و سرخ کنید.\n2. گوشت و پیاز را با زردچوبه تفت دهید و بپزید.\n3. گوجه و بادمجان را اضافه کنید.\n4. ۳۰ دقیقه با حرارت کم بپزید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-khoresht-bademjan-en",
+  "name": "Khoresht Bademjan",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "eggplant",
+   "meat",
+   "tomato",
+   "onion",
+   "turmeric",
+   "lemon",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Peel and fry the eggplant.\n2. Sauté and cook the meat with onion and turmeric.\n3. Add the tomatoes and eggplant.\n4. Simmer on low heat for 30 minutes.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-dolmeh-barg-mo-fa",
+  "name": "دلمه برگ مو",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "برگ مو",
+   "برنج",
+   "لپه",
+   "پیاز",
+   "جعفری",
+   "نعنا",
+   "شیوید",
+   "لیمو",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. برنج، لپه و سبزی‌ها را با پیاز سرخ‌شده مخلوط کنید.\n2. مقداری از مخلوط را داخل هر برگ مو بپیچید.\n3. دلمه‌ها را در قابلمه بچینید و آب‌لیمو و کمی آب اضافه کنید.\n4. ۴۰ دقیقه با حرارت کم بپزید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-dolmeh-barg-mo-en",
+  "name": "Dolmeh Barg-e Mo",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "grape leaves",
+   "rice",
+   "split peas",
+   "onion",
+   "parsley",
+   "mint",
+   "dill",
+   "lemon",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Mix rice, split peas and herbs with fried onion.\n2. Roll some filling into each grape leaf.\n3. Arrange in a pot and add lemon juice and a little water.\n4. Simmer on low heat for 40 minutes.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-dolmeh-felfel-fa",
+  "name": "دلمه فلفل",
+  "prepTimeMinutes": 80,
+  "category": "MainCourse",
+  "ingredients": [
+   "فلفل دلمه",
+   "گوشت",
+   "برنج",
+   "پیاز",
+   "گوجه فرنگی",
+   "رب گوجه فرنگی",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. گوشت، برنج، پیاز و ادویه را مخلوط کنید.\n2. داخل فلفل‌دلمه‌ها را پر کنید.\n3. رب را در آب حل کنید و ته قابلمه بریزید.\n4. فلفل‌ها را بچینید و ۴۵ دقیقه بپزید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-dolmeh-felfel-en",
+  "name": "Dolmeh Felfel",
+  "prepTimeMinutes": 80,
+  "category": "MainCourse",
+  "ingredients": [
+   "bell pepper",
+   "meat",
+   "rice",
+   "onion",
+   "tomato",
+   "tomato paste",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Mix the meat, rice, onion and spices.\n2. Stuff the bell peppers.\n3. Dilute tomato paste in water and pour it into the pot.\n4. Add the peppers and cook for 45 minutes.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-kofteh-tabrizi-fa",
+  "name": "کوفته تبریزی",
+  "prepTimeMinutes": 120,
+  "category": "MainCourse",
+  "ingredients": [
+   "گوشت",
+   "برنج",
+   "لپه",
+   "تخم مرغ",
+   "پیاز",
+   "جعفری",
+   "زعفران",
+   "زرشک",
+   "زردچوبه",
+   "نمک"
+  ],
+  "recipe": "1. گوشت، برنج، لپه و سبزی را با نمک ورز دهید.\n2. در وسط هر کوفته یک تخم‌مرغ آب‌پز بگذارید.\n3. در سس پیاز، زعفران و زردچوبه بپزید.\n4. ۱ ساعت با حرارت کم بپزید و با زرشک تزیین کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-kofteh-tabrizi-en",
+  "name": "Kofteh Tabrizi",
+  "prepTimeMinutes": 120,
+  "category": "MainCourse",
+  "ingredients": [
+   "meat",
+   "rice",
+   "split peas",
+   "egg",
+   "onion",
+   "parsley",
+   "saffron",
+   "barberries",
+   "turmeric",
+   "salt"
+  ],
+  "recipe": "1. Knead meat, rice, split peas and herbs with salt.\n2. Place a boiled egg in the center of each meatball.\n3. Cook in a sauce of onion, saffron and turmeric.\n4. Simmer for 1 hour and garnish with barberries.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-kotlet-fa",
+  "name": "کتلت",
+  "prepTimeMinutes": 40,
+  "category": "MainCourse",
+  "ingredients": [
+   "گوشت",
+   "سیب زمینی",
+   "پیاز",
+   "تخم مرغ",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. سیب‌زمینی پخته را له کنید.\n2. با گوشت چرخ‌کرده، پیاز رنده‌شده، تخم‌مرغ و ادویه مخلوط کنید.\n3. شکل دهید و در روغن سرخ کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-kotlet-en",
+  "name": "Kotlet",
+  "prepTimeMinutes": 40,
+  "category": "MainCourse",
+  "ingredients": [
+   "meat",
+   "potato",
+   "onion",
+   "egg",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Mash the boiled potato.\n2. Mix with minced meat, grated onion, egg and spices.\n3. Shape and fry in oil.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-shami-fa",
+  "name": "شامی",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "گوشت",
+   "لپه",
+   "پیاز",
+   "تخم مرغ",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. گوشت و لپه را با پیاز بپزید و چرخ کنید.\n2. تخم‌مرغ و ادویه اضافه کنید و ورز دهید.\n3. شکل دهید و سرخ کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-shami-en",
+  "name": "Shami",
+  "prepTimeMinutes": 60,
+  "category": "MainCourse",
+  "ingredients": [
+   "meat",
+   "split peas",
+   "onion",
+   "egg",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Cook the meat and split peas with onion, then mince.\n2. Add egg and spices and knead.\n3. Shape and fry.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-abgoosht-fa",
+  "name": "آبگوشت",
+  "prepTimeMinutes": 180,
+  "category": "MainCourse",
+  "ingredients": [
+   "گوشت",
+   "نخود",
+   "سیب زمینی",
+   "پیاز",
+   "گوجه فرنگی",
+   "زردچوبه",
+   "لیمو",
+   "نمک"
+  ],
+  "recipe": "1. گوشت، نخود و پیاز را با زردچوبه در آب بپزید.\n2. بعد از ۲ ساعت سیب‌زمینی و گوجه اضافه کنید.\n3. تا نرم شدن بپزید و با نان و سبزی سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-abgoosht-en",
+  "name": "Abgoosht",
+  "prepTimeMinutes": 180,
+  "category": "MainCourse",
+  "ingredients": [
+   "meat",
+   "chickpeas",
+   "potato",
+   "onion",
+   "tomato",
+   "turmeric",
+   "lemon",
+   "salt"
+  ],
+  "recipe": "1. Cook meat, chickpeas and onion with turmeric in water.\n2. After 2 hours add potato and tomato.\n3. Cook until tender and serve with bread and herbs.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-kashk-bademjan-fa",
+  "name": "کشک بادمجان",
+  "prepTimeMinutes": 45,
+  "category": "Snack",
+  "ingredients": [
+   "بادمجان",
+   "کشک",
+   "پیاز",
+   "سیر",
+   "گردو",
+   "نعنا",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. بادمجان را سرخ یا کباب کنید و له کنید.\n2. پیاز و سیر را سرخ کنید و به بادمجان اضافه کنید.\n3. کشک را اضافه کنید.\n4. با نعنا داغ و گردو تزیین کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-kashk-bademjan-en",
+  "name": "Kashk Bademjan",
+  "prepTimeMinutes": 45,
+  "category": "Snack",
+  "ingredients": [
+   "eggplant",
+   "kashk",
+   "onion",
+   "garlic",
+   "walnut",
+   "mint",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Fry or grill the eggplant and mash it.\n2. Fry onion and garlic and add to the eggplant.\n3. Stir in the kashk.\n4. Garnish with fried mint and walnuts.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-mast-o-khiar-fa",
+  "name": "ماست و خیار",
+  "prepTimeMinutes": 5,
+  "category": "Snack",
+  "ingredients": [
+   "ماست",
+   "خیار",
+   "نعنا",
+   "کشمش",
+   "گردو",
+   "نمک"
+  ],
+  "recipe": "1. خیار را خرد کنید.\n2. با ماست مخلوط کنید.\n3. نعنا، کشمش و گردو اضافه کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-mast-o-khiar-en",
+  "name": "Mast-o-Khiar",
+  "prepTimeMinutes": 5,
+  "category": "Snack",
+  "ingredients": [
+   "yogurt",
+   "cucumber",
+   "mint",
+   "raisins",
+   "walnut",
+   "salt"
+  ],
+  "recipe": "1. Dice the cucumber.\n2. Mix with yogurt.\n3. Add mint, raisins and walnuts.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-salad-shirazi-fa",
+  "name": "سالاد شیرازی",
+  "prepTimeMinutes": 10,
+  "category": "Snack",
+  "ingredients": [
+   "خیار",
+   "گوجه فرنگی",
+   "پیاز",
+   "نعنا",
+   "لیمو",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. خیار، گوجه و پیاز را ریز خرد کنید.\n2. نعنا، نمک، آب‌لیمو و روغن زیتون اضافه کنید.\n3. مخلوط کنید و سرد سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-salad-shirazi-en",
+  "name": "Salad Shirazi",
+  "prepTimeMinutes": 10,
+  "category": "Snack",
+  "ingredients": [
+   "cucumber",
+   "tomato",
+   "onion",
+   "mint",
+   "lemon",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Dice the cucumber, tomato and onion.\n2. Add mint, salt, lemon juice and oil.\n3. Toss and serve cold.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-salad-olivieh-fa",
+  "name": "سالاد الویه",
+  "prepTimeMinutes": 45,
+  "category": "Snack",
+  "ingredients": [
+   "مرغ",
+   "سیب زمینی",
+   "تخم مرغ",
+   "خیارشور",
+   "نخود فرنگی",
+   "هویج",
+   "مایونز",
+   "نمک"
+  ],
+  "recipe": "1. سیب‌زمینی، تخم‌مرغ، هویج و مرغ را بپزید.\n2. همه را ریز خرد کنید.\n3. خیارشور، نخود فرنگی و مایونز اضافه کنید و مخلوط کنید.\n4. چند ساعت در یخچال بگذارید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-salad-olivieh-en",
+  "name": "Salad Olivieh",
+  "prepTimeMinutes": 45,
+  "category": "Snack",
+  "ingredients": [
+   "chicken",
+   "potato",
+   "egg",
+   "pickles",
+   "green peas",
+   "carrot",
+   "mayonnaise",
+   "salt"
+  ],
+  "recipe": "1. Cook the potato, egg, carrot and chicken.\n2. Dice everything finely.\n3. Add pickles, peas and mayonnaise and mix.\n4. Chill for a few hours.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-kuku-sibzamini-fa",
+  "name": "کوکو سیب‌زمینی",
+  "prepTimeMinutes": 40,
+  "category": "Snack",
+  "ingredients": [
+   "سیب زمینی",
+   "تخم مرغ",
+   "پیاز",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. سیب‌زمینی را بپزید و له کنید.\n2. تخم‌مرغ، پیاز رنده‌شده و ادویه اضافه کنید.\n3. در تابه با روغن از دو طرف سرخ کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-kuku-sibzamini-en",
+  "name": "Kuku Sibzamini",
+  "prepTimeMinutes": 40,
+  "category": "Snack",
+  "ingredients": [
+   "potato",
+   "egg",
+   "onion",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Boil and mash the potatoes.\n2. Add egg, grated onion and spices.\n3. Fry in a pan with oil on both sides.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-borani-esfenaj-fa",
+  "name": "بورانی اسفناج",
+  "prepTimeMinutes": 20,
+  "category": "Snack",
+  "ingredients": [
+   "اسفناج",
+   "ماست",
+   "سیر",
+   "پیاز",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. اسفناج را خرد کنید و با پیاز تفت دهید.\n2. بگذارید خنک شود.\n3. با ماست و سیر مخلوط کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-borani-esfenaj-en",
+  "name": "Borani Esfenaj",
+  "prepTimeMinutes": 20,
+  "category": "Snack",
+  "ingredients": [
+   "spinach",
+   "yogurt",
+   "garlic",
+   "onion",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Chop the spinach and sauté with onion.\n2. Let it cool.\n3. Mix with yogurt and garlic.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-nargesi-esfenaj-fa",
+  "name": "نرگسی اسفناج",
+  "prepTimeMinutes": 25,
+  "category": "Breakfast",
+  "ingredients": [
+   "اسفناج",
+   "تخم مرغ",
+   "پیاز",
+   "سیر",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. اسفناج را با پیاز و سیر تفت دهید.\n2. تخم‌مرغ‌ها را روی آن بشکنید.\n3. بگذارید تخم‌مرغ‌ها بسته شوند و با نان سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-nargesi-esfenaj-en",
+  "name": "Nargesi Esfenaj",
+  "prepTimeMinutes": 25,
+  "category": "Breakfast",
+  "ingredients": [
+   "spinach",
+   "egg",
+   "onion",
+   "garlic",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Sauté the spinach with onion and garlic.\n2. Crack the eggs over the top.\n3. Let the eggs set and serve with bread.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-ash-anar-fa",
+  "name": "آش انار",
+  "prepTimeMinutes": 150,
+  "category": "MainCourse",
+  "ingredients": [
+   "رب انار",
+   "برنج",
+   "لپه",
+   "گوشت",
+   "جعفری",
+   "نعنا",
+   "پیاز",
+   "زردچوبه",
+   "روغن",
+   "نمک"
+  ],
+  "recipe": "1. لپه، برنج و گوشت را بپزید.\n2. سبزی‌ها و پیاز داغ را اضافه کنید.\n3. رب انار را اضافه کنید و ۱ ساعت بپزید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-ash-anar-en",
+  "name": "Ash Anar",
+  "prepTimeMinutes": 150,
+  "category": "MainCourse",
+  "ingredients": [
+   "pomegranate molasses",
+   "rice",
+   "split peas",
+   "meat",
+   "parsley",
+   "mint",
+   "onion",
+   "turmeric",
+   "oil",
+   "salt"
+  ],
+  "recipe": "1. Cook the split peas, rice and meat.\n2. Add herbs and fried onion.\n3. Stir in pomegranate molasses and cook for 1 hour.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-soup-jo-fa",
+  "name": "سوپ جو",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "مرغ",
+   "هویج",
+   "کرفس",
+   "پیاز",
+   "شیر",
+   "کره",
+   "آرد",
+   "نمک"
+  ],
+  "recipe": "1. جو را از شب قبل خیس کنید.\n2. مرغ، جو و سبزیجات را بپزید.\n3. آرد و کره را تفت دهید و اضافه کنید.\n4. شیر اضافه کنید و بجوشانید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-soup-jo-en",
+  "name": "Soup Jo",
+  "prepTimeMinutes": 90,
+  "category": "MainCourse",
+  "ingredients": [
+   "chicken",
+   "carrot",
+   "celery",
+   "onion",
+   "milk",
+   "butter",
+   "flour",
+   "salt"
+  ],
+  "recipe": "1. Soak the barley overnight.\n2. Cook the chicken, barley and vegetables.\n3. Sauté flour and butter and add them.\n4. Add milk and bring to a boil.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-sholeh-zard-fa",
+  "name": "شله زرد",
+  "prepTimeMinutes": 90,
+  "category": "Dessert",
+  "ingredients": [
+   "برنج",
+   "شکر",
+   "زعفران",
+   "گلاب",
+   "بادام",
+   "دارچین",
+   "کره",
+   "آب"
+  ],
+  "recipe": "1. برنج را در آب خوب بپزید تا له شود.\n2. شکر و زعفران را اضافه کنید.\n3. کره و گلاب را اضافه کنید و بپزید تا غلیظ شود.\n4. با دارچین و بادام تزیین کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-sholeh-zard-en",
+  "name": "Sholeh Zard",
+  "prepTimeMinutes": 90,
+  "category": "Dessert",
+  "ingredients": [
+   "rice",
+   "sugar",
+   "saffron",
+   "rosewater",
+   "almonds",
+   "cinnamon",
+   "butter",
+   "water"
+  ],
+  "recipe": "1. Cook the rice in water until very soft.\n2. Add sugar and saffron.\n3. Add butter and rose water and cook until thick.\n4. Decorate with cinnamon and almonds.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-shir-berenj-fa",
+  "name": "شیر برنج",
+  "prepTimeMinutes": 50,
+  "category": "Dessert",
+  "ingredients": [
+   "برنج",
+   "شیر",
+   "شکر",
+   "گلاب",
+   "دارچین",
+   "هل"
+  ],
+  "recipe": "1. برنج را با آب بپزید.\n2. شیر و شکر اضافه کنید و هم بزنید تا غلیظ شود.\n3. گلاب اضافه کنید و با دارچین سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-shir-berenj-en",
+  "name": "Shir Berenj",
+  "prepTimeMinutes": 50,
+  "category": "Dessert",
+  "ingredients": [
+   "rice",
+   "milk",
+   "sugar",
+   "rosewater",
+   "cinnamon",
+   "cardamom"
+  ],
+  "recipe": "1. Cook the rice in water.\n2. Add milk and sugar and stir until thick.\n3. Add rose water and serve with cinnamon.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-halva-fa",
+  "name": "حلوا",
+  "prepTimeMinutes": 30,
+  "category": "Dessert",
+  "ingredients": [
+   "آرد",
+   "کره",
+   "شکر",
+   "گلاب",
+   "زعفران",
+   "آب"
+  ],
+  "recipe": "1. آرد را در کره تفت دهید تا طلایی شود.\n2. شربت شکر، گلاب و زعفران را اضافه کنید.\n3. هم بزنید تا حلوا از دیواره جدا شود.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-halva-en",
+  "name": "Halva",
+  "prepTimeMinutes": 30,
+  "category": "Dessert",
+  "ingredients": [
+   "flour",
+   "butter",
+   "sugar",
+   "rosewater",
+   "saffron",
+   "water"
+  ],
+  "recipe": "1. Toast the flour in butter until golden.\n2. Add the sugar syrup, rose water and saffron.\n3. Stir until it comes away from the pan.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-halva-ardeh-fa",
+  "name": "حلوا ارده",
+  "prepTimeMinutes": 15,
+  "category": "Dessert",
+  "ingredients": [
+   "ارده",
+   "شکر",
+   "خرما",
+   "گردو",
+   "آب"
+  ],
+  "recipe": "1. ارده را با شیره یا شکر مخلوط کنید.\n2. گردو خرد‌شده اضافه کنید.\n3. با نان یا خرما سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-halva-ardeh-en",
+  "name": "Halva Ardeh",
+  "prepTimeMinutes": 15,
+  "category": "Dessert",
+  "ingredients": [
+   "tahini",
+   "sugar",
+   "dates",
+   "walnut",
+   "water"
+  ],
+  "recipe": "1. Mix the tahini with sugar or syrup.\n2. Add chopped walnuts.\n3. Serve with bread or dates.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-zoolbia-bamieh-fa",
+  "name": "زولبیا بامیه",
+  "prepTimeMinutes": 60,
+  "category": "Dessert",
+  "ingredients": [
+   "آرد",
+   "ماست",
+   "آرد برنج",
+   "خمیرمایه",
+   "شکر",
+   "آب",
+   "گلاب",
+   "زعفران",
+   "روغن"
+  ],
+  "recipe": "1. آرد، ماست، خمیرمایه و آب را مخلوط کنید و استراحت دهید.\n2. با قیف در روغن داغ بریزید.\n3. در شربت شکر، گلاب و زعفران بیندازید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-zoolbia-bamieh-en",
+  "name": "Zoolbia Bamieh",
+  "prepTimeMinutes": 60,
+  "category": "Dessert",
+  "ingredients": [
+   "flour",
+   "yogurt",
+   "rice flour",
+   "yeast",
+   "sugar",
+   "water",
+   "rosewater",
+   "saffron",
+   "oil"
+  ],
+  "recipe": "1. Mix flour, yogurt, yeast and water and let rest.\n2. Pipe into hot oil.\n3. Soak in sugar syrup with rose water and saffron.",
+  "language": "EN"
+ },
+ {
+  "id": "seed-ir-sekanjabin-fa",
+  "name": "شربت سکنجبین",
+  "prepTimeMinutes": 20,
+  "category": "Drink",
+  "ingredients": [
+   "شکر",
+   "سرکه",
+   "نعنا",
+   "آب"
+  ],
+  "recipe": "1. شکر و آب را بجوشانید.\n2. سرکه را اضافه کنید و بگذارید غلیظ شود.\n3. با نعنا و یخ و خیار رنده‌شده سرو کنید.",
+  "language": "FA"
+ },
+ {
+  "id": "seed-ir-sekanjabin-en",
+  "name": "Sekanjabin",
+  "prepTimeMinutes": 20,
+  "category": "Drink",
+  "ingredients": [
+   "sugar",
+   "vinegar",
+   "mint",
+   "water"
+  ],
+  "recipe": "1. Boil sugar and water.\n2. Add vinegar and let it thicken.\n3. Serve with mint, ice and grated cucumber.",
+  "language": "EN"
+ }
+]

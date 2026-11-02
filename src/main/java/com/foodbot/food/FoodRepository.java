@@ -8,11 +8,16 @@ import com.google.gson.reflect.TypeToken;
 import com.foodbot.util.AtomicFiles;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -69,6 +74,60 @@ public class FoodRepository {
         if (foods.removeIf(food -> food.getId().equals(id))) {
             save();
         }
+    }
+
+    /**
+     * Adds the bundled public foods in {@code resource} that this install has never had. Seeded ids
+     * are remembered in {@code seeded-foods.json} beside the data file, so a seed food an admin later
+     * deletes or edits is not restored on the next start; a public food with the same name and
+     * language is never duplicated. Returns how many foods were added.
+     */
+    public synchronized int seedFrom(String resource) {
+        List<Food> seeds;
+        try (InputStream in = FoodRepository.class.getResourceAsStream(resource)) {
+            if (in == null) {
+                return 0;
+            }
+            seeds = GSON.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), FOOD_LIST_TYPE);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read " + resource, e);
+        }
+        if (seeds == null) {
+            return 0;
+        }
+        Path marker = dataFile.resolveSibling("seeded-foods.json");
+        Set<String> seen = new HashSet<>();
+        try {
+            if (Files.exists(marker)) {
+                List<String> ids = GSON.fromJson(Files.readString(marker), new TypeToken<ArrayList<String>>() {}.getType());
+                if (ids != null) {
+                    seen.addAll(ids);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to load " + marker, e);
+        }
+        int added = 0;
+        for (Food seed : seeds) {
+            if (!seen.add(seed.getId())) {
+                continue;
+            }
+            boolean duplicate = foods.stream().anyMatch(f -> f.getOwnerChatId() == null
+                    && f.getLanguage() == seed.getLanguage() && f.getName().equalsIgnoreCase(seed.getName()));
+            if (!duplicate) {
+                foods.add(seed);
+                added++;
+            }
+        }
+        try {
+            if (added > 0) {
+                save();
+            }
+            AtomicFiles.writeString(marker, GSON.toJson(new ArrayList<>(seen)));
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to save seeded foods", e);
+        }
+        return added;
     }
 
     /**
