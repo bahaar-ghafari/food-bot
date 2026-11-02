@@ -104,17 +104,30 @@ class FollowHandler extends FlowHandler {
             target = Long.parseLong(trimmed);
         } else {
             String username = UsernameRepository.normalize(trimmed);
-            if (username == null || !username.matches("[a-z][a-z0-9_]{3,31}")) {
-                send(chatId, Messages.get(lang, "friends.bad_id"));
-                return;
-            }
-            Long found = ctx.usernameRepository.findChatId(username);
-            if (found == null) {
+            if (username != null && username.matches("[a-z][a-z0-9_]{3,31}")
+                    && ctx.usernameRepository.findChatId(username) != null) {
+                target = ctx.usernameRepository.findChatId(username);
+            } else if (trimmed.startsWith("@") || trimmed.toLowerCase().contains("t.me/")) {
+                if (username == null || !username.matches("[a-z][a-z0-9_]{3,31}")) {
+                    send(chatId, Messages.get(lang, "friends.bad_id"));
+                    return;
+                }
                 awaitingFollowId.remove(chatId);
                 sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_username", username));
                 return;
+            } else {
+                List<Long> matches = ctx.usernameRepository.findByName(trimmed);
+                if (matches.isEmpty()) {
+                    awaitingFollowId.remove(chatId);
+                    sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_name", trimmed));
+                    return;
+                }
+                if (matches.size() > 1) {
+                    send(chatId, Messages.get(lang, "friends.ambiguous_name", matches.size()));
+                    return;
+                }
+                target = matches.get(0);
             }
-            target = found;
         }
         awaitingFollowId.remove(chatId);
         if (target != chatId && languageRepository.get(target) == null) {

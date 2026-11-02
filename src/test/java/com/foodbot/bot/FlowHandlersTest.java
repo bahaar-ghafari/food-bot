@@ -684,6 +684,26 @@ class FlowHandlersTest {
     }
 
     @Test
+    void followingByNameResolvesAUniqueMatchAndRejectsAmbiguousOnes() {
+        for (long id : new long[]{5L, 6L, 7L, 8L}) {
+            ctx.languageRepository.set(id, Lang.EN);
+        }
+        ctx.usernameRepository.recordName(6L, "Anna Lee");
+        ctx.usernameRepository.recordName(7L, "Sara Kim");
+        ctx.usernameRepository.recordName(8L, "Sara Moon");
+
+        ctx.awaitingFollowId.add(5L);
+        ctx.follow.handleFollowId(5L, "anna lee", Lang.EN, null);
+        assertTrue(ctx.followRepository.isFollowing(5L, 6L));
+
+        ctx.awaitingFollowId.add(5L);
+        ctx.follow.handleFollowId(5L, "sara", Lang.EN, null);
+        assertFalse(ctx.followRepository.isFollowing(5L, 7L));
+        assertFalse(ctx.followRepository.isFollowing(5L, 8L));
+        assertTrue(ctx.awaitingFollowId.contains(5L));
+    }
+
+    @Test
     void followingAnUnknownUsernameFollowsNobody() {
         ctx.languageRepository.set(5L, Lang.EN);
 

@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -58,6 +59,21 @@ public class UsernameRepository {
 
     public synchronized String findName(long chatId) {
         return namesById.get(chatId);
+    }
+
+    /** Chat ids whose remembered full name matches {@code query} exactly (ignoring case), else those containing it. */
+    public synchronized List<Long> findByName(String query) {
+        String q = query == null ? "" : query.trim().toLowerCase();
+        if (q.isEmpty()) {
+            return List.of();
+        }
+        List<Long> exact = namesById.entrySet().stream().filter(e -> e.getValue().toLowerCase().equals(q))
+                .map(Map.Entry::getKey).toList();
+        if (!exact.isEmpty()) {
+            return exact;
+        }
+        return namesById.entrySet().stream().filter(e -> e.getValue().toLowerCase().contains(q))
+                .map(Map.Entry::getKey).toList();
     }
 
     /** The last @username (no @) recorded for {@code chatId}, or null. */
