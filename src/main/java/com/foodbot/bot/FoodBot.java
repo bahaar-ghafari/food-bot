@@ -203,6 +203,8 @@ public class FoodBot extends TelegramLongPollingBot {
             AddFoodSession newSession = new AddFoodSession();
             ctx.addFoodSessions.put(chatId, newSession);
             ctx.addFood.sendAddFoodScopePrompt(chatId, newSession, lang);
+        } else if (text.equalsIgnoreCase("/refresh") || text.equals(Messages.get(lang, "btn.refresh"))) {
+            ctx.ui.refresh(chatId, lang);
         } else if (text.equalsIgnoreCase("/cancel")) {
             AddFoodSession cancelledAddFood = ctx.addFoodSessions.remove(chatId);
             if (cancelledAddFood != null) {

@@ -11,6 +11,7 @@ import com.foodbot.food.FoodRepository;
 import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
+import com.foodbot.lang.Messages;
 import com.foodbot.social.FollowRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -612,6 +613,40 @@ class FlowHandlersTest {
         ctx.editFood.handleEditSaveCallback(callback(), 6L, "fesave");
 
         assertEquals("Soup f1", ctx.foodRepository.findById("f1").orElseThrow().getName());
+    }
+
+    @Test
+    void refreshDropsInProgressStateAndRestoresTheMainMenu() {
+        ctx.addFoodSessions.put(5L, new AddFoodSession());
+        ctx.awaitingSearch.add(5L);
+        ctx.awaitingFeedback.add(5L);
+        ctx.pendingSearchQuery.put(5L, "soup");
+
+        ctx.ui.refresh(5L, Lang.EN);
+
+        assertFalse(ctx.addFoodSessions.containsKey(5L));
+        assertFalse(ctx.awaitingSearch.contains(5L));
+        assertFalse(ctx.awaitingFeedback.contains(5L));
+        assertFalse(ctx.pendingSearchQuery.containsKey(5L));
+        SendMessage reply = sentMessages().get(sentMessages().size() - 1);
+        assertEquals(Messages.get(Lang.EN, "refresh.done"), reply.getText());
+        assertNotNull(reply.getReplyMarkup());
+    }
+
+    @Test
+    void refreshPicksUpFoodsChangedOnDisk(@TempDir Path dir) throws Exception {
+        Path file = dir.resolve("shared.json");
+        FoodRepository repo = new FoodRepository(file);
+        BotContext local = new BotContext(ctx.sender, ADMIN, FEEDBACK_CHAT, repo, ctx.languageRepository,
+                ctx.followRepository, ctx.usernameRepository, ctx.favoriteRepository, ctx.shoppingListRepository,
+                ctx.aiSuggestionService, ctx.mealDbSuggestionService);
+        new FoodRepository(file).add(new Food("f9", "Outside", 10, "Dinner", List.of("rice"), 5L, 5L, null,
+                Lang.EN, null, null, null, null));
+        assertTrue(repo.findById("f9").isEmpty());
+
+        local.ui.refresh(5L, Lang.EN);
+
+        assertTrue(repo.findById("f9").isPresent());
     }
 
     @Test

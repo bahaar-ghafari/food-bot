@@ -547,9 +547,41 @@ class FlowHandler {
         KeyboardRow row4 = new KeyboardRow();
         row4.add(Messages.get(lang, "btn.friends"));
         row4.add(Messages.get(lang, "btn.feedback"));
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3, row4));
+        KeyboardRow row5 = new KeyboardRow();
+        row5.add(Messages.get(lang, "btn.refresh"));
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3, row4, row5));
         markup.setResizeKeyboard(true);
         return markup;
+    }
+
+    /**
+     * Gets the chat back to a clean, up-to-date state: drops any in-progress flow and cached
+     * per-chat results (so no stale button can act on old data), re-reads the food data from
+     * disk, and resends the main menu keyboard (which also replaces an outdated one).
+     */
+    void refresh(long chatId, Lang lang) {
+        AddFoodSession addFood = ctx.addFoodSessions.remove(chatId);
+        if (addFood != null) {
+            clearInlineKeyboard(chatId, addFood.getKeyboardMessageId());
+        }
+        ctx.cookSessions.remove(chatId);
+        ctx.editSessions.remove(chatId);
+        ctx.lastCookResults.remove(chatId);
+        ctx.lastSearchResults.remove(chatId);
+        ctx.pendingSearchSuggestion.remove(chatId);
+        ctx.pendingSearchQuery.remove(chatId);
+        ctx.awaitingFeedback.remove(chatId);
+        ctx.awaitingShoppingItem.remove(chatId);
+        ctx.awaitingSearch.remove(chatId);
+        ctx.awaitingFollowId.remove(chatId);
+        String key = "refresh.done";
+        try {
+            ctx.foodRepository.reload();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            key = "refresh.partial";
+        }
+        sendWithMainMenu(chatId, lang, Messages.get(lang, key));
     }
 
     void sendWithMainMenu(long chatId, Lang lang, String text) {
