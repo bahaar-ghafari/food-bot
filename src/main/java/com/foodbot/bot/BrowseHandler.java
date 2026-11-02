@@ -80,7 +80,7 @@ class BrowseHandler extends FlowHandler {
                 : data.equals(CB_VIEW_FOODS_GLOBAL) ? SCOPE_GLOBAL
                 : data.equals(CB_VIEW_FOODS_CREATED) ? SCOPE_CREATED
                 : data.equals(CB_VIEW_FOODS_FAVORITES) ? SCOPE_FAVORITES : SCOPE_ALL;
-        sendFoodListPage(chatId, lang, scope, 0, null);
+        sendFoodListPage(chatId, lang, scope, 0, callbackQuery.getMessage().getMessageId());
     }
 
     void handleViewFoodsPageCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -121,8 +121,13 @@ class BrowseHandler extends FlowHandler {
         }
 
         if (foods.isEmpty()) {
-            sendWithMainMenu(chatId, lang,
-                    Messages.get(lang, scope.equals(SCOPE_FAVORITES) ? "favorites.none" : "foods.none"));
+            String none = Messages.get(lang, scope.equals(SCOPE_FAVORITES) ? "favorites.none" : "foods.none");
+            if (editMessageId != null) {
+                editMessageTextAndMarkup(chatId, editMessageId, none, new InlineKeyboardMarkup(List.of(List.of(
+                        backButton(lang, scope.startsWith(SCOPE_USER) ? CB_FRIENDS_LIST : CB_VIEW_FOODS_MENU)))));
+                return;
+            }
+            sendWithMainMenu(chatId, lang, none);
             return;
         }
 

@@ -358,6 +358,50 @@ class FlowHandlersTest {
     }
 
     @Test
+    void typedItemsReplyWithASingleMessage() {
+        ctx.shopping.handleItemText(5L, "milk", Lang.EN);
+
+        assertEquals(1, sentMessages().size());
+    }
+
+    @Test
+    void pickingAScopeRedrawsTheTappedMessageInsteadOfSendingANewOne() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        addFood("g1", null);
+
+        ctx.browse.handleViewFoodsCallback(callback(), 5L, BotConstants.CB_VIEW_FOODS_GLOBAL);
+
+        assertTrue(sentMessages().isEmpty());
+        assertEquals(42, sent.stream().filter(EditMessageText.class::isInstance)
+                .map(EditMessageText.class::cast).findFirst().orElseThrow().getMessageId());
+    }
+
+    @Test
+    void emptyScopeKeepsTheMenuMessageAndOffersBack() {
+        ctx.languageRepository.set(5L, Lang.EN);
+
+        ctx.browse.handleViewFoodsCallback(callback(), 5L, BotConstants.CB_VIEW_FOODS_FAVORITES);
+
+        assertTrue(sentMessages().isEmpty());
+        EditMessageText edit = sent.stream().filter(EditMessageText.class::isInstance)
+                .map(EditMessageText.class::cast).findFirst().orElseThrow();
+        assertTrue(edit.getText().contains("No favorites yet"));
+        assertTrue(edit.getReplyMarkup().toString().contains(BotConstants.CB_VIEW_FOODS_MENU));
+    }
+
+    @Test
+    void cookTimePresetMovesOnByEditingTheTappedMessage() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        com.foodbot.food.CookSession session = new com.foodbot.food.CookSession();
+        ctx.cookSessions.put(5L, session);
+
+        ctx.cook.handleCookTimePresetCallback(callback(), 5L, BotConstants.CB_COOK_TIME_PRESET + "30");
+
+        assertTrue(sentMessages().isEmpty());
+        assertEquals(42, session.getKeyboardMessageId());
+    }
+
+    @Test
     void addItemButtonStartsAwaitingAnItem() {
         ctx.shopping.handleListCallback(callback(), 5L, "shl:add");
 

@@ -74,7 +74,7 @@ class CookHandler extends FlowHandler {
         if (data.equals(CB_COOK_INGREDIENT_DONE)) {
             session.setStep(CookSession.Step.ASK_SHOPPING);
             answerCallback(callbackQuery.getId(), null, false);
-            sendShoppingPrompt(chatId, lang);
+            sendShoppingPrompt(chatId, lang, callbackQuery.getMessage().getMessageId());
             return;
         }
         if (data.equals(CB_COOK_INGREDIENT_CLEAR)) {
@@ -142,7 +142,8 @@ class CookHandler extends FlowHandler {
         session.setStep(CookSession.Step.SELECTING_CATEGORY);
         answerCallback(callbackQuery.getId(), null, false);
         sendCategoryKeyboard(chatId, CB_COOK_CATEGORY, cookCategoryKeys(), lang,
-                Messages.get(lang, "cook.ask_category_filter"), null, backButton(lang, CB_COOK_BACK));
+                Messages.get(lang, "cook.ask_category_filter"), callbackQuery.getMessage().getMessageId(),
+                backButton(lang, CB_COOK_BACK));
     }
 
     void handleCookCategoryCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -161,7 +162,7 @@ class CookHandler extends FlowHandler {
         CookResultContext ctx = new CookResultContext(session.getTimeMinutes(), session.getHaveIngredients(),
                 session.isCanShop(), category);
         lastCookResults.put(chatId, ctx);
-        sendCookResults(chatId, lang, ctx);
+        sendCookResults(chatId, lang, ctx, callbackQuery.getMessage().getMessageId());
     }
 
     List<Food> computeCookMatches(long chatId, Lang lang, CookResultContext ctx, boolean needsShopping) {
@@ -208,19 +209,21 @@ class CookHandler extends FlowHandler {
         }
     }
 
-    void sendCookResults(long chatId, Lang lang, CookResultContext ctx) {
+    /** Shows the matches; the first group replaces {@code editMessageId} (when given) and a second one follows as a new message. */
+    void sendCookResults(long chatId, Lang lang, CookResultContext ctx, Integer editMessageId) {
         List<Food> ready = computeCookMatches(chatId, lang, ctx, false);
         List<Food> shoppingNeeded = computeCookMatches(chatId, lang, ctx, true);
 
         if (ready.isEmpty() && shoppingNeeded.isEmpty()) {
+            clearInlineKeyboard(chatId, editMessageId);
             sendNoMatchFallback(chatId, lang, ctx);
             return;
         }
         if (!ready.isEmpty()) {
-            sendCookResultPage(chatId, lang, GROUP_READY, 0, null);
+            sendCookResultPage(chatId, lang, GROUP_READY, 0, editMessageId);
         }
         if (!shoppingNeeded.isEmpty()) {
-            sendCookResultPage(chatId, lang, GROUP_SHOP, 0, null);
+            sendCookResultPage(chatId, lang, GROUP_SHOP, 0, ready.isEmpty() ? editMessageId : null);
         }
     }
 
@@ -489,7 +492,10 @@ class CookHandler extends FlowHandler {
         session.setStep(CookSession.Step.SELECTING_INGREDIENTS);
         addNonStapleIngredients(session.getCandidateIngredients(), foodRepository.findAllIngredients(chatId, lang));
         answerCallback(callbackQuery.getId(), null, false);
-        sendCookIngredientKeyboard(chatId, session, lang);
+        Integer messageId = callbackQuery.getMessage().getMessageId();
+        session.setKeyboardMessageId(messageId);
+        editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, "cook.ingredient_prompt"),
+                cookIngredientMarkup(session, lang));
     }
 
     void sendShoppingPrompt(long chatId, Lang lang) {

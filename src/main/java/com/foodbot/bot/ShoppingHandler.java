@@ -95,13 +95,17 @@ class ShoppingHandler extends FlowHandler {
             return;
         }
         int added = shoppingListRepository.addAll(chatId, items);
-        sendWithMainMenu(chatId, lang,
+        sendShoppingList(chatId, lang, null,
                 Messages.get(lang, added > 0 ? "shop.added" : "shop.nothing_new", String.valueOf(added)));
-        sendShoppingList(chatId, lang, null);
     }
 
     /** Sends the list, or edits the message at {@code editMessageId} in place when given. */
     void sendShoppingList(long chatId, Lang lang, Integer editMessageId) {
+        sendShoppingList(chatId, lang, editMessageId, null);
+    }
+
+    /** As above, with an optional one-line {@code note} (e.g. what was just added) above the list header. */
+    void sendShoppingList(long chatId, Lang lang, Integer editMessageId, String note) {
         List<Item> items = shoppingListRepository.itemsOf(chatId);
         if (items.isEmpty()) {
             InlineKeyboardMarkup addOnly = new InlineKeyboardMarkup(buildListRows(items, lang));
@@ -120,7 +124,7 @@ class ShoppingHandler extends FlowHandler {
             return;
         }
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(buildListRows(items, lang));
-        String header = Messages.get(lang, "shop.header");
+        String header = (note == null ? "" : note + "\n\n") + Messages.get(lang, "shop.header");
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, header, markup);
             return;

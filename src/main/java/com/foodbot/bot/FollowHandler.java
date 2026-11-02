@@ -95,8 +95,8 @@ class FollowHandler extends FlowHandler {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_user"));
             return;
         }
-        followAndNotify(chatId, target, lang, from);
-        sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.menu_hint"));
+        sendWithMainMenu(chatId, lang, followAndNotify(chatId, target, lang, from)
+                + "\n\n" + Messages.get(lang, "friends.menu_hint"));
     }
 
     /** Accepts a numeric Telegram ID, or an @username / t.me link of someone who has used the bot. */
@@ -137,24 +137,30 @@ class FollowHandler extends FlowHandler {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.unknown_user"));
             return;
         }
-        followAndNotify(chatId, target, lang, from);
-        sendWithMainMenu(chatId, lang, Messages.get(lang, "friends.menu_hint"));
+        sendWithMainMenu(chatId, lang, followAndNotify(chatId, target, lang, from)
+                + "\n\n" + Messages.get(lang, "friends.menu_hint"));
     }
 
-    /** Follows (or requests to follow) {@code target}, replying to the follower and notifying the target. */
-    private void followAndNotify(long chatId, long target, Lang lang, User from) {
+    /** Follows (or requests to follow) {@code target}, notifying the target; returns the reply for the follower. */
+    private String followAndNotify(long chatId, long target, Lang lang, User from) {
         switch (followRepository.follow(chatId, target)) {
-            case SELF -> send(chatId, Messages.get(lang, "friends.self"));
-            case ALREADY_FOLLOWING -> send(chatId, Messages.get(lang, "friends.already", displayName(target)));
-            case ALREADY_REQUESTED -> send(chatId, Messages.get(lang, "friends.already_requested"));
+            case SELF -> {
+                return Messages.get(lang, "friends.self");
+            }
+            case ALREADY_FOLLOWING -> {
+                return Messages.get(lang, "friends.already", displayName(target));
+            }
+            case ALREADY_REQUESTED -> {
+                return Messages.get(lang, "friends.already_requested");
+            }
             case FOLLOWING -> {
-                send(chatId, Messages.get(lang, "friends.followed", displayName(target)));
                 Lang targetLang = lang(target);
                 send(target, Messages.get(targetLang, "friends.new_follower", authorDisplayName(from, chatId)));
+                return Messages.get(lang, "friends.followed", displayName(target));
             }
-            case REQUESTED -> {
-                send(chatId, Messages.get(lang, "friends.request_sent"));
+            default -> {
                 sendFollowRequest(target, chatId, authorDisplayName(from, chatId));
+                return Messages.get(lang, "friends.request_sent");
             }
         }
     }
@@ -180,7 +186,9 @@ class FollowHandler extends FlowHandler {
     void handleFriendsCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
         Integer messageId = callbackQuery.getMessage().getMessageId();
-        answerCallback(callbackQuery.getId(), null, false);
+        if (!data.startsWith(CB_PROFILE_FOLLOW)) {
+            answerCallback(callbackQuery.getId(), null, false);
+        }
         if (data.equals(CB_FRIENDS_FOLLOW)) {
             addFoodSessions.remove(chatId);
             cookSessions.remove(chatId);
@@ -211,10 +219,11 @@ class FollowHandler extends FlowHandler {
         } else if (data.startsWith(CB_PROFILE_FOLLOW)) {
             long userId = Long.parseLong(data.substring(CB_PROFILE_FOLLOW.length()));
             if (userId != chatId && languageRepository.get(userId) == null) {
-                send(chatId, Messages.get(lang, "friends.unknown_user"));
+                answerCallback(callbackQuery.getId(), Messages.get(lang, "friends.unknown_user"), false);
                 return;
             }
-            followAndNotify(chatId, userId, lang, callbackQuery.getFrom());
+            // the result shows as a toast over the redrawn profile instead of as extra chat messages
+            answerCallback(callbackQuery.getId(), followAndNotify(chatId, userId, lang, callbackQuery.getFrom()), false);
             sendProfile(chatId, lang, userId, messageId);
         } else if (data.startsWith(CB_PROFILE_UNFOLLOW)) {
             long userId = Long.parseLong(data.substring(CB_PROFILE_UNFOLLOW.length()));
@@ -226,7 +235,7 @@ class FollowHandler extends FlowHandler {
                 sendFollowingList(chatId, lang, messageId);
                 return;
             }
-            ctx.browse.sendFoodListPage(chatId, lang, SCOPE_USER + userId, 0, null);
+            ctx.browse.sendFoodListPage(chatId, lang, SCOPE_USER + userId, 0, messageId);
         } else if (data.startsWith(CB_FRIENDS_UNFOLLOW)) {
             followRepository.unfollow(chatId, Long.parseLong(data.substring(CB_FRIENDS_UNFOLLOW.length())));
             sendFollowingList(chatId, lang, messageId);
