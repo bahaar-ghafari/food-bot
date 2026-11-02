@@ -101,7 +101,7 @@
   "food.detail_time": "زمان آماده‌سازی: %s",
   "food.no_recipe": "(هنوز دستور پختی نداره — هر وقت خواستی اضافه کن!)",
   "food.source_bot": "اضافه‌شده از طریق ربات",
-  "food.source_bot_by": "اضافه‌شده از طریق ربات · دستور پخت از %s",
+  "food.source_bot_by": "اضافه‌شده توسط %s",
   "food.source_manual": "اضافه‌شده دستی",
   "food.source_manual_by": "اضافه‌شده دستی · دستور پخت از %s",
   "foods.ask_scope": "کدوم رو می‌خوای ببینی؟",
