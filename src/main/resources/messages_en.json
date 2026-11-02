@@ -102,6 +102,7 @@
   "food.no_recipe": "(no recipe yet — add one anytime!)",
   "food.source_bot": "Added via the bot",
   "food.source_bot_by": "Added by %s",
+  "food.source_public": "Public food",
   "food.source_manual": "Added manually",
   "food.source_manual_by": "Added manually · recipe by %s",
   "foods.ask_scope": "What do you want to see?",

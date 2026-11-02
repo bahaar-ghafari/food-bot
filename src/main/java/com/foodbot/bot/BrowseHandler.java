@@ -324,12 +324,13 @@ class BrowseHandler extends FlowHandler {
 
     String provenanceLine(Food food, Lang lang) {
         String author = food.getAuthorName();
-        if (food.isAddedViaBot()) {
-            return author != null ? "👩‍🍳 " + Messages.get(lang, "food.source_bot_by", author)
-                    : "🤖 " + Messages.get(lang, "food.source_bot");
+        if (food.isAddedViaBot() && author != null) {
+            return "👩‍🍳 " + Messages.get(lang, "food.source_bot_by", author);
         }
-        return author != null ? "✍️ " + Messages.get(lang, "food.source_manual_by", author)
-                : "✍️ " + Messages.get(lang, "food.source_manual");
+        if (food.getOwnerChatId() == null) {
+            return "🌐 " + Messages.get(lang, "food.source_public");
+        }
+        return "✍️ " + Messages.get(lang, "food.source_manual");
     }
 
     void handleFoodViewCallback(CallbackQuery callbackQuery, long chatId, String data) {
