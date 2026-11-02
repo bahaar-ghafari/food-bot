@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +37,17 @@ class FollowHandler extends FlowHandler {
         InlineKeyboardButton digest = new InlineKeyboardButton(Messages.get(lang,
                 followRepository.isDigest(chatId) ? "friends.btn_digest_on" : "friends.btn_digest_off"));
         digest.setCallbackData(CB_FRIENDS_DIGEST);
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
-                List.of(List.of(follow, list), List.of(toggle), List.of(digest)));
+        InlineKeyboardButton followers = new InlineKeyboardButton(
+                Messages.get(lang, "friends.btn_followers", followRepository.followersOf(chatId).size()));
+        followers.setCallbackData(CB_FRIENDS_FOLLOWERS);
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>(
+                List.of(List.of(follow), List.of(list, followers), List.of(toggle), List.of(digest)));
+        if (ctx.botUsername != null) {
+            InlineKeyboardButton share = new InlineKeyboardButton(Messages.get(lang, "friends.btn_share_profile"));
+            share.setUrl(profileShareUrl(chatId, lang));
+            rows.add(List.of(share));
+        }
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, text, markup);
             return;
@@ -63,6 +74,11 @@ class FollowHandler extends FlowHandler {
             send(chatId, Messages.get(lang, "friends.unknown_user"));
             return;
         }
+        followAndNotify(chatId, target, lang, from);
+    }
+
+    /** Follows (or requests to follow) {@code target}, replying to the follower and notifying the target. */
+    private void followAndNotify(long chatId, long target, Lang lang, User from) {
         switch (followRepository.follow(chatId, target)) {
             case SELF -> send(chatId, Messages.get(lang, "friends.self"));
             case ALREADY_FOLLOWING -> send(chatId, Messages.get(lang, "friends.already", displayName(target)));
@@ -121,6 +137,22 @@ class FollowHandler extends FlowHandler {
             sendFollowingList(chatId, lang, messageId);
         } else if (data.equals(CB_FRIENDS_LIST)) {
             sendFollowingList(chatId, lang, messageId);
+        } else if (data.equals(CB_FRIENDS_FOLLOWERS)) {
+            sendFollowersList(chatId, lang, messageId);
+        } else if (data.startsWith(CB_PROFILE_VIEW)) {
+            sendProfile(chatId, lang, Long.parseLong(data.substring(CB_PROFILE_VIEW.length())), messageId);
+        } else if (data.startsWith(CB_PROFILE_FOLLOW)) {
+            long userId = Long.parseLong(data.substring(CB_PROFILE_FOLLOW.length()));
+            if (userId != chatId && languageRepository.get(userId) == null) {
+                send(chatId, Messages.get(lang, "friends.unknown_user"));
+                return;
+            }
+            followAndNotify(chatId, userId, lang, callbackQuery.getFrom());
+            sendProfile(chatId, lang, userId, messageId);
+        } else if (data.startsWith(CB_PROFILE_UNFOLLOW)) {
+            long userId = Long.parseLong(data.substring(CB_PROFILE_UNFOLLOW.length()));
+            followRepository.unfollow(chatId, userId);
+            sendProfile(chatId, lang, userId, messageId);
         } else if (data.startsWith(CB_FRIENDS_USER)) {
             long userId = Long.parseLong(data.substring(CB_FRIENDS_USER.length()));
             if (!followRepository.isFollowing(chatId, userId)) {
@@ -151,6 +183,93 @@ class FollowHandler extends FlowHandler {
         }
         String text = Messages.get(lang, following.isEmpty() ? "friends.list_empty" : "friends.list_header");
         editMessageTextAndMarkup(chatId, editMessageId, text, new InlineKeyboardMarkup(rows));
+    }
+
+    /** Upper bound so the list always fits Telegram's per-keyboard button limit (and its name lookups stay cheap). */
+    private static final int MAX_LISTED_FOLLOWERS = 50;
+
+    void sendFollowersList(long chatId, Lang lang, Integer editMessageId) {
+        List<Long> followers = followRepository.followersOf(chatId);
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (long userId : followers.subList(0, Math.min(followers.size(), MAX_LISTED_FOLLOWERS))) {
+            InlineKeyboardButton profile = new InlineKeyboardButton("👤 " + displayName(userId));
+            profile.setCallbackData(CB_PROFILE_VIEW + userId);
+            rows.add(List.of(profile));
+        }
+        String text = followers.isEmpty() ? Messages.get(lang, "friends.followers_empty")
+                : Messages.get(lang, "friends.followers_header")
+                + (followers.size() > MAX_LISTED_FOLLOWERS
+                ? "\n" + Messages.get(lang, "friends.followers_more", MAX_LISTED_FOLLOWERS, followers.size()) : "");
+        editMessageTextAndMarkup(chatId, editMessageId, text, new InlineKeyboardMarkup(rows));
+    }
+
+    String profileDeepLink(long userId) {
+        return "https://t.me/" + ctx.botUsername + "?start=" + START_PROFILE_PREFIX + userId;
+    }
+
+    /** Telegram's chat picker, prefilled with a one-line profile summary and the profile's deep link. */
+    String profileShareUrl(long userId, Lang lang) {
+        String name = plainName(userId);
+        String text = Messages.get(lang, "profile.share_text", name != null ? name : String.valueOf(userId),
+                foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size());
+        return "https://t.me/share/url?url=" + URLEncoder.encode(profileDeepLink(userId), StandardCharsets.UTF_8)
+                + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Profile card for {@code userId}: counts, the latest recipe names (only for the owner and their followers,
+     * like browsing) and a Follow / Unfollow button. Sent as a new message, or drawn over {@code editMessageId}.
+     */
+    void sendProfile(long chatId, Lang lang, long userId, Integer editMessageId) {
+        if (userId != chatId && languageRepository.get(userId) == null) {
+            send(chatId, Messages.get(lang, "profile.unavailable"));
+            return;
+        }
+        boolean self = userId == chatId;
+        boolean following = followRepository.isFollowing(chatId, userId);
+        StringBuilder text = new StringBuilder(Messages.get(lang, "profile.card", displayName(userId),
+                foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size(),
+                followRepository.followingOf(userId).size()));
+        if (self || following) {
+            List<Food> owned = foodRepository.findOwnedBy(userId, lang);
+            if (!owned.isEmpty()) {
+                text.append("\n\n").append(Messages.get(lang, "profile.latest"));
+                for (Food food : owned.subList(Math.max(0, owned.size() - 3), owned.size())) {
+                    text.append("\n• ").append(food.getName());
+                }
+            }
+        }
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        if (self) {
+            text.append("\n\n").append(Messages.get(lang, "profile.you"));
+        } else if (following) {
+            InlineKeyboardButton recipes = new InlineKeyboardButton(Messages.get(lang, "profile.btn_recipes"));
+            recipes.setCallbackData(CB_FRIENDS_USER + userId);
+            InlineKeyboardButton unfollow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_unfollow"));
+            unfollow.setCallbackData(CB_PROFILE_UNFOLLOW + userId);
+            rows.add(List.of(recipes, unfollow));
+        } else {
+            InlineKeyboardButton follow = new InlineKeyboardButton(Messages.get(lang, "profile.btn_follow"));
+            follow.setCallbackData(CB_PROFILE_FOLLOW + userId);
+            rows.add(List.of(follow));
+        }
+        if (ctx.botUsername != null) {
+            InlineKeyboardButton share = new InlineKeyboardButton(Messages.get(lang, "friends.btn_share_profile"));
+            share.setUrl(profileShareUrl(userId, lang));
+            rows.add(List.of(share));
+        }
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
+        if (editMessageId != null) {
+            editMessageTextAndMarkup(chatId, editMessageId, text.toString(), markup);
+            return;
+        }
+        SendMessage message = new SendMessage(String.valueOf(chatId), text.toString());
+        message.setReplyMarkup(markup);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     void handleFollowRequestAnswer(long chatId, Lang lang, Integer messageId, String data) {

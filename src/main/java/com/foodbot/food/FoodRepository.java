@@ -110,6 +110,17 @@ public class FoodRepository {
         return result;
     }
 
+    /** Number of personal recipes owned by this chat, across all languages. */
+    public synchronized int countOwnedBy(long chatId) {
+        int count = 0;
+        for (Food food : foods) {
+            if (food.getOwnerChatId() != null && food.getOwnerChatId() == chatId) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /**
      * Foods this chat created, regardless of where they currently live (their own personal
      * list or the global list) - e.g. a food they added to the global list still shows up here

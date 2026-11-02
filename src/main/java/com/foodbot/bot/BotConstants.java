@@ -94,10 +94,17 @@ final class BotConstants {
     static final String CB_FRIENDS_DECLINE = "frd:";
     static final String CB_FRIENDS_DIGEST = "frdg";
     static final String CB_FRIENDS_MUTE = "frm:";
+    static final String CB_FRIENDS_FOLLOWERS = "frfs";
+    /** Followed by a chat id: shows that user's profile card. */
+    static final String CB_PROFILE_VIEW = "frp:";
+    static final String CB_PROFILE_FOLLOW = "frpf:";
+    static final String CB_PROFILE_UNFOLLOW = "frpu:";
     /** Scope prefix for browsing a followed user's recipes; the rest is their chat id. */
     static final String SCOPE_USER = "usr";
     /** Prefix of the {@code /start} payload that opens a shared recipe: {@code recipe_<id>}. */
     static final String START_RECIPE_PREFIX = "recipe_";
+    /** Prefix of the {@code /start} payload that opens a shared profile: {@code user_<chat id>}. */
+    static final String START_PROFILE_PREFIX = "user_";
     static final String CB_FOOD_VIEW = "fv:";
     static final String CB_FOOD_SETTINGS = "fset:";
     static final String CB_FOOD_FAVORITE = "ffav:";

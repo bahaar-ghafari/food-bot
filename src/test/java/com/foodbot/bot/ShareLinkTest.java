@@ -8,6 +8,7 @@ import com.foodbot.food.FoodRepository;
 import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
+import com.foodbot.lang.Messages;
 import com.foodbot.social.FollowRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -124,6 +125,60 @@ class ShareLinkTest {
         Food food = addFood("g1", null);
         ctx.browse.sendFoodDetailMessage(5L, Lang.EN, SCOPE_ALL, 0, food);
         assertTrue(firstRow().stream().allMatch(b -> b.getUrl() == null));
+    }
+
+    private List<String> callbacks() {
+        InlineKeyboardMarkup markup = (InlineKeyboardMarkup) ((SendMessage) sent.get(sent.size() - 1)).getReplyMarkup();
+        List<String> result = new ArrayList<>();
+        markup.getKeyboard().forEach(row -> row.forEach(b -> result.add(b.getCallbackData())));
+        return result;
+    }
+
+    @Test
+    void parsesProfileIdFromStartPayload() {
+        assertEquals(42L, FoodBot.sharedProfileId("/start user_42"));
+        assertEquals(42L, FoodBot.sharedProfileId("/start@foodbot user_42"));
+        assertNull(FoodBot.sharedProfileId("/start user_"));
+        assertNull(FoodBot.sharedProfileId("/start user_abc"));
+        assertNull(FoodBot.sharedProfileId("/start recipe_42"));
+        assertNull(FoodBot.sharedProfileId("/start"));
+    }
+
+    @Test
+    void profileCardOffersFollowAndShareToStrangers() {
+        ctx.languageRepository.set(7L, Lang.EN);
+        addFood("p1", 7L);
+        ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
+        assertTrue(lastText().contains("Recipes: 1"));
+        assertFalse(lastText().contains("Soup"), "recipe names are only for followers");
+        assertTrue(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
+        InlineKeyboardMarkup markup = (InlineKeyboardMarkup) ((SendMessage) sent.get(sent.size() - 1)).getReplyMarkup();
+        String url = markup.getKeyboard().stream().flatMap(List::stream).map(InlineKeyboardButton::getUrl)
+                .filter(u -> u != null).findFirst().orElseThrow();
+        assertTrue(url.contains("foodbot%3Fstart%3Duser_7"));
+    }
+
+    @Test
+    void profileCardOfFollowedUserShowsRecipesAndUnfollow() {
+        ctx.languageRepository.set(7L, Lang.EN);
+        addFood("p1", 7L);
+        ctx.followRepository.follow(5L, 7L);
+        ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
+        assertTrue(lastText().contains("Soup"));
+        assertTrue(callbacks().contains(BotConstants.CB_PROFILE_UNFOLLOW + 7L));
+        assertFalse(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
+    }
+
+    @Test
+    void profileOfUnknownUserIsUnavailable() {
+        ctx.follow.sendProfile(5L, Lang.EN, 12345L, null);
+        assertEquals(Messages.get(Lang.EN, "profile.unavailable"), lastText());
+    }
+
+    @Test
+    void ownProfileHasNoFollowButton() {
+        ctx.follow.sendProfile(5L, Lang.EN, 5L, null);
+        assertTrue(callbacks().stream().noneMatch(c -> c != null && c.startsWith("frp")));
     }
 
     private static final String SCOPE_ALL = BotConstants.SCOPE_ALL;

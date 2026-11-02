@@ -150,10 +150,14 @@ public class FoodBot extends TelegramLongPollingBot {
         }
 
         String sharedRecipeId = sharedRecipeId(text);
+        Long sharedProfileId = sharedProfileId(text);
         Lang lang = ctx.languageRepository.get(chatId);
         if (lang == null) {
             if (sharedRecipeId != null) {
                 ctx.pendingSharedRecipe.put(chatId, sharedRecipeId);
+            }
+            if (sharedProfileId != null) {
+                ctx.pendingSharedProfile.put(chatId, sharedProfileId);
             }
             sendLanguagePrompt(chatId);
             return;
@@ -161,6 +165,8 @@ public class FoodBot extends TelegramLongPollingBot {
 
         if (sharedRecipeId != null) {
             ctx.browse.openSharedRecipe(chatId, lang, sharedRecipeId);
+        } else if (sharedProfileId != null) {
+            ctx.follow.sendProfile(chatId, lang, sharedProfileId, null);
         } else if (text.equalsIgnoreCase("/start")) {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
@@ -295,6 +301,10 @@ public class FoodBot extends TelegramLongPollingBot {
         if (pendingRecipe != null) {
             ctx.browse.openSharedRecipe(chatId, lang, pendingRecipe);
         }
+        Long pendingProfile = ctx.pendingSharedProfile.remove(chatId);
+        if (pendingProfile != null) {
+            ctx.follow.sendProfile(chatId, lang, pendingProfile, null);
+        }
     }
 
     /** The recipe id in a {@code /start recipe_<id>} deep link, or null for any other text. */
@@ -307,6 +317,21 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         String id = parts[1].substring(START_RECIPE_PREFIX.length());
         return id.isEmpty() ? null : id;
+    }
+
+    /** The chat id in a {@code /start user_<id>} deep link, or null for any other text. */
+    static Long sharedProfileId(String text) {
+        String[] parts = text.trim().split("\\s+");
+        if (parts.length != 2 || !(parts[0].equalsIgnoreCase("/start")
+                || parts[0].toLowerCase().startsWith("/start@"))
+                || !parts[1].startsWith(START_PROFILE_PREFIX)) {
+            return null;
+        }
+        try {
+            return Long.parseLong(parts[1].substring(START_PROFILE_PREFIX.length()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private void sendLanguagePrompt(long chatId) {
@@ -343,7 +368,9 @@ public class FoodBot extends TelegramLongPollingBot {
                 || data.startsWith(CB_FRIENDS_USER) || data.startsWith(CB_FRIENDS_UNFOLLOW)
                 || data.startsWith(CB_FRIENDS_APPROVE) || data.startsWith(CB_FRIENDS_APPROVE_VISIBLE)
                 || data.startsWith(CB_FRIENDS_DECLINE) || data.equals(CB_FRIENDS_DIGEST)
-                || data.startsWith(CB_FRIENDS_MUTE)) {
+                || data.startsWith(CB_FRIENDS_MUTE) || data.equals(CB_FRIENDS_FOLLOWERS)
+                || data.startsWith(CB_PROFILE_VIEW) || data.startsWith(CB_PROFILE_FOLLOW)
+                || data.startsWith(CB_PROFILE_UNFOLLOW)) {
             ctx.follow.handleFriendsCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_ADMIN_RELOAD)) {
             ctx.browse.handleAdminReloadCallback(callbackQuery, chatId, data);

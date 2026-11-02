@@ -501,20 +501,29 @@ class FlowHandler {
     }
 
     String displayName(long userId) {
+        String name = plainName(userId);
+        return name != null ? name + " (" + userId + ")" : String.valueOf(userId);
+    }
+
+    /** The user's Telegram name or @username without their id, or null when it can't be looked up. */
+    String plainName(long userId) {
         try {
             Chat chat = execute(new GetChat(String.valueOf(userId)));
+            if (chat == null) {
+                return null;
+            }
             String full = ((chat.getFirstName() == null ? "" : chat.getFirstName()) + " "
                     + (chat.getLastName() == null ? "" : chat.getLastName())).trim();
             if (!full.isEmpty()) {
-                return full + " (" + userId + ")";
+                return full;
             }
             if (chat.getUserName() != null) {
-                return "@" + chat.getUserName() + " (" + userId + ")";
+                return "@" + chat.getUserName();
             }
         } catch (TelegramApiException ignored) {
-            // fall through to the bare id
+            // fall through to null
         }
-        return String.valueOf(userId);
+        return null;
     }
 
     static String authorDisplayNameOrId(User from, long chatId) {
