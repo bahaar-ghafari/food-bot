@@ -11,6 +11,14 @@ Never run a command that could delete or overwrite data — especially anything 
 - Any deploy command touching `/opt/foodbot` must explicitly `--exclude='data/'` (and the stray gitignored root-level `foods.json`/`languages.json` left over from before the app switched to `./data/foods.json`). Never sync that path with a deletion flag without excluding `data/` first.
 - Before running `rsync --delete`, `docker volume rm`, `rm -rf`, `git push --force`, or anything else with delete/overwrite semantics against the VPS, stop and confirm with the user first — what will be affected, why, and get an explicit go-ahead.
 
+## Local `.env` (gitignored) — use these, don't ask for them again
+
+Variable names only; never print or commit the values.
+
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` (no `@`, e.g. `Dishcover_bot` — drives `t.me/<bot>?start=...` share links), `SUPERADMIN_CHAT_ID` — read by the bot.
+- `VPS_ROOT_HOST`, `VPS_ROOT_USER`, `VPS_ROOT_PASSWORD` — production server access. For one-off server commands, load the password into `SSHPASS` without echoing it and use `sshpass -e ssh "$VPS_ROOT_USER@$VPS_ROOT_HOST" '...'`. The data-safety rules above still apply: confirm before anything with delete/overwrite semantics.
+- Production has its own `/opt/foodbot/.env`; changing a value there needs `docker compose up -d` (not `restart`) to take effect.
+
 ## Deployment
 
 See README.md "Production deployment (Docker)" section for the full deploy process.
