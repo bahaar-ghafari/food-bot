@@ -209,7 +209,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.awaitingShoppingItem.remove(chatId);
             AddFoodSession newSession = new AddFoodSession();
             ctx.addFoodSessions.put(chatId, newSession);
-            ctx.addFood.sendAddFoodScopePrompt(chatId, newSession, lang);
+            ctx.addFood.sendAddFoodNamePrompt(chatId, newSession, lang);
         } else if (text.equalsIgnoreCase("/refresh") || text.equals(Messages.get(lang, "btn.refresh"))) {
             ctx.ui.refresh(chatId, lang);
         } else if (text.equalsIgnoreCase("/cancel")) {
@@ -396,9 +396,7 @@ public class FoodBot extends TelegramLongPollingBot {
         String data = callbackQuery.getData();
         long chatId = callbackQuery.getMessage().getChatId();
 
-        if (data.equals(CB_ADDFOOD_SCOPE_MINE) || data.equals(CB_ADDFOOD_SCOPE_GLOBAL)) {
-            ctx.addFood.handleAddFoodScopeCallback(callbackQuery, chatId, data);
-        } else if (data.equals(CB_ADDFOOD_CANCEL)) {
+        if (data.equals(CB_ADDFOOD_CANCEL)) {
             ctx.addFood.handleAddFoodCancelCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_ADDFOOD_BACK)) {
             ctx.addFood.handleAddFoodBackCallback(callbackQuery, chatId, data);

@@ -28,17 +28,6 @@ class AddFoodHandler extends FlowHandler {
         super(ctx);
     }
 
-    void sendAddFoodScopePrompt(long chatId, AddFoodSession session, Lang lang) {
-        InlineKeyboardButton mine = new InlineKeyboardButton(Messages.get(lang, "addfood.scope.mine"));
-        mine.setCallbackData(CB_ADDFOOD_SCOPE_MINE);
-        InlineKeyboardButton global = new InlineKeyboardButton(Messages.get(lang, "addfood.scope.global"));
-        global.setCallbackData(CB_ADDFOOD_SCOPE_GLOBAL);
-        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
-        back.setCallbackData(CB_ADDFOOD_CANCEL);
-        sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.ask_scope"),
-                new InlineKeyboardMarkup(List.of(List.of(mine, global), List.of(back))));
-    }
-
     void sendAddFoodNamePrompt(long chatId, AddFoodSession session, Lang lang) {
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_ADDFOOD_BACK);
@@ -108,19 +97,6 @@ class AddFoodHandler extends FlowHandler {
         renderAddFoodReview(chatId, session, lang);
     }
 
-    void handleAddFoodScopeCallback(CallbackQuery callbackQuery, long chatId, String data) {
-        Lang lang = lang(chatId);
-        AddFoodSession session = addFoodSessions.get(chatId);
-        if (session == null || session.getStep() != AddFoodSession.Step.ASK_SCOPE) {
-            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
-            return;
-        }
-        session.setOwnerChatId(data.equals(CB_ADDFOOD_SCOPE_MINE) ? chatId : null);
-        session.setStep(AddFoodSession.Step.AWAITING_NAME);
-        answerCallback(callbackQuery.getId(), null, false);
-        sendAddFoodNamePrompt(chatId, session, lang);
-    }
-
     void handleAddFoodCancelCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
         AddFoodSession session = addFoodSessions.remove(chatId);
@@ -147,8 +123,7 @@ class AddFoodHandler extends FlowHandler {
         }
         switch (session.getStep()) {
             case AWAITING_NAME:
-                session.setStep(AddFoodSession.Step.ASK_SCOPE);
-                sendAddFoodScopePrompt(chatId, session, lang);
+                handleAddFoodCancelCallback(callbackQuery, chatId, data);
                 break;
             case AWAITING_PREP_TIME:
                 session.setStep(AddFoodSession.Step.AWAITING_NAME);
@@ -188,10 +163,6 @@ class AddFoodHandler extends FlowHandler {
     void handleAddFoodText(long chatId, String text, Lang lang) {
         AddFoodSession session = addFoodSessions.get(chatId);
         switch (session.getStep()) {
-            case ASK_SCOPE:
-                send(chatId, Messages.get(lang, "tap_button_above"));
-                break;
-
             case AWAITING_NAME:
                 if (!matchesLanguage(text, lang)) {
                     send(chatId, Messages.get(lang, "lang.wrong_script"));

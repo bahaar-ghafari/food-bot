@@ -9,11 +9,11 @@ import java.util.Set;
 
 public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState, AmountEditorState {
     public enum Step {
-        ASK_SCOPE, AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_AMOUNTS,
+        AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_AMOUNTS,
         AWAITING_RECIPE, AWAITING_PHOTO, REVIEW
     }
 
-    private Step step = Step.ASK_SCOPE;
+    private Step step = Step.AWAITING_NAME;
     private String name;
     private int prepTimeMinutes;
     private String category;

@@ -47,8 +47,6 @@ final class BotConstants {
             {"cook.time.fast", "cook.time.2h", "cook.time.5h", "cook.time.1day", "cook.time.any"};
     static final int[] COOK_TIME_PRESET_MINUTES = {30, 120, 300, 1440, Integer.MAX_VALUE};
     static final String CATEGORY_ANY = "ANY";
-    static final String CB_ADDFOOD_SCOPE_MINE = "afs:mine";
-    static final String CB_ADDFOOD_SCOPE_GLOBAL = "afs:global";
     static final String CB_VIEW_FOODS_MINE = "vf:mine";
     static final String CB_VIEW_FOODS_GLOBAL = "vf:global";
     static final String CB_VIEW_FOODS_ALL = "vf:all";

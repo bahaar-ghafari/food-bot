@@ -116,7 +116,9 @@ class FlowHandler {
     }
 
     boolean canModify(Food food, long chatId) {
-        return isSuperAdmin(chatId) || (food.getOwnerChatId() != null && food.getOwnerChatId() == chatId);
+        return isSuperAdmin(chatId)
+                || (food.getOwnerChatId() != null && food.getOwnerChatId() == chatId)
+                || (food.getCreatedByChatId() != null && food.getCreatedByChatId() == chatId);
     }
 
     boolean matchesLanguage(String text, Lang lang) {
