@@ -311,12 +311,20 @@ class FollowHandler extends FlowHandler {
             if (owned.isEmpty()) {
                 text.append(Messages.get(lang, "profile.empty"));
             } else {
-                text.append(Messages.get(lang, "profile.latest"));
-                List<Food> latest = owned.subList(Math.max(0, owned.size() - 3), owned.size());
-                for (int i = latest.size() - 1; i >= 0; i--) {
-                    Food food = latest.get(i);
-                    text.append("\n").append(Messages.get(lang, "profile.item", food.getName(),
-                            TimeFormat.format(food.getPrepTimeMinutes(), lang)));
+                // most-starred first; recipes nobody starred yet fall back to newest first
+                List<Food> ranked = new ArrayList<>(owned);
+                java.util.Collections.reverse(ranked);
+                ranked.sort(java.util.Comparator.comparingInt(
+                        (Food f) -> ctx.favoriteRepository.countFavorites(f.getId())).reversed());
+                boolean anyStarred = ctx.favoriteRepository.countFavorites(ranked.get(0).getId()) > 0;
+                text.append(Messages.get(lang, anyStarred ? "profile.popular" : "profile.latest"));
+                for (Food food : ranked.subList(0, Math.min(3, ranked.size()))) {
+                    int stars = ctx.favoriteRepository.countFavorites(food.getId());
+                    text.append("\n").append(stars > 0
+                            ? Messages.get(lang, "profile.item_stars", food.getName(),
+                                    TimeFormat.format(food.getPrepTimeMinutes(), lang), stars)
+                            : Messages.get(lang, "profile.item", food.getName(),
+                                    TimeFormat.format(food.getPrepTimeMinutes(), lang)));
                 }
             }
         }

@@ -20,6 +20,19 @@ class FavoriteRepositoryTest {
     }
 
     @Test
+    void countFavoritesCountsDistinctPeopleWhoStarredTheFood(@TempDir Path dir) {
+        FavoriteRepository repo = new FavoriteRepository(dir.resolve("fav.json"));
+        repo.toggle(1L, "a");
+        repo.toggle(2L, "a");
+        repo.toggle(2L, "b");
+        assertEquals(2, repo.countFavorites("a"));
+        assertEquals(1, repo.countFavorites("b"));
+        repo.toggle(1L, "a");
+        assertEquals(1, repo.countFavorites("a"));
+        assertEquals(0, repo.countFavorites("zzz"));
+    }
+
+    @Test
     void toggleStarsThenUnstars(@TempDir Path dir) {
         FavoriteRepository repo = new FavoriteRepository(dir.resolve("fav.json"));
         assertTrue(repo.toggle(1L, "a"));

@@ -53,6 +53,17 @@ public class FavoriteRepository {
         return nowFavorite;
     }
 
+    /** How many people have starred this food. */
+    public synchronized int countFavorites(String foodId) {
+        int count = 0;
+        for (Set<String> ids : favorites.values()) {
+            if (ids.contains(foodId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /** Food ids in the order they were starred, oldest first. */
     public synchronized List<String> idsOf(long chatId) {
         return new ArrayList<>(favorites.getOrDefault(chatId, Set.of()));
