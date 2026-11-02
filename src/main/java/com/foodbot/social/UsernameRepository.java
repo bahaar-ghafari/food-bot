@@ -23,9 +23,14 @@ public class UsernameRepository {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type MAP_TYPE = new TypeToken<HashMap<String, Long>>() {}.getType();
 
+    private static final Type NAMES_TYPE = new TypeToken<HashMap<Long, String>>() {}.getType();
+
     private final Path dataFile;
     /** lower-cased username (no @) -> chat id */
     private final Map<String, Long> byUsername;
+    private final Path namesFile;
+    /** chat id -> Telegram full name, so people can be shown by name when Telegram won't resolve them. */
+    private final Map<Long, String> namesById;
 
     public UsernameRepository() {
         this(DEFAULT_DATA_FILE);
@@ -34,6 +39,43 @@ public class UsernameRepository {
     public UsernameRepository(Path dataFile) {
         this.dataFile = dataFile;
         this.byUsername = load();
+        this.namesFile = dataFile.resolveSibling("usernames-names.json");
+        this.namesById = loadNames();
+    }
+
+    /** Remembers the user's Telegram full name (ignored when blank). */
+    public synchronized void recordName(long chatId, String fullName) {
+        if (fullName == null || fullName.isBlank() || fullName.equals(namesById.get(chatId))) {
+            return;
+        }
+        namesById.put(chatId, fullName);
+        try {
+            AtomicFiles.writeString(namesFile, GSON.toJson(namesById, NAMES_TYPE));
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to save " + namesFile, e);
+        }
+    }
+
+    public synchronized String findName(long chatId) {
+        return namesById.get(chatId);
+    }
+
+    /** The last @username (no @) recorded for {@code chatId}, or null. */
+    public synchronized String findUsername(long chatId) {
+        return byUsername.entrySet().stream().filter(e -> e.getValue() == chatId)
+                .map(Map.Entry::getKey).findFirst().orElse(null);
+    }
+
+    private Map<Long, String> loadNames() {
+        if (!Files.exists(namesFile)) {
+            return new HashMap<>();
+        }
+        try {
+            Map<Long, String> loaded = GSON.fromJson(Files.readString(namesFile), NAMES_TYPE);
+            return loaded != null ? loaded : new HashMap<>();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to load " + namesFile, e);
+        }
     }
 
     /** Remembers {@code username} for {@code chatId}, dropping the user's previous name and any other holder of it. */

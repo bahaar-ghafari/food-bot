@@ -122,6 +122,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 : update.hasInlineQuery() ? update.getInlineQuery().getFrom() : null;
         if (from != null && !Boolean.TRUE.equals(from.getIsBot())) {
             ctx.usernameRepository.record(from.getId(), from.getUserName());
+            ctx.usernameRepository.recordName(from.getId(), FlowHandler.fullName(from.getFirstName(), from.getLastName()));
         }
     }
 

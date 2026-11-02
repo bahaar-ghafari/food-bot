@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -505,23 +506,29 @@ class FlowHandler {
     /** Telegram name and @username of the user (never the numeric id unless nothing else is known). */
     String displayName(long userId) {
         String label = handleLabel(lookupChat(userId));
+        if (label == null) {
+            label = handleLabel(ctx.usernameRepository.findName(userId), ctx.usernameRepository.findUsername(userId));
+        }
         return label != null ? label : String.valueOf(userId);
     }
 
     /** The user's Telegram name or @username, or null when it can't be looked up. */
     String plainName(long userId) {
         Chat chat = lookupChat(userId);
-        if (chat == null) {
-            return null;
+        String full = chat != null ? fullName(chat.getFirstName(), chat.getLastName())
+                : Objects.requireNonNullElse(ctx.usernameRepository.findName(userId), "");
+        if (!full.isEmpty()) {
+            return full;
         }
-        String full = fullName(chat.getFirstName(), chat.getLastName());
-        return !full.isEmpty() ? full : chat.getUserName() != null ? "@" + chat.getUserName() : null;
+        String username = chat != null ? chat.getUserName() : ctx.usernameRepository.findUsername(userId);
+        return username != null ? "@" + username : null;
     }
 
     /** {@code https://t.me/<username>} for users who have a public @username, else null. */
     String profileLink(long userId) {
         Chat chat = lookupChat(userId);
-        return chat != null && chat.getUserName() != null ? "https://t.me/" + chat.getUserName() : null;
+        String username = chat != null ? chat.getUserName() : ctx.usernameRepository.findUsername(userId);
+        return username != null ? "https://t.me/" + username : null;
     }
 
     private Chat lookupChat(long userId) {
@@ -532,7 +539,7 @@ class FlowHandler {
         }
     }
 
-    private static String fullName(String first, String last) {
+    static String fullName(String first, String last) {
         return ((first == null ? "" : first) + " " + (last == null ? "" : last)).trim();
     }
 
