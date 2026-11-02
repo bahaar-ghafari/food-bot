@@ -111,6 +111,7 @@ class BrowseHandler extends FlowHandler {
         } else if (scope.equals(SCOPE_ALL)) {
             foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));
             foods.addAll(foodRepository.findGlobal(lang));
+            foods = publicLast(chatId, foods);
             headerText = Messages.get(lang, "foods.header.all");
         } else if (scope.equals(SCOPE_CREATED)) {
             foods = foodRepository.findCreatedBy(chatId, lang);

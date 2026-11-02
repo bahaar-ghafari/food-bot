@@ -18,6 +18,7 @@ import com.foodbot.food.IngredientPickerState;
 import com.foodbot.food.IngredientSearch;
 import com.foodbot.food.IngredientTranslations;
 import com.foodbot.food.Paginator;
+import com.foodbot.food.RecipePriority;
 import com.foodbot.food.RecipeStepEditorState;
 import com.foodbot.food.RecipeSteps;
 import com.foodbot.food.SearchResultContext;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,6 +59,12 @@ import static com.foodbot.bot.BotConstants.*;
 
 /** Shared Telegram/UI plumbing for the per-flow handlers. */
 class FlowHandler {
+    /** The user's own, favorite and followed recipes first; public foods at the end. */
+    protected List<Food> publicLast(long chatId, List<Food> foods) {
+        return RecipePriority.publicLast(foods, chatId, new HashSet<>(favoriteRepository.idsOf(chatId)),
+                new HashSet<>(followRepository.followingOf(chatId)));
+    }
+
     protected final BotContext ctx;
     protected final FoodRepository foodRepository;
     protected final LanguageRepository languageRepository;

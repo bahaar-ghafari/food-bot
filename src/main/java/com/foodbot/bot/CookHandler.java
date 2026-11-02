@@ -194,7 +194,7 @@ class CookHandler extends FlowHandler {
         // Rank so dishes reusing more of what the user already has come first, not just
         // whichever dish happens to need the fewest extra ingredients bought (see CookRanking).
         CookRanking.sortByBestMatch(result, ctx.getHaveIngredients());
-        return result;
+        return publicLast(chatId, result);
     }
 
     boolean effectivelyHas(Set<String> haveIngredients, String ingredient) {

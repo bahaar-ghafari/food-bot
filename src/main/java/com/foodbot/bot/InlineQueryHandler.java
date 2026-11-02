@@ -47,7 +47,7 @@ class InlineQueryHandler extends FlowHandler {
         Lang lang = lang(userId);
         List<Food> visible = foodRepository.findVisibleTo(userId, lang);
         String trimmed = query == null ? "" : query.trim();
-        List<Food> matches = trimmed.isEmpty() ? visible : FoodSearch.search(visible, trimmed);
+        List<Food> matches = publicLast(userId, trimmed.isEmpty() ? visible : FoodSearch.search(visible, trimmed));
         List<InlineQueryResult> results = new ArrayList<>();
         for (Food food : matches) {
             if (results.size() >= MAX_RESULTS) {

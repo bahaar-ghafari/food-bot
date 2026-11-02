@@ -30,7 +30,7 @@ class SearchHandler extends FlowHandler {
         }
         awaitingSearch.remove(chatId);
         List<Food> visible = foodRepository.findVisibleTo(chatId, lang);
-        List<Food> matches = FoodSearch.search(visible, text);
+        List<Food> matches = publicLast(chatId, FoodSearch.search(visible, text));
         if (!matches.isEmpty()) {
             presentSearchResults(chatId, lang, matches, text);
             return;
@@ -72,7 +72,7 @@ class SearchHandler extends FlowHandler {
         Lang other = lang == Lang.EN ? Lang.FA : Lang.EN;
         String translated = translateQueryToOtherLanguage(text, other);
         List<Food> otherVisible = foodRepository.findVisibleTo(chatId, other);
-        List<Food> otherMatches = FoodSearch.search(otherVisible, translated);
+        List<Food> otherMatches = publicLast(chatId, FoodSearch.search(otherVisible, translated));
         if (otherMatches.isEmpty()) {
             awaitingSearch.add(chatId);
             sendWithMainMenu(chatId, lang, Messages.get(lang, "search.no_results", text));
