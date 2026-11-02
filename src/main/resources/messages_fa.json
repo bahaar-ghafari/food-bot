@@ -148,6 +148,8 @@
   "search.otherlang_yes": "✅ آره، نشونم بده!",
   "search.results_header": "🔍 نتایج برای «%s» — برای جزئیات روی یکی بزن:",
   "selection_expired": "⏰ اوپس، این انتخاب منقضی شده. دوباره امتحان کن!",
+  "settings.menu": "⚙️ تنظیمات — یکی را انتخاب کن:",
+  "settings.back": "بازگشت به منوی اصلی.",
   "settings.choose_action": "چیکار می‌خوای بکنی؟",
   "tap_button_above": "یکی از دکمه‌های بالا رو بزن 👆",
   "time.day": "روز",

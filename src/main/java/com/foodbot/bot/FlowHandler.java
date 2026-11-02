@@ -542,16 +542,31 @@ class FlowHandler {
         row2.add(Messages.get(lang, "btn.search"));
         row2.add(Messages.get(lang, "btn.shopping"));
         KeyboardRow row3 = new KeyboardRow();
-        row3.add(Messages.get(lang, "btn.change_lang"));
+        row3.add(Messages.get(lang, "btn.friends"));
         row3.add(Messages.get(lang, "btn.help"));
-        KeyboardRow row4 = new KeyboardRow();
-        row4.add(Messages.get(lang, "btn.friends"));
-        row4.add(Messages.get(lang, "btn.feedback"));
-        KeyboardRow row5 = new KeyboardRow();
-        row5.add(Messages.get(lang, "btn.refresh"));
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3, row4, row5));
+        row3.add(Messages.get(lang, "btn.settings"));
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2, row3));
         markup.setResizeKeyboard(true);
         return markup;
+    }
+
+    /** Settings sub-menu: Language, Feedback and Refresh, plus a way back to the main menu. */
+    void sendSettingsMenu(long chatId, Lang lang) {
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(Messages.get(lang, "btn.change_lang"));
+        row1.add(Messages.get(lang, "btn.feedback"));
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(Messages.get(lang, "btn.refresh"));
+        row2.add(Messages.get(lang, "btn.back"));
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2));
+        markup.setResizeKeyboard(true);
+        SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "settings.menu"));
+        message.setReplyMarkup(markup);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

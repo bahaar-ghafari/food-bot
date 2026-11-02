@@ -193,7 +193,13 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "help.text"));
-        } else if (text.equals(Messages.get(lang, "btn.change_lang"))) {
+        } else if (text.equalsIgnoreCase("/settings") || text.equals(Messages.get(lang, "btn.settings"))) {
+            ctx.ui.sendSettingsMenu(chatId, lang);
+        } else if (text.equals(Messages.get(lang, "btn.back"))
+                && !ctx.addFoodSessions.containsKey(chatId) && !ctx.cookSessions.containsKey(chatId)
+                && !ctx.editSessions.containsKey(chatId)) {
+            ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "settings.back"));
+        } else if (text.equalsIgnoreCase("/lang") || text.equals(Messages.get(lang, "btn.change_lang"))) {
             sendLanguagePrompt(chatId);
         } else if (text.equalsIgnoreCase("/addfood") || text.equals(Messages.get(lang, "btn.add_food"))) {
             ctx.cookSessions.remove(chatId);
