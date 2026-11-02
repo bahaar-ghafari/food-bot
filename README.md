@@ -1,4 +1,4 @@
-# FoodBot
+# Dishcover
 
 A minimal Telegram bot project.
 
@@ -21,7 +21,7 @@ A minimal Telegram bot project.
 
 4. Run the bot:
    ```bash
-   java -jar target/food-bot-0.0.1-SNAPSHOT.jar
+   java -jar target/dishcover-0.0.1-SNAPSHOT.jar
    ```
 
 ## Production deployment (Docker)

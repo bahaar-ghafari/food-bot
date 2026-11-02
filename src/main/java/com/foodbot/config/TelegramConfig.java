@@ -34,7 +34,7 @@ public class TelegramConfig {
 
     public String getBotUsername() {
         return firstNonBlank(dotenv.get("TELEGRAM_BOT_USERNAME"), properties.getProperty("telegram.bot.username"),
-                "FoodBot");
+                "Dishcover_bot");
     }
 
     public Long getSuperAdminChatId() {

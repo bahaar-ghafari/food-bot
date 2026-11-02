@@ -1,4 +1,4 @@
-# Production stack for FoodBot. Lives on the VPS at
+# Production stack for Dishcover. Lives on the VPS at
 # /opt/foodbot/docker-compose.yml.
 # Requires a sibling .env with TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME,
 # and SUPERADMIN_CHAT_ID (never committed). foods.json/languages.json

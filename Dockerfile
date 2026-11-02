@@ -7,6 +7,6 @@ RUN mvn -q -B package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /data
-COPY --from=build /build/target/food-bot-0.0.1-SNAPSHOT.jar /app/food-bot.jar
+COPY --from=build /build/target/dishcover-0.0.1-SNAPSHOT.jar /app/dishcover.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/food-bot.jar"]
+ENTRYPOINT ["java", "-jar", "/app/dishcover.jar"]

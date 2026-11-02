@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Back up FoodBot's production data (everything in data/: foods.json,
+# Back up Dishcover's production data (everything in data/: foods.json,
 # languages.json, follows.json, favorites.json, shopping.json) to timestamped, gzipped tarballs, keeping the last N days.
 #
 # Run on the VPS (manually or via cron):
