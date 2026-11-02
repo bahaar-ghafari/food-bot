@@ -38,7 +38,7 @@ class FollowHandler extends FlowHandler {
         InlineKeyboardButton toggle = new InlineKeyboardButton(
                 Messages.get(lang, visible ? "friends.btn_hide" : "friends.btn_show"));
         toggle.setCallbackData(CB_FRIENDS_VISIBILITY);
-        String text = Messages.get(lang, "friends.menu", chatId,
+        String text = Messages.get(lang, "friends.menu",
                 Messages.get(lang, visible ? "friends.visible" : "friends.hidden"), followRepository.followersOf(chatId).size());
         InlineKeyboardButton digest = new InlineKeyboardButton(Messages.get(lang,
                 followRepository.isDigest(chatId) ? "friends.btn_digest_on" : "friends.btn_digest_off"));
@@ -134,11 +134,11 @@ class FollowHandler extends FlowHandler {
             case FOLLOWING -> {
                 send(chatId, Messages.get(lang, "friends.followed", displayName(target)));
                 Lang targetLang = lang(target);
-                send(target, Messages.get(targetLang, "friends.new_follower", authorDisplayNameOrId(from, chatId)));
+                send(target, Messages.get(targetLang, "friends.new_follower", authorDisplayName(from, chatId)));
             }
             case REQUESTED -> {
                 send(chatId, Messages.get(lang, "friends.request_sent"));
-                sendFollowRequest(target, chatId, authorDisplayNameOrId(from, chatId));
+                sendFollowRequest(target, chatId, authorDisplayName(from, chatId));
             }
         }
     }
@@ -269,7 +269,7 @@ class FollowHandler extends FlowHandler {
     /** Telegram's chat picker, prefilled with a one-line profile summary and the profile's deep link. */
     String profileShareUrl(long userId, Lang lang) {
         String name = plainName(userId);
-        String text = Messages.get(lang, "profile.share_text", name != null ? name : String.valueOf(userId),
+        String text = Messages.get(lang, "profile.share_text", name != null ? name : Messages.get(lang, "profile.unknown_name"),
                 foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size());
         return "https://t.me/share/url?url=" + URLEncoder.encode(profileDeepLink(userId), StandardCharsets.UTF_8)
                 + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8);
@@ -289,9 +289,8 @@ class FollowHandler extends FlowHandler {
         StringBuilder text = new StringBuilder(Messages.get(lang, "profile.card", displayName(userId),
                 foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size(),
                 followRepository.followingOf(userId).size()));
-        String link = profileLink(userId);
-        if (link != null) {
-            text.append("\n🔗 ").append(link);
+        if (ctx.botUsername != null) {
+            text.append("\n🔗 ").append(profileDeepLink(userId));
         }
         if (self || following) {
             List<Food> owned = foodRepository.findOwnedBy(userId, lang);

@@ -503,13 +503,13 @@ class FlowHandler {
         return new InlineKeyboardMarkup(rows);
     }
 
-    /** Telegram name and @username of the user (never the numeric id unless nothing else is known). */
+    /** Telegram name and @username of the user (never the numeric id). */
     String displayName(long userId) {
         String label = handleLabel(lookupChat(userId));
         if (label == null) {
             label = handleLabel(ctx.usernameRepository.findName(userId), ctx.usernameRepository.findUsername(userId));
         }
-        return label != null ? label : String.valueOf(userId);
+        return label != null ? label : Messages.get(lang(userId), "profile.unknown_name");
     }
 
     /** The user's Telegram name or @username, or null when it can't be looked up. */
@@ -522,13 +522,6 @@ class FlowHandler {
         }
         String username = chat != null ? chat.getUserName() : ctx.usernameRepository.findUsername(userId);
         return username != null ? "@" + username : null;
-    }
-
-    /** {@code https://t.me/<username>} for users who have a public @username, else null. */
-    String profileLink(long userId) {
-        Chat chat = lookupChat(userId);
-        String username = chat != null ? chat.getUserName() : ctx.usernameRepository.findUsername(userId);
-        return username != null ? "https://t.me/" + username : null;
     }
 
     private Chat lookupChat(long userId) {
@@ -557,10 +550,10 @@ class FlowHandler {
         return hasName ? fullName + " (@" + username + ")" : "@" + username;
     }
 
-    static String authorDisplayNameOrId(User from, long chatId) {
+    String authorDisplayName(User from, long chatId) {
         String label = from == null ? null
                 : handleLabel(fullName(from.getFirstName(), from.getLastName()), from.getUserName());
-        return label != null ? label : String.valueOf(chatId);
+        return label != null ? label : displayName(chatId);
     }
 
     ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {

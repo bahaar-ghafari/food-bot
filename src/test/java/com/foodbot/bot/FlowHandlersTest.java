@@ -674,14 +674,13 @@ class FlowHandlersTest {
 
     @Test
     void displayNameFallsBackToRememberedNameAndUsernameWhenTelegramLookupFails() {
-        assertEquals("77", ctx.follow.displayName(77L));
+        assertEquals(Messages.get(ctx.follow.lang(77L), "profile.unknown_name"), ctx.follow.displayName(77L));
 
         ctx.usernameRepository.record(77L, "chef_anna");
         ctx.usernameRepository.recordName(77L, "Anna Lee");
 
         assertEquals("Anna Lee (@chef_anna)", ctx.follow.displayName(77L));
         assertEquals("Anna Lee", ctx.follow.plainName(77L));
-        assertEquals("https://t.me/chef_anna", ctx.follow.profileLink(77L));
     }
 
     @Test
