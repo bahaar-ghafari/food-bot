@@ -289,6 +289,10 @@ class FollowHandler extends FlowHandler {
         StringBuilder text = new StringBuilder(Messages.get(lang, "profile.card", displayName(userId),
                 foodRepository.countOwnedBy(userId), followRepository.followersOf(userId).size(),
                 followRepository.followingOf(userId).size()));
+        String link = profileLink(userId);
+        if (link != null) {
+            text.append("\n🔗 ").append(link);
+        }
         if (self || following) {
             List<Food> owned = foodRepository.findOwnedBy(userId, lang);
             text.append("\n\n");

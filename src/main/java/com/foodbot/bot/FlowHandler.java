@@ -502,35 +502,58 @@ class FlowHandler {
         return new InlineKeyboardMarkup(rows);
     }
 
+    /** Telegram name and @username of the user (never the numeric id unless nothing else is known). */
     String displayName(long userId) {
-        String name = plainName(userId);
-        return name != null ? name + " (" + userId + ")" : String.valueOf(userId);
+        String label = handleLabel(lookupChat(userId));
+        return label != null ? label : String.valueOf(userId);
     }
 
-    /** The user's Telegram name or @username without their id, or null when it can't be looked up. */
+    /** The user's Telegram name or @username, or null when it can't be looked up. */
     String plainName(long userId) {
-        try {
-            Chat chat = execute(new GetChat(String.valueOf(userId)));
-            if (chat == null) {
-                return null;
-            }
-            String full = ((chat.getFirstName() == null ? "" : chat.getFirstName()) + " "
-                    + (chat.getLastName() == null ? "" : chat.getLastName())).trim();
-            if (!full.isEmpty()) {
-                return full;
-            }
-            if (chat.getUserName() != null) {
-                return "@" + chat.getUserName();
-            }
-        } catch (TelegramApiException ignored) {
-            // fall through to null
+        Chat chat = lookupChat(userId);
+        if (chat == null) {
+            return null;
         }
-        return null;
+        String full = fullName(chat.getFirstName(), chat.getLastName());
+        return !full.isEmpty() ? full : chat.getUserName() != null ? "@" + chat.getUserName() : null;
+    }
+
+    /** {@code https://t.me/<username>} for users who have a public @username, else null. */
+    String profileLink(long userId) {
+        Chat chat = lookupChat(userId);
+        return chat != null && chat.getUserName() != null ? "https://t.me/" + chat.getUserName() : null;
+    }
+
+    private Chat lookupChat(long userId) {
+        try {
+            return execute(new GetChat(String.valueOf(userId)));
+        } catch (TelegramApiException ignored) {
+            return null;
+        }
+    }
+
+    private static String fullName(String first, String last) {
+        return ((first == null ? "" : first) + " " + (last == null ? "" : last)).trim();
+    }
+
+    /** "Name (@username)", "Name", "@username", or null when the chat has neither. */
+    private static String handleLabel(Chat chat) {
+        return chat == null ? null
+                : handleLabel(fullName(chat.getFirstName(), chat.getLastName()), chat.getUserName());
+    }
+
+    static String handleLabel(String fullName, String username) {
+        boolean hasName = fullName != null && !fullName.isEmpty();
+        if (username == null || username.isEmpty()) {
+            return hasName ? fullName : null;
+        }
+        return hasName ? fullName + " (@" + username + ")" : "@" + username;
     }
 
     static String authorDisplayNameOrId(User from, long chatId) {
-        String name = authorDisplayName(from);
-        return (name != null ? name + " (" + chatId + ")" : String.valueOf(chatId));
+        String label = from == null ? null
+                : handleLabel(fullName(from.getFirstName(), from.getLastName()), from.getUserName());
+        return label != null ? label : String.valueOf(chatId);
     }
 
     ReplyKeyboardMarkup mainMenuKeyboard(Lang lang, long chatId) {

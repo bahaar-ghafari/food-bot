@@ -680,4 +680,12 @@ class FlowHandlersTest {
 
         assertTrue(ctx.followRepository.followingOf(5L).isEmpty());
     }
+
+    @Test
+    void handleLabelShowsNameAndUsernameButNeverAnId() {
+        assertEquals("Sara K (@sara)", FlowHandler.handleLabel("Sara K", "sara"));
+        assertEquals("Sara K", FlowHandler.handleLabel("Sara K", null));
+        assertEquals("@sara", FlowHandler.handleLabel("", "sara"));
+        assertNull(FlowHandler.handleLabel("", null));
+    }
 }
