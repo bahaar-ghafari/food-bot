@@ -269,7 +269,7 @@ class BrowseHandler extends FlowHandler {
                 + "⏱️ " + Messages.get(lang, "food.detail_time", timeText) + "\n"
                 + "🧾 " + Messages.get(lang, "food.detail_ingredients", ingredients) + "\n\n"
                 + "📝 " + Messages.get(lang, "food.detail_recipe", recipeText) + "\n\n"
-                + provenanceLine(food, lang) + "\n";
+                + provenanceLine(food, lang);
     }
 
     Map<String, String> scaleAmounts(Map<String, String> amounts, double factor) {
@@ -328,7 +328,7 @@ class BrowseHandler extends FlowHandler {
             return "👩‍🍳 " + Messages.get(lang, "food.source_bot_by", author);
         }
         if (food.getOwnerChatId() == null) {
-            return "🌐 " + Messages.get(lang, "food.source_public");
+            return "";
         }
         return "✍️ " + Messages.get(lang, "food.source_manual");
     }
