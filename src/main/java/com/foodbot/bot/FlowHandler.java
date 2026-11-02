@@ -32,6 +32,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -622,6 +623,51 @@ class FlowHandler {
             key = "refresh.partial";
         }
         sendWithMainMenu(chatId, lang, Messages.get(lang, key));
+    }
+
+    InlineKeyboardButton backButton(Lang lang, String callbackData) {
+        InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
+        back.setCallbackData(callbackData);
+        return back;
+    }
+
+    /** Back button for a top-level screen: returns to the main menu. */
+    InlineKeyboardButton homeButton(Lang lang) {
+        return backButton(lang, CB_HOME);
+    }
+
+    /** Sends {@code text} with a lone Back-to-main-menu button, for prompts that wait for typed input. */
+    void sendWithHomeButton(long chatId, Lang lang, String text) {
+        SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(homeButton(lang)))));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Drops every in-progress flow and typed-input wait of the chat. */
+    void clearPendingInput(long chatId) {
+        AddFoodSession addFood = addFoodSessions.remove(chatId);
+        if (addFood != null) {
+            clearInlineKeyboard(chatId, addFood.getKeyboardMessageId());
+        }
+        cookSessions.remove(chatId);
+        editSessions.remove(chatId);
+        awaitingFeedback.remove(chatId);
+        awaitingShoppingItem.remove(chatId);
+        awaitingSearch.remove(chatId);
+        awaitingFollowId.remove(chatId);
+    }
+
+    /** The Back-to-main-menu button was tapped: abandon the screen and show the main menu. */
+    void handleHomeCallback(CallbackQuery callbackQuery, long chatId) {
+        Lang lang = lang(chatId);
+        answerCallback(callbackQuery.getId(), null, false);
+        clearPendingInput(chatId);
+        clearInlineKeyboard(chatId, callbackQuery.getMessage().getMessageId());
+        sendWithMainMenu(chatId, lang, Messages.get(lang, "settings.back"));
     }
 
     void sendWithMainMenu(long chatId, Lang lang, String text) {

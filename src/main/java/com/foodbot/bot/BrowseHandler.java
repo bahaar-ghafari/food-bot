@@ -45,6 +45,11 @@ class BrowseHandler extends FlowHandler {
     }
 
     void sendViewFoodsPrompt(long chatId, Lang lang) {
+        sendViewFoodsPrompt(chatId, lang, null);
+    }
+
+    /** The "which recipes?" menu, sent fresh or drawn over {@code editMessageId}. */
+    void sendViewFoodsPrompt(long chatId, Lang lang, Integer editMessageId) {
         InlineKeyboardButton favorites = new InlineKeyboardButton(Messages.get(lang, "scope.favorites"));
         favorites.setCallbackData(CB_VIEW_FOODS_FAVORITES);
         InlineKeyboardButton created = new InlineKeyboardButton(Messages.get(lang, "scope.created"));
@@ -53,8 +58,14 @@ class BrowseHandler extends FlowHandler {
         global.setCallbackData(CB_VIEW_FOODS_GLOBAL);
         InlineKeyboardButton all = new InlineKeyboardButton(Messages.get(lang, "scope.all"));
         all.setCallbackData(CB_VIEW_FOODS_ALL);
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
+                List.of(List.of(favorites, created), List.of(global, all), List.of(homeButton(lang))));
+        if (editMessageId != null) {
+            editMessageTextAndMarkup(chatId, editMessageId, Messages.get(lang, "foods.ask_scope"), markup);
+            return;
+        }
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "foods.ask_scope"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(favorites, created), List.of(global, all))));
+        message.setReplyMarkup(markup);
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -152,6 +163,9 @@ class BrowseHandler extends FlowHandler {
             rows.add(List.of(reload));
         }
 
+        // back goes to wherever the list was opened from
+        rows.add(List.of(backButton(lang, scope.equals(SCOPE_SEARCH) ? CB_HOME
+                : scope.startsWith(SCOPE_USER) ? CB_FRIENDS_LIST : CB_VIEW_FOODS_MENU)));
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
 
         if (editMessageId != null) {

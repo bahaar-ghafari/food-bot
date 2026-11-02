@@ -199,6 +199,7 @@ public class FoodBot extends TelegramLongPollingBot {
         } else if (text.equals(Messages.get(lang, "btn.back"))
                 && !ctx.addFoodSessions.containsKey(chatId) && !ctx.cookSessions.containsKey(chatId)
                 && !ctx.editSessions.containsKey(chatId)) {
+            ctx.awaitingFollowId.remove(chatId);
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "settings.back"));
         } else if (text.equalsIgnoreCase("/lang") || text.equals(Messages.get(lang, "btn.change_lang"))) {
             sendLanguagePrompt(chatId);
@@ -249,7 +250,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingFeedback.add(chatId);
             ctx.awaitingShoppingItem.remove(chatId);
-            ctx.ui.send(chatId, Messages.get(lang, "feedback.ask"));
+            ctx.ui.sendWithHomeButton(chatId, lang, Messages.get(lang, "feedback.ask"));
         } else if (text.equalsIgnoreCase("/search") || text.equals(Messages.get(lang, "btn.search"))
                 || text.toLowerCase().startsWith("/search ")) {
             ctx.addFoodSessions.remove(chatId);
@@ -396,7 +397,14 @@ public class FoodBot extends TelegramLongPollingBot {
         String data = callbackQuery.getData();
         long chatId = callbackQuery.getMessage().getChatId();
 
-        if (data.equals(CB_ADDFOOD_CANCEL)) {
+        if (data.equals(CB_HOME)) {
+            ctx.ui.handleHomeCallback(callbackQuery, chatId);
+        } else if (data.equals(CB_COOK_BACK)) {
+            ctx.cook.handleCookBackCallback(callbackQuery, chatId);
+        } else if (data.equals(CB_VIEW_FOODS_MENU)) {
+            ctx.browse.sendViewFoodsPrompt(chatId, ctx.ui.lang(chatId), callbackQuery.getMessage().getMessageId());
+            ctx.ui.answerCallback(callbackQuery.getId(), null, false);
+        } else if (data.equals(CB_ADDFOOD_CANCEL)) {
             ctx.addFood.handleAddFoodCancelCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_ADDFOOD_BACK)) {
             ctx.addFood.handleAddFoodBackCallback(callbackQuery, chatId, data);

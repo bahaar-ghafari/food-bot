@@ -58,6 +58,7 @@ If `telegram.bot.token` is empty, the code falls back to `TELEGRAM_BOT_TOKEN` fr
 ## Bot commands
 
 - First message — asks you to pick a language (فارسی shown first, with a 🦁☀️ symbol since Unicode has no dedicated Iranian flag emoji / English) before anything else. Once chosen, the bot only accepts typed names/ingredients in that script. Persian is the default wherever a language can't be determined (e.g. a feedback group that's never run `/lang`).
+- **Back buttons everywhere** — every inline screen ends with a "🔙 Back": recipe lists go back to the "which recipes?" menu, `/cook` steps back one question at a time (the first question, and the other top-level screens — shopping list, friends, search and feedback prompts — go back to the main menu). The follow prompt has a "🔙 Back" key too.
 - `/settings` (or the "⚙️ Settings" main-menu button) — opens a sub-menu with "🌐 Language", "💬 Feedback", "🔄 Refresh" and "🔙 Back". Each of those is also still available as its own command.
 - `/lang` (or the "🌐 Language" button in Settings) — change the language at any time.
 - `/help` (or the "❓ Help" button) — explains everything the bot can do.

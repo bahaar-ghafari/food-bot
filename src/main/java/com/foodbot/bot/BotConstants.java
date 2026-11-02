@@ -54,6 +54,12 @@ final class BotConstants {
     static final String CB_VIEW_FOODS_FAVORITES = "vf:fav";
     static final String CB_VIEW_FOODS_PAGE = "vfp:";
     static final String CB_ADMIN_RELOAD = "adm:reload:";
+    /** Back from the recipe list to the "which recipes?" menu. */
+    static final String CB_VIEW_FOODS_MENU = "vf:menu";
+    /** Back from a top-level screen to the main menu. */
+    static final String CB_HOME = "home";
+    /** Back one step in the /cook flow. */
+    static final String CB_COOK_BACK = "ckb";
 
     static final String CB_FOOD_EDIT_START = "fe:";
     static final String CB_FOOD_EDIT_FIELD = "fef:";

@@ -95,6 +95,42 @@ class CookHandler extends FlowHandler {
         editCookIngredientKeyboard(chatId, session, lang);
     }
 
+    /** Steps the /cook flow back one screen, redrawing the tapped message in place. */
+    void handleCookBackCallback(CallbackQuery callbackQuery, long chatId) {
+        Lang lang = lang(chatId);
+        CookSession session = cookSessions.get(chatId);
+        if (session == null) {
+            answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
+            return;
+        }
+        answerCallback(callbackQuery.getId(), null, false);
+        Integer messageId = callbackQuery.getMessage().getMessageId();
+        switch (session.getStep()) {
+            case SELECTING_INGREDIENTS -> {
+                session.setStep(CookSession.Step.AWAITING_TIME);
+                session.getCandidateIngredients().clear();
+                session.getHaveIngredients().clear();
+                session.setIngredientFilter("");
+                session.setIngredientPage(0);
+                session.setKeyboardMessageId(null);
+                sendCookTimePrompt(chatId, lang, messageId);
+            }
+            case ASK_SHOPPING -> {
+                session.setStep(CookSession.Step.SELECTING_INGREDIENTS);
+                // the earlier ingredient message stays behind; only this one should answer taps now
+                clearInlineKeyboard(chatId, session.getKeyboardMessageId());
+                session.setKeyboardMessageId(messageId);
+                editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, "cook.ingredient_prompt"),
+                        cookIngredientMarkup(session, lang));
+            }
+            case SELECTING_CATEGORY -> {
+                session.setStep(CookSession.Step.ASK_SHOPPING);
+                sendShoppingPrompt(chatId, lang, messageId);
+            }
+            default -> sendCookTimePrompt(chatId, lang, messageId);
+        }
+    }
+
     void handleCookShopCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
         CookSession session = cookSessions.get(chatId);
@@ -106,7 +142,7 @@ class CookHandler extends FlowHandler {
         session.setStep(CookSession.Step.SELECTING_CATEGORY);
         answerCallback(callbackQuery.getId(), null, false);
         sendCategoryKeyboard(chatId, CB_COOK_CATEGORY, cookCategoryKeys(), lang,
-                Messages.get(lang, "cook.ask_category_filter"));
+                Messages.get(lang, "cook.ask_category_filter"), null, backButton(lang, CB_COOK_BACK));
     }
 
     void handleCookCategoryCallback(CallbackQuery callbackQuery, long chatId, String data) {
@@ -297,6 +333,7 @@ class CookHandler extends FlowHandler {
             rows.add(navRow);
         }
 
+        rows.add(List.of(homeButton(lang)));
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
 
         if (editMessageId != null) {
@@ -407,6 +444,10 @@ class CookHandler extends FlowHandler {
     }
 
     void sendCookTimePrompt(long chatId, Lang lang) {
+        sendCookTimePrompt(chatId, lang, null);
+    }
+
+    void sendCookTimePrompt(long chatId, Lang lang, Integer editMessageId) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> currentRow = new ArrayList<>();
         for (int i = 0; i < COOK_TIME_PRESET_KEYS.length; i++) {
@@ -420,6 +461,12 @@ class CookHandler extends FlowHandler {
         }
         if (!currentRow.isEmpty()) {
             rows.add(currentRow);
+        }
+        rows.add(List.of(homeButton(lang)));
+        if (editMessageId != null) {
+            editMessageTextAndMarkup(chatId, editMessageId, Messages.get(lang, "cook.ask_time"),
+                    new InlineKeyboardMarkup(rows));
+            return;
         }
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "cook.ask_time"));
         message.setReplyMarkup(new InlineKeyboardMarkup(rows));
@@ -446,12 +493,22 @@ class CookHandler extends FlowHandler {
     }
 
     void sendShoppingPrompt(long chatId, Lang lang) {
+        sendShoppingPrompt(chatId, lang, null);
+    }
+
+    void sendShoppingPrompt(long chatId, Lang lang, Integer editMessageId) {
         InlineKeyboardButton yes = new InlineKeyboardButton(Messages.get(lang, "yes"));
         yes.setCallbackData(CB_COOK_SHOP_YES);
         InlineKeyboardButton no = new InlineKeyboardButton(Messages.get(lang, "no"));
         no.setCallbackData(CB_COOK_SHOP_NO);
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(
+                List.of(List.of(yes, no), List.of(backButton(lang, CB_COOK_BACK))));
+        if (editMessageId != null) {
+            editMessageTextAndMarkup(chatId, editMessageId, Messages.get(lang, "cook.ask_shopping"), markup);
+            return;
+        }
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "cook.ask_shopping"));
-        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(yes, no))));
+        message.setReplyMarkup(markup);
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -459,10 +516,14 @@ class CookHandler extends FlowHandler {
         }
     }
 
+    private InlineKeyboardMarkup cookIngredientMarkup(CookSession session, Lang lang) {
+        return buildIngredientKeyboard(session, CB_COOK_INGREDIENT, CB_COOK_INGREDIENT_DONE,
+                CB_COOK_INGREDIENT_CLEAR, lang, backButton(lang, CB_COOK_BACK));
+    }
+
     void sendCookIngredientKeyboard(long chatId, CookSession session, Lang lang) {
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "cook.ingredient_prompt"));
-        message.setReplyMarkup(buildIngredientKeyboard(session, CB_COOK_INGREDIENT, CB_COOK_INGREDIENT_DONE,
-                CB_COOK_INGREDIENT_CLEAR, lang));
+        message.setReplyMarkup(cookIngredientMarkup(session, lang));
         try {
             Message sent = execute(message);
             session.setKeyboardMessageId(sent.getMessageId());
@@ -479,8 +540,7 @@ class CookHandler extends FlowHandler {
         EditMessageReplyMarkup edit = new EditMessageReplyMarkup();
         edit.setChatId(String.valueOf(chatId));
         edit.setMessageId(session.getKeyboardMessageId());
-        edit.setReplyMarkup(buildIngredientKeyboard(session, CB_COOK_INGREDIENT, CB_COOK_INGREDIENT_DONE,
-                CB_COOK_INGREDIENT_CLEAR, lang));
+        edit.setReplyMarkup(cookIngredientMarkup(session, lang));
         try {
             execute(edit);
         } catch (TelegramApiException e) {

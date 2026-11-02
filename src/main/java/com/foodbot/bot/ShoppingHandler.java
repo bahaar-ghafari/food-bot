@@ -64,7 +64,7 @@ class ShoppingHandler extends FlowHandler {
             awaitingSearch.remove(chatId);
             awaitingFollowId.remove(chatId);
             awaitingShoppingItem.add(chatId);
-            send(chatId, Messages.get(lang, "shop.add_prompt"));
+            sendWithHomeButton(chatId, lang, Messages.get(lang, "shop.add_prompt"));
             return;
         }
         if (data.equals(CB_SHOP_CLEAR)) {
@@ -154,6 +154,7 @@ class ShoppingHandler extends FlowHandler {
         InlineKeyboardButton add = new InlineKeyboardButton(Messages.get(lang, "shop.btn_add_item"));
         add.setCallbackData(CB_SHOP_ADD_ITEM);
         rows.add(List.of(add));
+        rows.add(List.of(homeButton(lang)));
         return rows;
     }
 }

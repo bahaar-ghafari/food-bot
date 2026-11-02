@@ -55,6 +55,7 @@ class FollowHandler extends FlowHandler {
             share.setUrl(profileShareUrl(chatId, lang));
             rows.add(List.of(share));
         }
+        rows.add(List.of(homeButton(lang)));
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, text, markup);
@@ -73,7 +74,9 @@ class FollowHandler extends FlowHandler {
     void sendFollowPrompt(long chatId, Lang lang) {
         KeyboardButton pick = new KeyboardButton(Messages.get(lang, "friends.btn_pick_contact"));
         pick.setRequestUser(new KeyboardButtonRequestUser("1", false, null));
-        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(pick))));
+        KeyboardRow backRow = new KeyboardRow();
+        backRow.add(Messages.get(lang, "btn.back"));
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(pick)), backRow));
         keyboard.setResizeKeyboard(true);
         keyboard.setOneTimeKeyboard(true);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "friends.ask_id"));

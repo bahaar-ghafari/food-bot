@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.foodbot.bot.BotConstants.SCOPE_ALL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -331,13 +332,14 @@ class FlowHandlersTest {
     void togglingAndClearingUpdateTheListAndOfferClearOnlyWhenSomethingIsChecked() {
         ctx.languageRepository.set(5L, Lang.EN);
         ctx.shoppingListRepository.addAll(5L, List.of("egg", "milk"));
-        assertEquals(3, ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN).size());
+        assertEquals(4, ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN).size());
 
         ctx.shopping.handleListCallback(callback(), 5L, "shl:t:0");
         var rows = ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN);
         assertTrue(rows.get(0).get(0).getText().startsWith("☑️"));
         assertEquals("shl:clear", rows.get(2).get(0).getCallbackData());
         assertEquals("shl:add", rows.get(3).get(0).getCallbackData());
+        assertEquals("home", rows.get(4).get(0).getCallbackData());
 
         ctx.shopping.handleListCallback(callback(), 5L, "shl:clear");
         assertEquals(List.of("milk"),
@@ -718,5 +720,82 @@ class FlowHandlersTest {
         assertEquals("Sara K", FlowHandler.handleLabel("Sara K", null));
         assertEquals("@sara", FlowHandler.handleLabel("", "sara"));
         assertNull(FlowHandler.handleLabel("", null));
+    }
+
+    private InlineKeyboardMarkup lastEditedMarkup() {
+        EditMessageText edit = sent.stream().filter(EditMessageText.class::isInstance)
+                .map(EditMessageText.class::cast).reduce((a, b) -> b).orElseThrow();
+        return (InlineKeyboardMarkup) edit.getReplyMarkup();
+    }
+
+    private static String lastCallback(InlineKeyboardMarkup markup) {
+        var rows = markup.getKeyboard();
+        return rows.get(rows.size() - 1).get(0).getCallbackData();
+    }
+
+    @Test
+    void homeButtonDropsPendingInputAndShowsTheMainMenu() {
+        ctx.awaitingSearch.add(5L);
+        ctx.awaitingFollowId.add(5L);
+        ctx.cookSessions.put(5L, new com.foodbot.food.CookSession());
+
+        ctx.ui.handleHomeCallback(callback(), 5L);
+
+        assertFalse(ctx.awaitingSearch.contains(5L));
+        assertFalse(ctx.awaitingFollowId.contains(5L));
+        assertFalse(ctx.cookSessions.containsKey(5L));
+        assertEquals(Messages.get(Lang.FA, "settings.back"), sentMessages().get(0).getText());
+    }
+
+    @Test
+    void topLevelScreensEndWithABackButton() {
+        ctx.languageRepository.set(5L, Lang.EN);
+
+        ctx.browse.sendViewFoodsPrompt(5L, Lang.EN);
+        assertEquals("home", lastCallback((InlineKeyboardMarkup) sentMessages().get(0).getReplyMarkup()));
+        ctx.follow.sendFriendsMenu(5L, Lang.EN, null);
+        assertEquals("home", lastCallback((InlineKeyboardMarkup) sentMessages().get(1).getReplyMarkup()));
+        ctx.cook.sendCookTimePrompt(5L, Lang.EN);
+        assertEquals("home", lastCallback((InlineKeyboardMarkup) sentMessages().get(2).getReplyMarkup()));
+        ctx.search.sendSearchPrompt(5L, Lang.EN);
+        assertEquals("home", lastCallback((InlineKeyboardMarkup) sentMessages().get(3).getReplyMarkup()));
+    }
+
+    @Test
+    void recipeListBacksOutToWhereItWasOpenedFrom() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        addFood("f1", null);
+
+        ctx.browse.sendFoodListPage(5L, Lang.EN, SCOPE_ALL, 0, null);
+
+        assertEquals("vf:menu", lastCallback((InlineKeyboardMarkup) sentMessages().get(0).getReplyMarkup()));
+    }
+
+    @Test
+    void cookBackStepsThroughTheFlowOneScreenAtATime() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        com.foodbot.food.CookSession session = new com.foodbot.food.CookSession();
+        session.setStep(com.foodbot.food.CookSession.Step.SELECTING_CATEGORY);
+        ctx.cookSessions.put(5L, session);
+
+        ctx.cook.handleCookBackCallback(callback(), 5L);
+        assertEquals(com.foodbot.food.CookSession.Step.ASK_SHOPPING, session.getStep());
+        assertEquals("ckb", lastCallback(lastEditedMarkup()));
+
+        ctx.cook.handleCookBackCallback(callback(), 5L);
+        assertEquals(com.foodbot.food.CookSession.Step.SELECTING_INGREDIENTS, session.getStep());
+        assertEquals(Integer.valueOf(42), session.getKeyboardMessageId());
+        assertEquals("ckb", lastCallback(lastEditedMarkup()));
+
+        ctx.cook.handleCookBackCallback(callback(), 5L);
+        assertEquals(com.foodbot.food.CookSession.Step.AWAITING_TIME, session.getStep());
+        assertEquals("home", lastCallback(lastEditedMarkup()));
+    }
+
+    @Test
+    void cookBackWithoutASessionSaysExpired() {
+        ctx.cook.handleCookBackCallback(callback(), 5L);
+
+        assertTrue(sent.stream().noneMatch(EditMessageText.class::isInstance));
     }
 }

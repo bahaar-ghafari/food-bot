@@ -156,6 +156,6 @@ class SearchHandler extends FlowHandler {
     }
 
     void sendSearchPrompt(long chatId, Lang lang) {
-        send(chatId, Messages.get(lang, "search.ask"));
+        sendWithHomeButton(chatId, lang, Messages.get(lang, "search.ask"));
     }
 }
