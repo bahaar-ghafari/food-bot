@@ -248,7 +248,7 @@ public class FoodBot extends TelegramLongPollingBot {
             } else {
                 ctx.search.handleSearchQuery(chatId, query, lang);
             }
-        } else if (text.equalsIgnoreCase("/friends") || text.equals(Messages.get(lang, "btn.friends"))) {
+        } else if (text.equalsIgnoreCase("/friends") || text.equalsIgnoreCase("/profile") || text.equals(Messages.get(lang, "btn.friends"))) {
             ctx.addFoodSessions.remove(chatId);
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);

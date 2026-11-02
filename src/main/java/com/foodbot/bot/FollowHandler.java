@@ -45,8 +45,10 @@ class FollowHandler extends FlowHandler {
         InlineKeyboardButton followers = new InlineKeyboardButton(
                 Messages.get(lang, "friends.btn_followers", followRepository.followersOf(chatId).size()));
         followers.setCallbackData(CB_FRIENDS_FOLLOWERS);
+        InlineKeyboardButton card = new InlineKeyboardButton(Messages.get(lang, "friends.btn_my_profile"));
+        card.setCallbackData(CB_PROFILE_VIEW + chatId);
         List<List<InlineKeyboardButton>> rows = new ArrayList<>(
-                List.of(List.of(follow), List.of(list, followers), List.of(toggle), List.of(digest)));
+                List.of(List.of(card), List.of(follow), List.of(list, followers), List.of(toggle), List.of(digest)));
         if (ctx.botUsername != null) {
             InlineKeyboardButton share = new InlineKeyboardButton(Messages.get(lang, "friends.btn_share_profile"));
             share.setUrl(profileShareUrl(chatId, lang));
