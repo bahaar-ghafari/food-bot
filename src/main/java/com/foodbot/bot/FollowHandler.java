@@ -303,10 +303,10 @@ class FollowHandler extends FlowHandler {
                             TimeFormat.format(food.getPrepTimeMinutes(), lang)));
                 }
             }
-        } else {
-            text.append("\n\n").append(Messages.get(lang, "profile.locked"));
         }
-        text.append("\n\n").append(Messages.get(lang, "profile.features"));
+        if (!following) {
+            text.append("\n\n").append(Messages.get(lang, "profile.features"));
+        }
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         if (self) {
             text.append("\n\n").append(Messages.get(lang, "profile.you"));

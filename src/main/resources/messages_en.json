@@ -221,7 +221,6 @@
   "profile.unavailable": "I can't find that profile. They need to have started this bot first.",
   "profile.share_text": "👋 Meet %s on Dishcover!\n🍽️ %s recipes · 🙋 %s followers\nTap to follow and get a ping on every new recipe 🔔",
   "profile.item": "🍴 %s · ⏱ %s",
-  "profile.locked": "🔒 Follow to peek at their recipes and get a ping whenever they cook up something new!",
   "profile.empty": "🌱 No recipes yet — a fresh kitchen!",
-  "profile.features": "🤗 Here's what I'm up to on Dishcover — join me!\n🔗 I share my recipes with friends in one tap\n🛒 I turn missing ingredients into a shopping list\n🍳 I find what to cook from what's in my kitchen\n🔔 I follow friends and get pinged on new recipes"
+  "profile.features": "👋 I keep my recipes here — follow me to see all of them, now and in the future!\nAnd that's not all, you can also:\n🔗 share recipes with friends in one tap\n🛒 turn missing ingredients into a shopping list\n🍳 find what to cook from what's in your kitchen\n🔔 get a ping whenever I add something new"
 }

@@ -152,7 +152,7 @@ class ShareLinkTest {
         ctx.follow.sendProfile(5L, Lang.EN, 7L, null);
         assertTrue(lastText().contains("Recipes: 1"));
         assertFalse(lastText().contains("Soup"), "recipe names are only for followers");
-        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.locked")));
+        assertTrue(lastText().contains(Messages.get(Lang.EN, "profile.features")));
         assertTrue(lastText().contains("shopping list"), "card briefly explains the features");
         assertTrue(callbacks().contains(BotConstants.CB_PROFILE_FOLLOW + 7L));
         InlineKeyboardMarkup markup = (InlineKeyboardMarkup) ((SendMessage) sent.get(sent.size() - 1)).getReplyMarkup();
