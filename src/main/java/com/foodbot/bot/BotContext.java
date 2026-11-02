@@ -46,6 +46,7 @@ class BotContext {
     final Map<Long, Long> pendingSharedProfile = new ConcurrentHashMap<>();
     volatile String botUsername;
     final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
+    final Set<Long> awaitingShoppingItem = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingFollowId = ConcurrentHashMap.newKeySet();
     final AiSuggestionService aiSuggestionService;

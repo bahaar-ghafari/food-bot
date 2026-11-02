@@ -55,6 +55,18 @@ class ShoppingHandler extends FlowHandler {
             sendShoppingList(chatId, lang, null);
             return;
         }
+        if (data.equals(CB_SHOP_ADD_ITEM)) {
+            answerCallback(callbackQuery.getId(), null, false);
+            addFoodSessions.remove(chatId);
+            cookSessions.remove(chatId);
+            editSessions.remove(chatId);
+            awaitingFeedback.remove(chatId);
+            awaitingSearch.remove(chatId);
+            awaitingFollowId.remove(chatId);
+            awaitingShoppingItem.add(chatId);
+            send(chatId, Messages.get(lang, "shop.add_prompt"));
+            return;
+        }
         if (data.equals(CB_SHOP_CLEAR)) {
             int removed = shoppingListRepository.clearChecked(chatId);
             answerCallback(callbackQuery.getId(), Messages.get(lang, "shop.cleared", String.valueOf(removed)), false);
@@ -68,15 +80,42 @@ class ShoppingHandler extends FlowHandler {
         sendShoppingList(chatId, lang, callbackQuery.getMessage().getMessageId());
     }
 
+    /** Adds typed items (one per line or comma-separated) to the list, then shows it. */
+    void handleItemText(long chatId, String text, Lang lang) {
+        awaitingShoppingItem.remove(chatId);
+        List<String> items = new ArrayList<>();
+        for (String part : text.split("[,\\n،]")) {
+            String item = IngredientTranslations.translate(part.trim(), Lang.EN).toLowerCase();
+            if (!item.isEmpty() && !items.contains(item)) {
+                items.add(item);
+            }
+        }
+        if (items.isEmpty()) {
+            sendShoppingList(chatId, lang, null);
+            return;
+        }
+        int added = shoppingListRepository.addAll(chatId, items);
+        sendWithMainMenu(chatId, lang,
+                Messages.get(lang, added > 0 ? "shop.added" : "shop.nothing_new", String.valueOf(added)));
+        sendShoppingList(chatId, lang, null);
+    }
+
     /** Sends the list, or edits the message at {@code editMessageId} in place when given. */
     void sendShoppingList(long chatId, Lang lang, Integer editMessageId) {
         List<Item> items = shoppingListRepository.itemsOf(chatId);
         if (items.isEmpty()) {
+            InlineKeyboardMarkup addOnly = new InlineKeyboardMarkup(buildListRows(items, lang));
+            String empty = Messages.get(lang, "shop.empty");
             if (editMessageId != null) {
-                editMessageTextAndMarkup(chatId, editMessageId, Messages.get(lang, "shop.empty"),
-                        new InlineKeyboardMarkup(List.of()));
-            } else {
-                sendWithMainMenu(chatId, lang, Messages.get(lang, "shop.empty"));
+                editMessageTextAndMarkup(chatId, editMessageId, empty, addOnly);
+                return;
+            }
+            SendMessage message = new SendMessage(String.valueOf(chatId), empty);
+            message.setReplyMarkup(addOnly);
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
             }
             return;
         }
@@ -112,6 +151,9 @@ class ShoppingHandler extends FlowHandler {
             clear.setCallbackData(CB_SHOP_CLEAR);
             rows.add(List.of(clear));
         }
+        InlineKeyboardButton add = new InlineKeyboardButton(Messages.get(lang, "shop.btn_add_item"));
+        add.setCallbackData(CB_SHOP_ADD_ITEM);
+        rows.add(List.of(add));
         return rows;
     }
 }

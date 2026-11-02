@@ -69,6 +69,7 @@ class FlowHandler {
     protected final Map<Long, Food> pendingSearchSuggestion;
     protected final Map<Long, String> pendingSearchQuery;
     protected final Set<Long> awaitingFeedback;
+    protected final Set<Long> awaitingShoppingItem;
     protected final Set<Long> awaitingSearch;
     protected final Set<Long> awaitingFollowId;
     protected final AiSuggestionService aiSuggestionService;
@@ -91,6 +92,7 @@ class FlowHandler {
         this.pendingSearchSuggestion = ctx.pendingSearchSuggestion;
         this.pendingSearchQuery = ctx.pendingSearchQuery;
         this.awaitingFeedback = ctx.awaitingFeedback;
+        this.awaitingShoppingItem = ctx.awaitingShoppingItem;
         this.awaitingSearch = ctx.awaitingSearch;
         this.awaitingFollowId = ctx.awaitingFollowId;
         this.aiSuggestionService = ctx.aiSuggestionService;
@@ -540,6 +542,7 @@ class FlowHandler {
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.what_can_cook"));
         row2.add(Messages.get(lang, "btn.search"));
+        row2.add(Messages.get(lang, "btn.shopping"));
         KeyboardRow row3 = new KeyboardRow();
         row3.add(Messages.get(lang, "btn.change_lang"));
         row3.add(Messages.get(lang, "btn.help"));

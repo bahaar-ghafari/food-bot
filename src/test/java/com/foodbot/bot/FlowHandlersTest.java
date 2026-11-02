@@ -330,16 +330,35 @@ class FlowHandlersTest {
     void togglingAndClearingUpdateTheListAndOfferClearOnlyWhenSomethingIsChecked() {
         ctx.languageRepository.set(5L, Lang.EN);
         ctx.shoppingListRepository.addAll(5L, List.of("egg", "milk"));
-        assertEquals(2, ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN).size());
+        assertEquals(3, ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN).size());
 
         ctx.shopping.handleListCallback(callback(), 5L, "shl:t:0");
         var rows = ctx.shopping.buildListRows(ctx.shoppingListRepository.itemsOf(5L), Lang.EN);
         assertTrue(rows.get(0).get(0).getText().startsWith("☑️"));
         assertEquals("shl:clear", rows.get(2).get(0).getCallbackData());
+        assertEquals("shl:add", rows.get(3).get(0).getCallbackData());
 
         ctx.shopping.handleListCallback(callback(), 5L, "shl:clear");
         assertEquals(List.of("milk"),
                 ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+    }
+
+    @Test
+    void typedItemsAreAddedToTheShoppingList() {
+        ctx.awaitingShoppingItem.add(5L);
+
+        ctx.shopping.handleItemText(5L, "Milk, eggs\nmilk", Lang.EN);
+
+        assertFalse(ctx.awaitingShoppingItem.contains(5L));
+        assertEquals(List.of("milk", "eggs"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+    }
+
+    @Test
+    void addItemButtonStartsAwaitingAnItem() {
+        ctx.shopping.handleListCallback(callback(), 5L, "shl:add");
+
+        assertTrue(ctx.awaitingShoppingItem.contains(5L));
     }
 
     @Test

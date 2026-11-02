@@ -199,6 +199,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             AddFoodSession newSession = new AddFoodSession();
             ctx.addFoodSessions.put(chatId, newSession);
             ctx.addFood.sendAddFoodScopePrompt(chatId, newSession, lang);
@@ -210,7 +211,9 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingFeedback.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingFollowId.remove(chatId);
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
         } else if (ctx.ui.isSuperAdmin(chatId)
@@ -220,20 +223,24 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.addFoodSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.cookSessions.put(chatId, new CookSession());
             ctx.cook.sendCookTimePrompt(chatId, lang);
-        } else if (text.equalsIgnoreCase("/shopping")) {
+        } else if (text.equalsIgnoreCase("/shopping") || text.equals(Messages.get(lang, "btn.shopping"))) {
             ctx.addFoodSessions.remove(chatId);
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.shopping.sendShoppingList(chatId, lang, null);
         } else if (text.equalsIgnoreCase("/feedback") || text.equals(Messages.get(lang, "btn.feedback"))) {
             ctx.addFoodSessions.remove(chatId);
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingFeedback.add(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.ui.send(chatId, Messages.get(lang, "feedback.ask"));
         } else if (text.equalsIgnoreCase("/search") || text.equals(Messages.get(lang, "btn.search"))
                 || text.toLowerCase().startsWith("/search ")) {
@@ -241,6 +248,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingFeedback.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             String query = text.toLowerCase().startsWith("/search ") ? text.substring(8).trim() : "";
             if (query.isEmpty()) {
                 ctx.awaitingSearch.add(chatId);
@@ -253,7 +261,9 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingFeedback.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingFollowId.remove(chatId);
             ctx.follow.sendFriendsMenu(chatId, lang, null);
         } else if (text.equalsIgnoreCase("/follow") || text.toLowerCase().startsWith("/follow ")) {
@@ -261,7 +271,9 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cookSessions.remove(chatId);
             ctx.editSessions.remove(chatId);
             ctx.awaitingFeedback.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
+            ctx.awaitingShoppingItem.remove(chatId);
             String arg = text.length() > 7 ? text.substring(7).trim() : "";
             if (arg.isEmpty()) {
                 ctx.awaitingFollowId.add(chatId);
@@ -277,6 +289,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.editFood.handleEditText(chatId, text, lang);
         } else if (ctx.awaitingFeedback.contains(chatId)) {
             ctx.feedback.handleFeedbackText(chatId, text, lang, update.getMessage().getFrom());
+        } else if (ctx.awaitingShoppingItem.contains(chatId)) {
+            ctx.shopping.handleItemText(chatId, text, lang);
         } else if (ctx.awaitingSearch.contains(chatId)) {
             ctx.search.handleSearchQuery(chatId, text, lang);
         } else if (ctx.awaitingFollowId.contains(chatId)) {

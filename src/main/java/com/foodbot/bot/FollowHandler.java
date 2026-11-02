@@ -169,6 +169,7 @@ class FollowHandler extends FlowHandler {
             cookSessions.remove(chatId);
             editSessions.remove(chatId);
             awaitingFeedback.remove(chatId);
+            awaitingShoppingItem.remove(chatId);
             awaitingSearch.remove(chatId);
             awaitingFollowId.add(chatId);
             sendFollowPrompt(chatId, lang);
