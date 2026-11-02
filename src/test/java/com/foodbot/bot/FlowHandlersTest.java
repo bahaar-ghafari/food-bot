@@ -179,6 +179,19 @@ class FlowHandlersTest {
     }
 
     @Test
+    void scaleRowIsHiddenWhenNoAmountIsScalable() {
+        Food plain = new Food("f7", "Salad", 5, "Lunch", List.of("salt"), null, null, null, Lang.EN,
+                Map.of("salt", "a pinch"));
+        Food none = addFood("f8", null);
+        Food scalable = new Food("f9", "Omelette", 10, "Breakfast", List.of("egg"), null, null, null, Lang.EN,
+                Map.of("egg", "2"));
+
+        assertEquals(1, ctx.browse.buildDetailMarkup(5L, Lang.EN, "global", 0, plain).getKeyboard().size());
+        assertEquals(1, ctx.browse.buildDetailMarkup(5L, Lang.EN, "global", 0, none).getKeyboard().size());
+        assertEquals(2, ctx.browse.buildDetailMarkup(5L, Lang.EN, "global", 0, scalable).getKeyboard().size());
+    }
+
+    @Test
     void favoriteFoodsKeepsOnlyWhatTheUserCanStillSee() {
         addFood("global", null);
         addFood("mine", 5L);

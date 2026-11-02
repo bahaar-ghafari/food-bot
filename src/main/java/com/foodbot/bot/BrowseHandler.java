@@ -289,8 +289,7 @@ class BrowseHandler extends FlowHandler {
         answerCallback(callbackQuery.getId(), null, false);
         editMessageTextAndMarkup(chatId, callbackQuery.getMessage().getMessageId(),
                 formatFoodDetail(food, lang, factor),
-                new InlineKeyboardMarkup(List.of(buildDetailRow(chatId, lang, ref.key(), ref.page(), food),
-                        buildScaleRow(ref.key(), ref.page(), food, factor))));
+                buildDetailMarkup(chatId, lang, ref.key(), ref.page(), food, factor));
     }
 
     private static boolean isScaleFactor(double factor) {
@@ -329,8 +328,22 @@ class BrowseHandler extends FlowHandler {
     }
 
     InlineKeyboardMarkup buildDetailMarkup(long chatId, Lang lang, String scope, int page, Food food) {
-        return new InlineKeyboardMarkup(List.of(buildDetailRow(chatId, lang, scope, page, food),
-                buildScaleRow(scope, page, food, 1.0)));
+        return buildDetailMarkup(chatId, lang, scope, page, food, 1.0);
+    }
+
+    InlineKeyboardMarkup buildDetailMarkup(long chatId, Lang lang, String scope, int page, Food food, double factor) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        rows.add(buildDetailRow(chatId, lang, scope, page, food));
+        if (hasScalableAmounts(food)) {
+            rows.add(buildScaleRow(scope, page, food, factor));
+        }
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    /** True when at least one ingredient amount has a number that scaling would change. */
+    boolean hasScalableAmounts(Food food) {
+        return food.getIngredientAmounts().values().stream()
+                .anyMatch(amount -> amount != null && !amount.equals(Amount.scale(amount, 2)));
     }
 
     List<InlineKeyboardButton> buildDetailRow(long chatId, Lang lang, String scope, int page, Food food) {
