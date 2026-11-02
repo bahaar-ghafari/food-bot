@@ -58,6 +58,7 @@
   "cook.ask_time": "How much time have you got? ⏰ Tap an option or type the exact minutes.",
   "cook.detail_have": "✅ Already in your kitchen:",
   "cook.detail_have_everything": "🎉 You've got everything! Let's get cooking!",
+  "cook.detail_assumed": "ℹ️ I assumed you have %s at home.",
   "cook.detail_need": "🛒 You'll need to grab:",
   "cook.ingredient_prompt": "What's in your kitchen right now? Tap to pick, or type to search and add new ones. Hit Done when ready!",
   "cook.invalid_time": "That doesn't look like a number. How many minutes do you have? ⏱️",

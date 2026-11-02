@@ -360,10 +360,13 @@ class CookHandler extends FlowHandler {
     String formatCookFoodDetail(Food food, CookResultContext ctx, Lang lang) {
         List<String> have = new ArrayList<>();
         List<String> missing = new ArrayList<>();
+        List<String> assumed = new ArrayList<>();
         for (String ingredient : food.getIngredients()) {
             boolean hasIt = effectivelyHas(ctx.getHaveIngredients(), ingredient);
             String formatted = formatIngredientWithAmount(ingredient, food.getIngredientAmounts(), lang);
-            if (hasIt) {
+            if (PantryStaples.isStaple(ingredient)) {
+                assumed.add(IngredientTranslations.translate(ingredient, lang));
+            } else if (hasIt) {
                 have.add(formatted);
             } else {
                 missing.add(formatted);
@@ -389,6 +392,10 @@ class CookHandler extends FlowHandler {
             for (String item : missing) {
                 builder.append("- ").append(item).append("\n");
             }
+        }
+
+        if (!assumed.isEmpty()) {
+            builder.append("\n").append(Messages.get(lang, "cook.detail_assumed", String.join(", ", assumed))).append("\n");
         }
 
         String recipeText = (food.getRecipe() == null || food.getRecipe().isBlank())
