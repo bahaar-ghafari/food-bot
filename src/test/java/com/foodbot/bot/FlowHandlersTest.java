@@ -805,7 +805,7 @@ class FlowHandlersTest {
         assertFalse(ctx.awaitingSearch.contains(5L));
         assertFalse(ctx.awaitingFollowId.contains(5L));
         assertFalse(ctx.cookSessions.containsKey(5L));
-        assertEquals(Messages.get(Lang.FA, "settings.back"), sentMessages().get(0).getText());
+        assertTrue(sentMessages().isEmpty(), "going home must not post a new chat message");
     }
 
     @Test

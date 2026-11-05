@@ -711,8 +711,14 @@ class FlowHandler {
         Lang lang = lang(chatId);
         answerCallback(callbackQuery.getId(), null, false);
         clearPendingInput(chatId);
-        clearInlineKeyboard(chatId, callbackQuery.getMessage().getMessageId());
-        sendWithMainMenu(chatId, lang, Messages.get(lang, "settings.back"));
+        // The main-menu reply keyboard is already on screen, so just remove the screen: no new chat message.
+        Integer messageId = callbackQuery.getMessage().getMessageId();
+        try {
+            execute(new org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage(
+                    String.valueOf(chatId), messageId));
+        } catch (TelegramApiException e) {
+            clearInlineKeyboard(chatId, messageId);
+        }
     }
 
     void sendWithMainMenu(long chatId, Lang lang, String text) {
