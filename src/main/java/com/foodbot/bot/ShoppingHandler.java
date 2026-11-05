@@ -132,7 +132,7 @@ class ShoppingHandler extends FlowHandler {
     void sendShoppingList(long chatId, Lang lang, Integer editMessageId, String note) {
         List<Item> items = shoppingListRepository.itemsOf(listKey(chatId));
         if (items.isEmpty()) {
-            InlineKeyboardMarkup addOnly = new InlineKeyboardMarkup(buildListRows(items, lang));
+            InlineKeyboardMarkup addOnly = new InlineKeyboardMarkup(buildListRows(items, lang, partnerRepository.partnerOf(chatId) != null));
             String empty = Messages.get(lang, "shop.empty");
             if (editMessageId != null) {
                 editMessageTextAndMarkup(chatId, editMessageId, empty, addOnly);
@@ -147,7 +147,7 @@ class ShoppingHandler extends FlowHandler {
             }
             return;
         }
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(buildListRows(items, lang));
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(buildListRows(items, lang, partnerRepository.partnerOf(chatId) != null));
         String header = (note == null ? "" : note + "\n\n") + (partnerRepository.partnerOf(chatId) == null
                 ? Messages.get(lang, "shop.header")
                 : Messages.get(lang, "shop.header_shared", ctx.partner.partnerName(chatId)));
@@ -165,6 +165,10 @@ class ShoppingHandler extends FlowHandler {
     }
 
     List<List<InlineKeyboardButton>> buildListRows(List<Item> items, Lang lang) {
+        return buildListRows(items, lang, false);
+    }
+
+    List<List<InlineKeyboardButton>> buildListRows(List<Item> items, Lang lang, boolean hasPartner) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         boolean anyChecked = false;
         for (int i = 0; i < items.size(); i++) {
@@ -183,7 +187,7 @@ class ShoppingHandler extends FlowHandler {
         }
         InlineKeyboardButton add = new InlineKeyboardButton(Messages.get(lang, "shop.btn_add_item"));
         add.setCallbackData(CB_SHOP_ADD_ITEM);
-        InlineKeyboardButton partner = new InlineKeyboardButton(Messages.get(lang, "shop.btn_partner"));
+        InlineKeyboardButton partner = new InlineKeyboardButton(Messages.get(lang, hasPartner ? "shop.btn_partner_linked" : "shop.btn_partner"));
         partner.setCallbackData(CB_PARTNER_MENU);
         rows.add(List.of(add, partner));
         rows.add(List.of(homeButton(lang)));
