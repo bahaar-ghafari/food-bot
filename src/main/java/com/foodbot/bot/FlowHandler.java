@@ -621,6 +621,11 @@ class FlowHandler {
 
     /** Settings sub-menu: Language, Feedback and Refresh, plus a way back to the main menu. */
     void sendSettingsMenu(long chatId, Lang lang) {
+        sendSettingsMenu(chatId, lang, null);
+    }
+
+    /** Swaps in the settings keyboard, then removes the bot's carrier message and the user's tap so the chat stays clean. */
+    void sendSettingsMenu(long chatId, Lang lang, Integer userMessageId) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.change_lang"));
         row1.add(Messages.get(lang, "btn.feedback"));
@@ -631,11 +636,41 @@ class FlowHandler {
         markup.setResizeKeyboard(true);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "settings.menu"));
         message.setReplyMarkup(markup);
+        sendAndErase(message, userMessageId);
+    }
+
+    /** Sends a message only to swap the reply keyboard (Telegram requires one), then deletes it and the user's tap. */
+    private void sendAndErase(SendMessage message, Integer userMessageId) {
         try {
-            execute(message);
+            var sent = execute(message);
+            if (userMessageId != null) {
+                deleteMessage(Long.parseLong(message.getChatId()), userMessageId);
+            }
+            if (sent != null) {
+                deleteMessage(Long.parseLong(message.getChatId()), sent.getMessageId());
+            }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    void deleteMessage(long chatId, Integer messageId) {
+        if (messageId == null) {
+            return;
+        }
+        try {
+            execute(new org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage(
+                    String.valueOf(chatId), messageId));
+        } catch (TelegramApiException e) {
+            // Already gone or too old to delete; the chat just keeps the message.
+        }
+    }
+
+    /** Restores the main-menu keyboard without leaving any message behind. */
+    void sendMainMenuQuietly(long chatId, Lang lang, String text, Integer userMessageId) {
+        SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setReplyMarkup(mainMenuKeyboard(lang, chatId));
+        sendAndErase(message, userMessageId);
     }
 
     /**
