@@ -7,6 +7,7 @@ import com.foodbot.food.Paginator;
 import com.foodbot.food.SearchResultContext;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
+import com.foodbot.lang.PersianNames;
 import com.foodbot.lang.TimeFormat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -107,7 +108,7 @@ class BrowseHandler extends FlowHandler {
             long userId = Long.parseLong(scope.substring(SCOPE_USER.length()));
             // a follow can outlive its own approval (e.g. unfollowed in another message)
             foods = followRepository.isFollowing(chatId, userId) ? foodRepository.findCreatedBy(userId, lang) : List.of();
-            headerText = Messages.get(lang, "friends.recipes_header", displayName(userId));
+            headerText = Messages.get(lang, "friends.recipes_header", displayName(userId, lang));
         } else if (scope.equals(SCOPE_ALL)) {
             foods = new ArrayList<>(foodRepository.findOwnedBy(chatId, lang));
             foods.addAll(foodRepository.findGlobal(lang));
@@ -332,7 +333,7 @@ class BrowseHandler extends FlowHandler {
     String provenanceLine(Food food, Lang lang) {
         String author = food.getAuthorName();
         if (food.isAddedViaBot() && author != null) {
-            return "👩‍🍳 " + Messages.get(lang, "food.source_bot_by", author);
+            return "👩‍🍳 " + Messages.get(lang, "food.source_bot_by", PersianNames.forLang(lang, author));
         }
         if (food.getOwnerChatId() == null) {
             return "";

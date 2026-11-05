@@ -3,6 +3,7 @@ package com.foodbot.bot;
 import com.foodbot.food.Food;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
+import com.foodbot.lang.PersianNames;
 import com.foodbot.lang.TimeFormat;
 import com.foodbot.social.UsernameRepository;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -148,18 +149,18 @@ class FollowHandler extends FlowHandler {
                 return Messages.get(lang, "friends.self");
             }
             case ALREADY_FOLLOWING -> {
-                return Messages.get(lang, "friends.already", displayName(target));
+                return Messages.get(lang, "friends.already", displayName(target, lang));
             }
             case ALREADY_REQUESTED -> {
                 return Messages.get(lang, "friends.already_requested");
             }
             case FOLLOWING -> {
                 Lang targetLang = lang(target);
-                send(target, Messages.get(targetLang, "friends.new_follower", authorDisplayName(from, chatId)));
-                return Messages.get(lang, "friends.followed", displayName(target));
+                send(target, Messages.get(targetLang, "friends.new_follower", PersianNames.forLang(targetLang, authorDisplayName(from, chatId))));
+                return Messages.get(lang, "friends.followed", displayName(target, lang));
             }
             default -> {
-                sendFollowRequest(target, chatId, authorDisplayName(from, chatId));
+                sendFollowRequest(target, chatId, PersianNames.forLang(lang(target), authorDisplayName(from, chatId)));
                 return Messages.get(lang, "friends.request_sent");
             }
         }
@@ -254,7 +255,7 @@ class FollowHandler extends FlowHandler {
         List<Long> following = followRepository.followingOf(chatId);
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         for (long userId : following) {
-            InlineKeyboardButton view = new InlineKeyboardButton("🍽️ " + displayName(userId));
+            InlineKeyboardButton view = new InlineKeyboardButton("🍽️ " + displayName(userId, lang));
             view.setCallbackData(CB_FRIENDS_USER + userId);
             InlineKeyboardButton unfollow = new InlineKeyboardButton(Messages.get(lang, "friends.btn_unfollow"));
             unfollow.setCallbackData(CB_FRIENDS_UNFOLLOW + userId);
@@ -275,7 +276,7 @@ class FollowHandler extends FlowHandler {
         List<Long> followers = followRepository.followersOf(chatId);
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         for (long userId : followers.subList(0, Math.min(followers.size(), MAX_LISTED_FOLLOWERS))) {
-            InlineKeyboardButton profile = new InlineKeyboardButton("👤 " + displayName(userId));
+            InlineKeyboardButton profile = new InlineKeyboardButton("👤 " + displayName(userId, lang));
             profile.setCallbackData(CB_PROFILE_VIEW + userId);
             rows.add(List.of(profile));
         }
@@ -293,7 +294,7 @@ class FollowHandler extends FlowHandler {
 
     /** Telegram's chat picker, prefilled with a one-line profile summary and the profile's deep link. */
     String profileShareUrl(long userId, Lang lang) {
-        String name = plainName(userId);
+        String name = plainName(userId, lang);
         String text = Messages.get(lang, "profile.share_text", name != null ? name : Messages.get(lang, "profile.unknown_name"),
                 foodRepository.countCreatedBy(userId), followRepository.followersOf(userId).size());
         return "https://t.me/share/url?url=" + URLEncoder.encode(profileDeepLink(userId), StandardCharsets.UTF_8)
@@ -334,7 +335,7 @@ class FollowHandler extends FlowHandler {
                                 TimeFormat.format(food.getPrepTimeMinutes(), lang)));
             }
         }
-        text.append("\n\n").append(Messages.get(lang, "profile.card", displayName(userId),
+        text.append("\n\n").append(Messages.get(lang, "profile.card", displayName(userId, lang),
                 foodRepository.countCreatedBy(userId), followRepository.followersOf(userId).size(),
                 followRepository.followingOf(userId).size()));
         if (ctx.botUsername != null) {
@@ -390,10 +391,10 @@ class FollowHandler extends FlowHandler {
             followRepository.setVisible(chatId, true);
         }
         String resultKey = (approve || makeVisible) ? "friends.request_allowed" : "friends.request_declined";
-        editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, resultKey, displayName(requester)),
+        editMessageTextAndMarkup(chatId, messageId, Messages.get(lang, resultKey, displayName(requester, lang)),
                 new InlineKeyboardMarkup(List.of()));
         if (approve || makeVisible) {
-            send(requester, Messages.get(lang(requester), "friends.request_accepted", displayName(chatId)));
+            send(requester, Messages.get(lang(requester), "friends.request_accepted", displayName(chatId, lang(requester))));
         }
     }
 
@@ -409,8 +410,8 @@ class FollowHandler extends FlowHandler {
                     continue; // deleted since it was queued
                 }
                 Long owner = food.getOwnerChatId();
-                String author = food.getAuthorName() != null ? food.getAuthorName()
-                        : owner != null ? displayName(owner) : "";
+                String author = PersianNames.forLang(lang, food.getAuthorName() != null ? food.getAuthorName()
+                        : owner != null ? displayName(owner) : "");
                 body.append("\n• ").append(food.getName());
                 if (!author.isEmpty()) {
                     body.append(" — ").append(author);

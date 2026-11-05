@@ -36,7 +36,7 @@ class PartnerHandler extends FlowHandler {
             return nickname;
         }
         Long partner = partnerRepository.partnerOf(viewer);
-        String telegramName = partner == null ? null : plainName(partner);
+        String telegramName = partner == null ? null : plainName(partner, lang(viewer));
         return telegramName != null ? telegramName : Messages.get(lang(viewer), "partner.default_name");
     }
 
@@ -46,7 +46,7 @@ class PartnerHandler extends FlowHandler {
 
     /** Telegram's chat picker, prefilled with the invitation text and link. */
     String inviteShareUrl(long chatId, Lang lang) {
-        String name = plainName(chatId);
+        String name = plainName(chatId, lang);
         String text = Messages.get(lang, "partner.share_text", name != null ? name : Messages.get(lang, "profile.unknown_name"));
         return "https://t.me/share/url?url=" + URLEncoder.encode(inviteLink(chatId), StandardCharsets.UTF_8)
                 + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8);
@@ -94,7 +94,7 @@ class PartnerHandler extends FlowHandler {
             send(chatId, Messages.get(lang, "partner.invite_stale"));
             return;
         }
-        String inviter = plainName(inviterId);
+        String inviter = plainName(inviterId, lang);
         sendWithMarkup(chatId,
                 Messages.get(lang, "partner.invite_text", inviter != null ? inviter : Messages.get(lang, "profile.unknown_name")),
                 new InlineKeyboardMarkup(List.of(List.of(

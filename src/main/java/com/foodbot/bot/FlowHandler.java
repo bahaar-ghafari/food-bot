@@ -26,6 +26,7 @@ import com.foodbot.food.SearchResultContext;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
+import com.foodbot.lang.PersianNames;
 import com.foodbot.lang.TimeFormat;
 import com.foodbot.social.FollowRepository;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -545,6 +546,16 @@ class FlowHandler {
             label = handleLabel(ctx.usernameRepository.findName(userId), ctx.usernameRepository.findUsername(userId));
         }
         return label != null ? label : Messages.get(lang(userId), "profile.unknown_name");
+    }
+
+    /** {@link #displayName(long)} written for a reader in {@code viewer}'s language (Persian script for Persian). */
+    String displayName(long userId, Lang viewer) {
+        return PersianNames.forLang(viewer, displayName(userId));
+    }
+
+    /** {@link #plainName(long)} written for a reader in {@code viewer}'s language. */
+    String plainName(long userId, Lang viewer) {
+        return PersianNames.forLang(viewer, plainName(userId));
     }
 
     /** The user's Telegram name or @username, or null when it can't be looked up. */

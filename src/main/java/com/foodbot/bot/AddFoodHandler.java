@@ -6,6 +6,7 @@ import com.foodbot.food.FoodCategories;
 import com.foodbot.food.RecipeSteps;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
+import com.foodbot.lang.PersianNames;
 import com.foodbot.lang.TimeFormat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -547,7 +548,7 @@ class AddFoodHandler extends FlowHandler {
             }
             Lang followerLang = lang(follower);
             sendFoodPhoto(follower, food);
-            send(follower, Messages.get(followerLang, "friends.new_recipe", who) + "\n\n"
+            send(follower, Messages.get(followerLang, "friends.new_recipe", PersianNames.forLang(followerLang, who)) + "\n\n"
                     + ctx.browse.formatFoodDetail(food, followerLang));
         }
     }
