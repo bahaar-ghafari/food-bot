@@ -48,6 +48,7 @@ class ShareLinkTest {
                 new com.foodbot.social.UsernameRepository(dir.resolve("usernames.json")),
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
+                new com.foodbot.social.PartnerRepository(dir.resolve("partners.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());
         ctx.botUsername = "foodbot";
         ctx.languageRepository.set(5L, Lang.EN);

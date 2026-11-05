@@ -9,6 +9,7 @@ import com.foodbot.food.CookSession;
 import com.foodbot.food.EditFoodSession;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.ShoppingListRepository;
+import com.foodbot.social.PartnerRepository;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodCategories;
 import com.foodbot.food.FoodNameTranslations;
@@ -92,6 +93,7 @@ class FlowHandler {
     protected final FollowRepository followRepository;
     protected final FavoriteRepository favoriteRepository;
     protected final ShoppingListRepository shoppingListRepository;
+    protected final PartnerRepository partnerRepository;
     protected final Map<Long, AddFoodSession> addFoodSessions;
     protected final Map<Long, CookSession> cookSessions;
     protected final Map<Long, EditFoodSession> editSessions;
@@ -115,6 +117,7 @@ class FlowHandler {
         this.followRepository = ctx.followRepository;
         this.favoriteRepository = ctx.favoriteRepository;
         this.shoppingListRepository = ctx.shoppingListRepository;
+        this.partnerRepository = ctx.partnerRepository;
         this.addFoodSessions = ctx.addFoodSessions;
         this.cookSessions = ctx.cookSessions;
         this.editSessions = ctx.editSessions;
@@ -642,6 +645,7 @@ class FlowHandler {
         ctx.pendingSearchQuery.remove(chatId);
         ctx.awaitingFeedback.remove(chatId);
         ctx.awaitingShoppingItem.remove(chatId);
+        ctx.awaitingPartnerName.remove(chatId);
         ctx.awaitingSearch.remove(chatId);
         ctx.awaitingFollowId.remove(chatId);
         String key = "refresh.done";
@@ -686,6 +690,7 @@ class FlowHandler {
         editSessions.remove(chatId);
         awaitingFeedback.remove(chatId);
         awaitingShoppingItem.remove(chatId);
+        ctx.awaitingPartnerName.remove(chatId);
         awaitingSearch.remove(chatId);
         awaitingFollowId.remove(chatId);
     }

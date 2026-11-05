@@ -7,6 +7,7 @@ import com.foodbot.food.CookSession;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.FoodRepository;
 import com.foodbot.food.ShoppingListRepository;
+import com.foodbot.social.PartnerRepository;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.lang.Messages;
@@ -55,7 +56,7 @@ public class FoodBot extends TelegramLongPollingBot {
             }
         }, superAdminChatId, feedbackChatId, seededFoodRepository(),
                 new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
-                new FavoriteRepository(), new ShoppingListRepository(),
+                new FavoriteRepository(), new ShoppingListRepository(), new PartnerRepository(),
                 new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService());
         this.ctx.botUsername = username;
@@ -180,6 +181,7 @@ public class FoodBot extends TelegramLongPollingBot {
 
         String sharedRecipeId = sharedRecipeId(text);
         Long sharedProfileId = sharedProfileId(text);
+        Long partnerInviterId = partnerInviterId(text);
         Lang lang = ctx.languageRepository.get(chatId);
         if (lang == null) {
             if (sharedRecipeId != null) {
@@ -187,6 +189,9 @@ public class FoodBot extends TelegramLongPollingBot {
             }
             if (sharedProfileId != null) {
                 ctx.pendingSharedProfile.put(chatId, sharedProfileId);
+            }
+            if (partnerInviterId != null) {
+                ctx.pendingPartnerInvite.put(chatId, partnerInviterId);
             }
             sendLanguagePrompt(chatId);
             return;
@@ -196,6 +201,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.browse.openSharedRecipe(chatId, lang, sharedRecipeId);
         } else if (sharedProfileId != null) {
             ctx.follow.sendProfile(chatId, lang, sharedProfileId, null);
+        } else if (partnerInviterId != null) {
+            ctx.partner.handleInvite(chatId, lang, partnerInviterId);
         } else if (text.equalsIgnoreCase("/start")) {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "welcome"));
         } else if (text.equalsIgnoreCase("/help") || text.equals(Messages.get(lang, "btn.help"))) {
@@ -230,6 +237,7 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.awaitingShoppingItem.remove(chatId);
             ctx.awaitingSearch.remove(chatId);
             ctx.awaitingShoppingItem.remove(chatId);
+            ctx.awaitingPartnerName.remove(chatId);
             ctx.awaitingFollowId.remove(chatId);
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "cancelled"));
         } else if (text.equalsIgnoreCase("/menu") || text.equals(Messages.get(lang, "btn.all_foods"))) {
@@ -310,6 +318,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.search.handleSearchQuery(chatId, text, lang);
         } else if (ctx.awaitingFollowId.contains(chatId)) {
             ctx.follow.handleFollowId(chatId, text, lang, update.getMessage().getFrom());
+        } else if (ctx.awaitingPartnerName.contains(chatId)) {
+            ctx.partner.handleNameText(chatId, text, lang);
         } else {
             ctx.ui.sendWithMainMenu(chatId, lang, Messages.get(lang, "fallback"));
         }
@@ -356,6 +366,10 @@ public class FoodBot extends TelegramLongPollingBot {
         if (pendingProfile != null) {
             ctx.follow.sendProfile(chatId, lang, pendingProfile, null);
         }
+        Long pendingInviter = ctx.pendingPartnerInvite.remove(chatId);
+        if (pendingInviter != null) {
+            ctx.partner.handleInvite(chatId, lang, pendingInviter);
+        }
     }
 
     /** The recipe id in a {@code /start recipe_<id>} deep link, or null for any other text. */
@@ -380,6 +394,21 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         try {
             return Long.parseLong(parts[1].substring(START_PROFILE_PREFIX.length()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** The inviter's chat id in a {@code /start partner_<id>} deep link, or null for any other text. */
+    static Long partnerInviterId(String text) {
+        String[] parts = text.trim().split("\\s+");
+        if (parts.length != 2 || !(parts[0].equalsIgnoreCase("/start")
+                || parts[0].toLowerCase().startsWith("/start@"))
+                || !parts[1].startsWith(START_PARTNER_PREFIX)) {
+            return null;
+        }
+        try {
+            return Long.parseLong(parts[1].substring(START_PARTNER_PREFIX.length()));
         } catch (NumberFormatException e) {
             return null;
         }
@@ -460,6 +489,8 @@ public class FoodBot extends TelegramLongPollingBot {
             ctx.cook.handleCookViewCallback(callbackQuery, chatId, data);
         } else if (data.startsWith(CB_SHOP_ADD)) {
             ctx.shopping.handleAddMissingCallback(callbackQuery, chatId, data);
+        } else if (data.startsWith(CB_PARTNER_PREFIX)) {
+            ctx.partner.handleCallback(callbackQuery, chatId, data);
         } else if (data.startsWith("shl:")) {
             ctx.shopping.handleListCallback(callbackQuery, chatId, data);
         } else if (data.equals(CB_FOOD_EDIT_SAVE)) {

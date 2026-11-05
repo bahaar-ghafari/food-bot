@@ -33,9 +33,15 @@ class ShoppingHandler extends FlowHandler {
             answerCallback(callbackQuery.getId(), Messages.get(lang, "selection_expired"), false);
             return;
         }
-        int added = shoppingListRepository.addAll(chatId, missingIngredients(foodOpt.get(), cookCtx));
+        List<String> added = shoppingListRepository.addNew(listKey(chatId), missingIngredients(foodOpt.get(), cookCtx));
         answerCallback(callbackQuery.getId(),
-                Messages.get(lang, added > 0 ? "shop.added" : "shop.nothing_new", String.valueOf(added)), false);
+                Messages.get(lang, !added.isEmpty() ? "shop.added" : "shop.nothing_new", String.valueOf(added.size())), false);
+        ctx.partner.notifyAdded(chatId, added);
+    }
+
+    /** The key the user's list is stored under: their own chat id, or the shared one when they have a partner. */
+    long listKey(long chatId) {
+        return partnerRepository.listOwner(chatId);
     }
 
     List<String> missingIngredients(Food food, CookResultContext cookCtx) {
@@ -53,6 +59,13 @@ class ShoppingHandler extends FlowHandler {
         if (data.equals(CB_SHOP_OPEN) || data.equals(CB_SHOP_DONE)) {
             awaitingShoppingItem.remove(chatId);
             answerCallback(callbackQuery.getId(), null, false);
+            if (data.equals(CB_SHOP_DONE)) {
+                // finished adding: tell the partner everything new in one message
+                List<String> pending = ctx.pendingPartnerNotice.remove(chatId);
+                if (pending != null) {
+                    ctx.partner.notifyAdded(chatId, pending);
+                }
+            }
             sendShoppingList(chatId, lang, null);
             return;
         }
@@ -69,10 +82,10 @@ class ShoppingHandler extends FlowHandler {
             return;
         }
         if (data.equals(CB_SHOP_CLEAR)) {
-            int removed = shoppingListRepository.clearChecked(chatId);
+            int removed = shoppingListRepository.clearChecked(listKey(chatId));
             answerCallback(callbackQuery.getId(), Messages.get(lang, "shop.cleared", String.valueOf(removed)), false);
         } else if (data.startsWith(CB_SHOP_TOGGLE)) {
-            shoppingListRepository.toggleChecked(chatId, Integer.parseInt(data.substring(CB_SHOP_TOGGLE.length())));
+            shoppingListRepository.toggleChecked(listKey(chatId), Integer.parseInt(data.substring(CB_SHOP_TOGGLE.length())));
             answerCallback(callbackQuery.getId(), null, false);
         } else {
             answerCallback(callbackQuery.getId(), null, false);
@@ -93,7 +106,11 @@ class ShoppingHandler extends FlowHandler {
                 items.add(item);
             }
         }
-        int added = items.isEmpty() ? 0 : shoppingListRepository.addAll(chatId, items);
+        List<String> newItems = items.isEmpty() ? List.of() : shoppingListRepository.addNew(listKey(chatId), items);
+        int added = newItems.size();
+        if (added > 0 && partnerRepository.partnerOf(chatId) != null) {
+            ctx.pendingPartnerNotice.computeIfAbsent(chatId, k -> new ArrayList<>()).addAll(newItems);
+        }
         InlineKeyboardButton done = new InlineKeyboardButton(Messages.get(lang, "shop.btn_done"));
         done.setCallbackData(CB_SHOP_DONE);
         SendMessage message = new SendMessage(String.valueOf(chatId),
@@ -113,7 +130,7 @@ class ShoppingHandler extends FlowHandler {
 
     /** As above, with an optional one-line {@code note} (e.g. what was just added) above the list header. */
     void sendShoppingList(long chatId, Lang lang, Integer editMessageId, String note) {
-        List<Item> items = shoppingListRepository.itemsOf(chatId);
+        List<Item> items = shoppingListRepository.itemsOf(listKey(chatId));
         if (items.isEmpty()) {
             InlineKeyboardMarkup addOnly = new InlineKeyboardMarkup(buildListRows(items, lang));
             String empty = Messages.get(lang, "shop.empty");
@@ -131,7 +148,9 @@ class ShoppingHandler extends FlowHandler {
             return;
         }
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(buildListRows(items, lang));
-        String header = (note == null ? "" : note + "\n\n") + Messages.get(lang, "shop.header");
+        String header = (note == null ? "" : note + "\n\n") + (partnerRepository.partnerOf(chatId) == null
+                ? Messages.get(lang, "shop.header")
+                : Messages.get(lang, "shop.header_shared", ctx.partner.partnerName(chatId)));
         if (editMessageId != null) {
             editMessageTextAndMarkup(chatId, editMessageId, header, markup);
             return;
@@ -164,7 +183,9 @@ class ShoppingHandler extends FlowHandler {
         }
         InlineKeyboardButton add = new InlineKeyboardButton(Messages.get(lang, "shop.btn_add_item"));
         add.setCallbackData(CB_SHOP_ADD_ITEM);
-        rows.add(List.of(add));
+        InlineKeyboardButton partner = new InlineKeyboardButton(Messages.get(lang, "shop.btn_partner"));
+        partner.setCallbackData(CB_PARTNER_MENU);
+        rows.add(List.of(add, partner));
         rows.add(List.of(homeButton(lang)));
         return rows;
     }

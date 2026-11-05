@@ -68,6 +68,7 @@ class FlowHandlersTest {
                 new com.foodbot.social.UsernameRepository(dir.resolve("usernames.json")),
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
+                new com.foodbot.social.PartnerRepository(dir.resolve("partners.json")),
                 new AiSuggestionService(null), new MealDbSuggestionService());
     }
 
@@ -701,7 +702,7 @@ class FlowHandlersTest {
         FoodRepository repo = new FoodRepository(file);
         BotContext local = new BotContext(ctx.sender, ADMIN, FEEDBACK_CHAT, repo, ctx.languageRepository,
                 ctx.followRepository, ctx.usernameRepository, ctx.favoriteRepository, ctx.shoppingListRepository,
-                ctx.aiSuggestionService, ctx.mealDbSuggestionService);
+                ctx.partnerRepository, ctx.aiSuggestionService, ctx.mealDbSuggestionService);
         new FoodRepository(file).add(new Food("f9", "Outside", 10, "Dinner", List.of("rice"), 5L, 5L, null,
                 Lang.EN, null, null, null, null));
         assertTrue(repo.findById("f9").isEmpty());
@@ -857,5 +858,119 @@ class FlowHandlersTest {
         ctx.cook.handleCookBackCallback(callback(), 5L);
 
         assertTrue(sent.stream().noneMatch(EditMessageText.class::isInstance));
+    }
+
+    private List<SendMessage> messagesTo(long chatId) {
+        return sentMessages().stream().filter(m -> m.getChatId().equals(String.valueOf(chatId))).toList();
+    }
+
+    private void linkPartners(long inviter, long invitee) {
+        ctx.languageRepository.set(inviter, Lang.EN);
+        ctx.languageRepository.set(invitee, Lang.EN);
+        ctx.partner.handleCallback(callback(), invitee, "shp:ok:" + inviter);
+    }
+
+    @Test
+    void acceptingAnInviteLinksPartnersAndMergesTheirLists() {
+        ctx.shoppingListRepository.addAll(5L, List.of("egg"));
+        ctx.shoppingListRepository.addAll(9L, List.of("milk"));
+
+        linkPartners(5L, 9L);
+
+        assertEquals(5L, ctx.partnerRepository.partnerOf(9L));
+        assertEquals(9L, ctx.partnerRepository.partnerOf(5L));
+        assertEquals(List.of("egg", "milk"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+        assertTrue(ctx.shoppingListRepository.itemsOf(9L).isEmpty());
+        assertTrue(!messagesTo(5L).isEmpty(), "inviter is told the invite was accepted");
+        assertTrue(ctx.awaitingPartnerName.contains(9L), "invitee is asked to name their partner");
+    }
+
+    @Test
+    void invitesToSelfOrToSomeoneAlreadyTakenAreRefused() {
+        ctx.languageRepository.set(5L, Lang.EN);
+        ctx.partner.handleInvite(5L, Lang.EN, 5L);
+        assertEquals(Messages.get(Lang.EN, "partner.invite_self"), messagesTo(5L).get(0).getText());
+
+        linkPartners(5L, 9L);
+        ctx.partner.handleCallback(callback(), 7L, "shp:ok:5");
+        assertNull(ctx.partnerRepository.partnerOf(7L));
+        assertEquals(9L, ctx.partnerRepository.partnerOf(5L));
+    }
+
+    @Test
+    void partnerBothSeesTheSameListAndIsPingedOnDone() {
+        linkPartners(5L, 9L);
+        sent.clear();
+        ctx.awaitingShoppingItem.add(9L);
+
+        ctx.shopping.handleItemText(9L, "milk, eggs", Lang.EN);
+        assertTrue(messagesTo(5L).isEmpty(), "no ping until Done");
+        ctx.shopping.handleListCallback(callback(), 9L, "shl:done");
+
+        assertEquals(List.of("milk", "eggs"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+        List<SendMessage> pings = messagesTo(5L);
+        assertEquals(1, pings.size());
+        assertTrue(pings.get(0).getText().contains("milk, eggs"));
+    }
+
+    @Test
+    void partnerNicknameShowsInTheNotification() {
+        linkPartners(5L, 9L);
+        ctx.partnerRepository.setNickname(5L, "Ali");
+        sent.clear();
+
+        ctx.shopping.handleItemText(9L, "milk", Lang.EN);
+        ctx.shopping.handleListCallback(callback(), 9L, "shl:done");
+
+        assertTrue(messagesTo(5L).get(0).getText().contains("Ali"));
+    }
+
+    @Test
+    void addingFromACookResultPingsThePartnerImmediately() {
+        addFoodWith("f1", List.of("egg", "milk"));
+        ctx.lastCookResults.put(9L, new CookResultContext(60, java.util.Set.of("egg"), true, null));
+        linkPartners(5L, 9L);
+        sent.clear();
+
+        ctx.shopping.handleAddMissingCallback(callback(), 9L, "shadd:f1");
+
+        assertTrue(messagesTo(5L).get(0).getText().contains("milk"));
+    }
+
+    @Test
+    void stoppingSharingGivesEachPersonACopy() {
+        linkPartners(5L, 9L);
+        ctx.shoppingListRepository.addAll(5L, List.of("egg"));
+
+        ctx.partner.handleCallback(callback(), 9L, "shp:stopyes");
+
+        assertNull(ctx.partnerRepository.partnerOf(5L));
+        assertEquals(1, ctx.shoppingListRepository.itemsOf(5L).size());
+        assertEquals(1, ctx.shoppingListRepository.itemsOf(9L).size());
+        ctx.shoppingListRepository.addAll(9L, List.of("milk"));
+        assertEquals(1, ctx.shoppingListRepository.itemsOf(5L).size());
+    }
+
+    @Test
+    void partnerNameTextIsValidatedAndSaved() {
+        linkPartners(5L, 9L);
+        ctx.awaitingPartnerName.add(9L);
+
+        ctx.partner.handleNameText(9L, "x".repeat(31), Lang.EN);
+        assertTrue(ctx.awaitingPartnerName.contains(9L));
+        assertNull(ctx.partnerRepository.nicknameOf(9L));
+
+        ctx.partner.handleNameText(9L, " Sara ", Lang.EN);
+        assertTrue(!ctx.awaitingPartnerName.contains(9L));
+        assertEquals("Sara", ctx.partnerRepository.nicknameOf(9L));
+    }
+
+    @Test
+    void partnerInviteLinkIsParsedFromStartPayload() {
+        assertEquals(42L, FoodBot.partnerInviterId("/start partner_42"));
+        assertNull(FoodBot.partnerInviterId("/start partner_x"));
+        assertNull(FoodBot.partnerInviterId("/start user_42"));
     }
 }

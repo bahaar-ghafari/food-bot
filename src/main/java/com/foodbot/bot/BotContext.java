@@ -13,8 +13,10 @@ import com.foodbot.food.SearchResultContext;
 import com.foodbot.food.ShoppingListRepository;
 import com.foodbot.lang.LanguageRepository;
 import com.foodbot.social.FollowRepository;
+import com.foodbot.social.PartnerRepository;
 import com.foodbot.social.UsernameRepository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +34,7 @@ class BotContext {
     final UsernameRepository usernameRepository;
     final FavoriteRepository favoriteRepository;
     final ShoppingListRepository shoppingListRepository;
+    final PartnerRepository partnerRepository;
     final Map<Long, AddFoodSession> addFoodSessions = new ConcurrentHashMap<>();
     final Map<Long, CookSession> cookSessions = new ConcurrentHashMap<>();
     final Map<Long, EditFoodSession> editSessions = new ConcurrentHashMap<>();
@@ -44,9 +47,15 @@ class BotContext {
     /** The bot's @username, used to build share links; share buttons are hidden while it is unset. */
     /** Profile chat id from a deep link opened before the user had picked a language; shown once they do. */
     final Map<Long, Long> pendingSharedProfile = new ConcurrentHashMap<>();
+    /** Inviter chat id from a partner invite opened before the user had picked a language. */
+    final Map<Long, Long> pendingPartnerInvite = new ConcurrentHashMap<>();
     volatile String botUsername;
     final Set<Long> awaitingFeedback = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingShoppingItem = ConcurrentHashMap.newKeySet();
+    /** Users about to type the name they call their shopping-list partner. */
+    final Set<Long> awaitingPartnerName = ConcurrentHashMap.newKeySet();
+    /** Items a user added to the shared list since their partner was last told (sent when they tap Done). */
+    final Map<Long, List<String>> pendingPartnerNotice = new ConcurrentHashMap<>();
     final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingFollowId = ConcurrentHashMap.newKeySet();
     final AiSuggestionService aiSuggestionService;
@@ -61,11 +70,13 @@ class BotContext {
     final EditFoodHandler editFood;
     final CookHandler cook;
     final ShoppingHandler shopping;
+    final PartnerHandler partner;
     final InlineQueryHandler inline;
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
                UsernameRepository usernameRepository, FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
+               PartnerRepository partnerRepository,
                AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
         this.sender = sender;
         this.superAdminChatId = superAdminChatId;
@@ -76,6 +87,7 @@ class BotContext {
         this.usernameRepository = usernameRepository;
         this.favoriteRepository = favoriteRepository;
         this.shoppingListRepository = shoppingListRepository;
+        this.partnerRepository = partnerRepository;
         this.aiSuggestionService = aiSuggestionService;
         this.mealDbSuggestionService = mealDbSuggestionService;
         this.ui = new FlowHandler(this);
@@ -87,6 +99,7 @@ class BotContext {
         this.editFood = new EditFoodHandler(this);
         this.cook = new CookHandler(this);
         this.shopping = new ShoppingHandler(this);
+        this.partner = new PartnerHandler(this);
         this.inline = new InlineQueryHandler(this);
     }
 }

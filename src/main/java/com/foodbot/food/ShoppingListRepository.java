@@ -40,20 +40,46 @@ public class ShoppingListRepository {
 
     /** Adds the ingredients that aren't already listed. Returns how many were new. */
     public synchronized int addAll(long chatId, Collection<String> ingredients) {
+        return addNew(chatId, ingredients).size();
+    }
+
+    /** Adds the ingredients that aren't already listed. Returns just the ones that were new. */
+    public synchronized List<String> addNew(long chatId, Collection<String> ingredients) {
         Map<String, Boolean> list = lists.computeIfAbsent(chatId, k -> new LinkedHashMap<>());
-        int added = 0;
+        List<String> added = new ArrayList<>();
         for (String ingredient : ingredients) {
             if (list.putIfAbsent(ingredient, false) == null) {
-                added++;
+                added.add(ingredient);
             }
         }
         if (list.isEmpty()) {
             lists.remove(chatId);
         }
-        if (added > 0) {
+        if (!added.isEmpty()) {
             save();
         }
         return added;
+    }
+
+    /** Moves every item of {@code from}'s list onto {@code into}'s list (items already there are kept as they are). */
+    public synchronized void mergeInto(long from, long into) {
+        if (from == into || !lists.containsKey(from)) {
+            return;
+        }
+        Map<String, Boolean> source = lists.remove(from);
+        Map<String, Boolean> target = lists.computeIfAbsent(into, k -> new LinkedHashMap<>());
+        source.forEach(target::putIfAbsent);
+        save();
+    }
+
+    /** Replaces {@code to}'s list with a copy of {@code from}'s (so a split-up pair each keeps the list). */
+    public synchronized void copyList(long from, long to) {
+        Map<String, Boolean> source = lists.get(from);
+        if (from == to || source == null) {
+            return;
+        }
+        lists.put(to, new LinkedHashMap<>(source));
+        save();
     }
 
     /** Flips the checked state of the item at {@code index}. Returns false if there is no such item. */

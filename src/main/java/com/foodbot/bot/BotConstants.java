@@ -43,6 +43,17 @@ final class BotConstants {
     static final String CB_SHOP_ADD_ITEM = "shl:add";
     /** Ends the "keep typing items" mode and shows the list. */
     static final String CB_SHOP_DONE = "shl:done";
+    /** Shopping-list partner screens; the rest of the data is the action (see PartnerHandler). */
+    static final String CB_PARTNER_PREFIX = "shp:";
+    static final String CB_PARTNER_MENU = "shp:menu";
+    static final String CB_PARTNER_NAME = "shp:name";
+    static final String CB_PARTNER_STOP = "shp:stop";
+    static final String CB_PARTNER_STOP_YES = "shp:stopyes";
+    /** Followed by the inviter's chat id. */
+    static final String CB_PARTNER_ACCEPT = "shp:ok:";
+    static final String CB_PARTNER_DECLINE = "shp:no:";
+    /** Prefix of the {@code /start} payload that invites someone to share a shopping list: {@code partner_<chat id>}. */
+    static final String START_PARTNER_PREFIX = "partner_";
     static final String GROUP_READY = "ready";
     static final String GROUP_SHOP = "shop";
     static final String[] COOK_TIME_PRESET_KEYS =

@@ -88,4 +88,34 @@ class ShoppingListRepositoryTest {
         Files.writeString(file, "");
         assertTrue(new ShoppingListRepository(file).itemsOf(1L).isEmpty());
     }
+
+    @Test
+    void addNewReturnsOnlyTheItemsThatWereNew(@TempDir Path dir) {
+        ShoppingListRepository repo = new ShoppingListRepository(dir.resolve("s.json"));
+        repo.addAll(1L, List.of("egg"));
+        assertEquals(List.of("milk"), repo.addNew(1L, List.of("egg", "milk")));
+    }
+
+    @Test
+    void mergeIntoCombinesListsKeepingTargetStateAndEmptiesTheSource(@TempDir Path dir) {
+        ShoppingListRepository repo = new ShoppingListRepository(dir.resolve("s.json"));
+        repo.addAll(1L, List.of("egg", "milk"));
+        repo.toggleChecked(1L, 0);
+        repo.addAll(2L, List.of("milk", "flour"));
+        repo.mergeInto(2L, 1L);
+        assertEquals(List.of("egg", "milk", "flour"),
+                repo.itemsOf(1L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+        assertTrue(repo.itemsOf(1L).get(0).checked());
+        assertTrue(repo.itemsOf(2L).isEmpty());
+    }
+
+    @Test
+    void copyListGivesTheOtherUserTheirOwnIndependentCopy(@TempDir Path dir) {
+        ShoppingListRepository repo = new ShoppingListRepository(dir.resolve("s.json"));
+        repo.addAll(1L, List.of("egg"));
+        repo.copyList(1L, 2L);
+        repo.addAll(1L, List.of("milk"));
+        assertEquals(1, repo.itemsOf(2L).size());
+        assertEquals(2, repo.itemsOf(1L).size());
+    }
 }
