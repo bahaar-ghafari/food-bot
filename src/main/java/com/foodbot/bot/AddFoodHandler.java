@@ -106,7 +106,7 @@ class AddFoodHandler extends FlowHandler {
             clearInlineKeyboard(chatId, session.getKeyboardMessageId());
         }
         // The main-menu keyboard is already showing: just remove the screen instead of posting "Cancelled".
-        ui.deleteMessage(chatId, callbackQuery.getMessage().getMessageId());
+        deleteMessage(chatId, callbackQuery.getMessage().getMessageId());
     }
 
     void handleAddFoodBackCallback(CallbackQuery callbackQuery, long chatId, String data) {
