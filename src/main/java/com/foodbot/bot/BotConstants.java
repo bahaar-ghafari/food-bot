@@ -41,6 +41,8 @@ final class BotConstants {
     static final String CB_SHOP_TOGGLE = "shl:t:";
     static final String CB_SHOP_CLEAR = "shl:clear";
     static final String CB_SHOP_ADD_ITEM = "shl:add";
+    /** Ends the "keep typing items" mode and shows the list. */
+    static final String CB_SHOP_DONE = "shl:done";
     static final String GROUP_READY = "ready";
     static final String GROUP_SHOP = "shop";
     static final String[] COOK_TIME_PRESET_KEYS =

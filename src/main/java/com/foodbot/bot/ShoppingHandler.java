@@ -50,7 +50,8 @@ class ShoppingHandler extends FlowHandler {
 
     void handleListCallback(CallbackQuery callbackQuery, long chatId, String data) {
         Lang lang = lang(chatId);
-        if (data.equals(CB_SHOP_OPEN)) {
+        if (data.equals(CB_SHOP_OPEN) || data.equals(CB_SHOP_DONE)) {
+            awaitingShoppingItem.remove(chatId);
             answerCallback(callbackQuery.getId(), null, false);
             sendShoppingList(chatId, lang, null);
             return;
@@ -80,9 +81,11 @@ class ShoppingHandler extends FlowHandler {
         sendShoppingList(chatId, lang, callbackQuery.getMessage().getMessageId());
     }
 
-    /** Adds typed items (one per line or comma-separated) to the list, then shows it. */
+    /**
+     * Adds typed items (one per line or comma-separated). The user stays in add mode, so they can keep
+     * sending messages, until they tap Done (or leave via another command).
+     */
     void handleItemText(long chatId, String text, Lang lang) {
-        awaitingShoppingItem.remove(chatId);
         List<String> items = new ArrayList<>();
         for (String part : text.split("[,\\n،]")) {
             String item = IngredientTranslations.translate(part.trim(), Lang.EN).toLowerCase();
@@ -90,13 +93,17 @@ class ShoppingHandler extends FlowHandler {
                 items.add(item);
             }
         }
-        if (items.isEmpty()) {
-            sendShoppingList(chatId, lang, null);
-            return;
+        int added = items.isEmpty() ? 0 : shoppingListRepository.addAll(chatId, items);
+        InlineKeyboardButton done = new InlineKeyboardButton(Messages.get(lang, "shop.btn_done"));
+        done.setCallbackData(CB_SHOP_DONE);
+        SendMessage message = new SendMessage(String.valueOf(chatId),
+                Messages.get(lang, added > 0 ? "shop.added_more" : "shop.nothing_new_more", String.valueOf(added)));
+        message.setReplyMarkup(new InlineKeyboardMarkup(List.of(List.of(done))));
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
-        int added = shoppingListRepository.addAll(chatId, items);
-        sendShoppingList(chatId, lang, null,
-                Messages.get(lang, added > 0 ? "shop.added" : "shop.nothing_new", String.valueOf(added)));
     }
 
     /** Sends the list, or edits the message at {@code editMessageId} in place when given. */

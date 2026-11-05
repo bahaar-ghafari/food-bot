@@ -304,6 +304,22 @@ class FlowHandlersTest {
     }
 
     @Test
+    void typedShoppingItemsKeepAddModeOpenUntilDone() {
+        ctx.awaitingShoppingItem.add(5L);
+
+        ctx.shopping.handleItemText(5L, "milk, eggs", Lang.EN);
+        ctx.shopping.handleItemText(5L, "bread", Lang.EN);
+
+        assertTrue(ctx.awaitingShoppingItem.contains(5L));
+        assertEquals(List.of("milk", "eggs", "bread"),
+                ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
+
+        ctx.shopping.handleListCallback(callback(), 5L, "shl:done");
+
+        assertTrue(!ctx.awaitingShoppingItem.contains(5L));
+    }
+
+    @Test
     void addMissingWithoutACookContextChangesNothing() {
         addFoodWith("f1", List.of("egg"));
 
@@ -352,7 +368,7 @@ class FlowHandlersTest {
 
         ctx.shopping.handleItemText(5L, "Milk, eggs\nmilk", Lang.EN);
 
-        assertFalse(ctx.awaitingShoppingItem.contains(5L));
+        assertTrue(ctx.awaitingShoppingItem.contains(5L));
         assertEquals(List.of("milk", "eggs"),
                 ctx.shoppingListRepository.itemsOf(5L).stream().map(ShoppingListRepository.Item::ingredient).toList());
     }
