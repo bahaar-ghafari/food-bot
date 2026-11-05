@@ -624,7 +624,7 @@ class FlowHandler {
         sendSettingsMenu(chatId, lang, null);
     }
 
-    /** Swaps in the settings keyboard, then removes the bot's carrier message and the user's tap so the chat stays clean. */
+    /** Swaps in the settings keyboard; the bot's message must stay (deleting it hides the keyboard), only the user's tap is removed. */
     void sendSettingsMenu(long chatId, Lang lang, Integer userMessageId) {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(Messages.get(lang, "btn.change_lang"));
@@ -639,15 +639,13 @@ class FlowHandler {
         sendAndErase(message, userMessageId);
     }
 
-    /** Sends a message only to swap the reply keyboard (Telegram requires one), then deletes it and the user's tap. */
+    /** Sends a message only to swap the reply keyboard (Telegram requires one), then deletes only the user's tap (the sent message must stay or the keyboard disappears). */
     private void sendAndErase(SendMessage message, Integer userMessageId) {
         try {
-            var sent = execute(message);
+            execute(message);
+            // Never delete the bot's own message here: it carries the reply keyboard, and deleting it hides the keyboard.
             if (userMessageId != null) {
                 deleteMessage(Long.parseLong(message.getChatId()), userMessageId);
-            }
-            if (sent != null) {
-                deleteMessage(Long.parseLong(message.getChatId()), sent.getMessageId());
             }
         } catch (TelegramApiException e) {
             e.printStackTrace();
