@@ -59,6 +59,7 @@ class PartnerHandler extends FlowHandler {
         if (partnerRepository.partnerOf(chatId) == null) {
             text = Messages.get(lang, "partner.intro");
             if (ctx.botUsername != null) {
+                text += "\n\n🔗 " + inviteLink(chatId);
                 InlineKeyboardButton invite = new InlineKeyboardButton(Messages.get(lang, "partner.btn_invite"));
                 invite.setUrl(inviteShareUrl(chatId, lang));
                 rows.add(List.of(invite));

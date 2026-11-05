@@ -973,4 +973,11 @@ class FlowHandlersTest {
         assertNull(FoodBot.partnerInviterId("/start partner_x"));
         assertNull(FoodBot.partnerInviterId("/start user_42"));
     }
+
+    @Test
+    void partnerMenuShowsACopyableInviteLink() {
+        ctx.botUsername = "foodbot";
+        ctx.partner.sendPartnerMenu(5L, Lang.EN, null);
+        assertTrue(messagesTo(5L).get(0).getText().contains("https://t.me/foodbot?start=partner_5"));
+    }
 }
