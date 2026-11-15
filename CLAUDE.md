@@ -11,6 +11,16 @@ Never run a command that could delete or overwrite data — especially anything 
 - Any deploy command touching `/opt/foodbot` must explicitly `--exclude='data/'` (and the stray gitignored root-level `foods.json`/`languages.json` left over from before the app switched to `./data/foods.json`). Never sync that path with a deletion flag without excluding `data/` first.
 - Before running `rsync --delete`, `docker volume rm`, `rm -rf`, `git push --force`, or anything else with delete/overwrite semantics against the VPS, stop and confirm with the user first — what will be affected, why, and get an explicit go-ahead.
 
+## 💸 Zero cost — read before adding ANY dependency, service or API
+
+Everything in this project must be free to run. Do not build on anything that costs money: paid APIs (including the Anthropic/Claude API, OpenAI, Google Cloud Vision, etc.), paid tiers, usage-billed cloud services, or anything that needs a credit card or prepaid credits.
+
+- Prefer what already exists (Telegram Bot API, the VPS we already pay for) and free, keyless, or self-hosted options (e.g. open-source libraries running in the container, free public APIs like TheMealDB).
+- If a feature genuinely can't be done for free, **say so before implementing it** — name the cost, give the free alternatives (even if worse) — and wait for the user's decision. Never discover the cost after the code is written.
+- A free tier that silently turns into billing past a quota counts as paid unless the user explicitly accepts it.
+
+**Incident (2026-11-15):** recipe import from pasted text/screenshots was built on the paid Claude API without mentioning the cost up front.
+
 ## Local `.env` (gitignored) — use these, don't ask for them again
 
 Variable names only; never print or commit the values.
