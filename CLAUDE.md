@@ -31,6 +31,6 @@ Variable names only; never print or commit the values.
 
 ## Deployment
 
-**Deploys are automatic.** Every push to `main` triggers `.github/workflows/deploy.yml`: it runs `mvn test`, then SSHes to the VPS and runs `git fetch && git reset --hard origin/main && docker compose up -d --build` in `/opt/foodbot`. So committing + pushing to `main` *is* the deploy — don't run rsync or any manual deploy afterward, and don't offer to. The server uses git (not rsync), which only touches tracked files, so `data/`, `backups/` and `.env` on the VPS are not affected. Failing tests block the deploy.
+**Deploys are automatic.** Every push to `main` triggers `.github/workflows/deploy.yml`: it runs `mvn test`, then SSHes to the VPS and runs `git fetch && git reset --hard origin/main && docker compose up -d --build` in `/opt/foodbot`. So committing + pushing to `main` *is* the deploy — don't run rsync or any manual deploy afterward, and don't offer to. The server uses git (not rsync), which only touches tracked files, so `data/`, `backups/` and `.env` on the VPS are not affected. Failing tests block the deploy. Each deploy also writes `/opt/foodbot/deploy-info.env` (`DEPLOY_COMMIT`, `DEPLOYED_AT`, gitignored, loaded by compose) so the superadmin can check the live version under Settings → "🚀 Deploy info".
 
 See README.md "Production deployment (Docker)" section for the full deploy process.

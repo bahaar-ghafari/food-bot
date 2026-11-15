@@ -6,3 +6,6 @@ foods.json
 languages.json
 data/
 backups/
+
+# Written on the server by the deploy workflow
+deploy-info.env

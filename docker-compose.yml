@@ -7,7 +7,12 @@ services:
   bot:
     build: .
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
+      # Written by the deploy workflow on every push to main (DEPLOY_COMMIT, DEPLOYED_AT); shown to the
+      # superadmin under Settings → Deploy info. Its contents change each deploy, so the bot is always recreated.
+      - path: deploy-info.env
+        required: false
     environment:
       HEALTH_ADDR: ":8080"
     volumes:

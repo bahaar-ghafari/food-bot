@@ -37,4 +37,4 @@ jobs:
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_deploy "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /opt/foodbot && git fetch origin main && git reset --hard origin/main && docker compose up -d --build && docker compose ps"
+            "cd /opt/foodbot && git fetch origin main && git reset --hard origin/main && printf 'DEPLOY_COMMIT=%s\nDEPLOYED_AT=%s\n' \"\$(git rev-parse --short HEAD)\" \"\$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > deploy-info.env && docker compose up -d --build && docker compose ps"

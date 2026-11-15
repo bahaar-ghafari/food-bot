@@ -629,7 +629,13 @@ class FlowHandler {
         KeyboardRow row2 = new KeyboardRow();
         row2.add(Messages.get(lang, "btn.refresh"));
         row2.add(Messages.get(lang, "btn.back"));
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(List.of(row1, row2));
+        List<KeyboardRow> rows = new java.util.ArrayList<>(List.of(row1, row2));
+        if (isSuperAdmin(chatId)) {
+            KeyboardRow adminRow = new KeyboardRow();
+            adminRow.add(Messages.get(lang, "btn.deploy_info"));
+            rows.add(1, adminRow);
+        }
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(rows);
         markup.setResizeKeyboard(true);
         SendMessage message = new SendMessage(String.valueOf(chatId), Messages.get(lang, "settings.menu"));
         message.setReplyMarkup(markup);
