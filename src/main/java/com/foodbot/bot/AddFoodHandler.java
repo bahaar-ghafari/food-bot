@@ -1,8 +1,10 @@
 package com.foodbot.bot;
 
+import com.foodbot.ai.ImportedRecipe;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodCategories;
+import com.foodbot.food.IngredientSearch;
 import com.foodbot.food.RecipeSteps;
 import com.foodbot.lang.Lang;
 import com.foodbot.lang.Messages;
@@ -19,7 +21,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.foodbot.bot.BotConstants.*;
@@ -30,10 +34,119 @@ class AddFoodHandler extends FlowHandler {
     }
 
     void sendAddFoodNamePrompt(long chatId, AddFoodSession session, Lang lang) {
+        sendOrEditAddFood(chatId, session, namePromptText(session, lang), backOnlyMarkup(lang));
+    }
+
+    private String namePromptText(AddFoodSession session, Lang lang) {
+        boolean offerImport = ctx.recipeImporter.isEnabled() && !session.isReturnToReview();
+        return Messages.get(lang, offerImport ? "addfood.ask_name_import" : "addfood.ask_name");
+    }
+
+    private InlineKeyboardMarkup backOnlyMarkup(Lang lang) {
         InlineKeyboardButton back = new InlineKeyboardButton(Messages.get(lang, "btn.back"));
         back.setCallbackData(CB_ADDFOOD_BACK);
-        sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.ask_name"),
-                new InlineKeyboardMarkup(List.of(List.of(back))));
+        return new InlineKeyboardMarkup(List.of(List.of(back)));
+    }
+
+    /** A pasted or screenshotted recipe is only taken in place of the very first answer (the name). */
+    private boolean canImport(AddFoodSession session) {
+        return ctx.recipeImporter.isEnabled() && session.getStep() == AddFoodSession.Step.AWAITING_NAME
+                && !session.isReturnToReview();
+    }
+
+    /** A food name is one short line; anything multi-line or long is treated as a whole pasted recipe. */
+    static boolean looksLikePastedRecipe(String text) {
+        return text.contains("\n") || text.length() > 80;
+    }
+
+    /** Screenshot sent at the name step: read the recipe from it. Returns false when it isn't the time for one. */
+    boolean handleAddFoodImage(long chatId, String fileId, String mediaType, String caption, Lang lang) {
+        AddFoodSession session = addFoodSessions.get(chatId);
+        if (session == null || !canImport(session)) {
+            return false;
+        }
+        startImport(chatId, session, lang, known -> {
+            byte[] image;
+            try {
+                image = ctx.sender.downloadFile(fileId);
+            } catch (TelegramApiException e) {
+                System.err.println("Recipe import: could not download image: " + e);
+                return Optional.empty();
+            }
+            return ctx.recipeImporter.fromImage(image, mediaType, caption, lang, known);
+        });
+        return true;
+    }
+
+    private void startImport(long chatId, AddFoodSession session, Lang lang,
+                             Function<List<String>, Optional<ImportedRecipe>> work) {
+        int attempt = session.nextImportAttempt();
+        session.setStep(AddFoodSession.Step.IMPORTING);
+        // Re-post the screen below the pasted recipe/screenshot, so the progress and the result aren't
+        // hidden up above it.
+        deleteMessage(chatId, session.getKeyboardMessageId());
+        session.setKeyboardMessageId(null);
+        sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.import_reading"), backOnlyMarkup(lang));
+        List<String> known = foodRepository.findAllIngredients(chatId, lang);
+        ctx.backgroundExecutor.execute(() -> {
+            Optional<ImportedRecipe> result;
+            try {
+                result = work.apply(known);
+            } catch (RuntimeException e) {
+                System.err.println("Recipe import failed: " + e);
+                result = Optional.empty();
+            }
+            finishImport(chatId, session, attempt, lang, known, result);
+        });
+    }
+
+    private void finishImport(long chatId, AddFoodSession session, int attempt, Lang lang, List<String> known,
+                              Optional<ImportedRecipe> result) {
+        synchronized (session) {
+            // The user cancelled, went back, or started another import while this one was running.
+            if (addFoodSessions.get(chatId) != session || session.getStep() != AddFoodSession.Step.IMPORTING
+                    || session.getImportAttempt() != attempt) {
+                return;
+            }
+            if (result.isEmpty()) {
+                session.setStep(AddFoodSession.Step.AWAITING_NAME);
+                sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.import_failed") + "\n\n"
+                        + namePromptText(session, lang), backOnlyMarkup(lang));
+                return;
+            }
+            applyImport(session, result.get().normalized(known, RECIPE_STEP_CHAR_LIMIT, AMOUNT_CHAR_LIMIT), known);
+            session.setStep(AddFoodSession.Step.REVIEW);
+            renderAddFoodReview(chatId, session, lang);
+        }
+    }
+
+    /** Fills every field of the draft from an imported recipe, leaving the photo as it was. */
+    static void applyImport(AddFoodSession session, ImportedRecipe recipe, List<String> knownIngredients) {
+        session.setName(recipe.name());
+        session.setPrepTimeMinutes(recipe.prepTimeMinutes());
+        session.setCategory(recipe.category());
+        session.getSelectedIngredients().clear();
+        session.getIngredientAmounts().clear();
+        recipe.ingredientAmounts().forEach((ingredient, amount) -> {
+            session.getSelectedIngredients().add(ingredient);
+            if (!amount.isEmpty()) {
+                session.getIngredientAmounts().put(ingredient, amount);
+            }
+        });
+        // So "✏️ Ingredients" on the review screen lists the imported ones alongside everything else.
+        session.getCandidateIngredients().clear();
+        session.getCandidateIngredients().addAll(knownIngredients);
+        for (String ingredient : session.getSelectedIngredients()) {
+            if (IngredientSearch.findExactMatch(session.getCandidateIngredients(), ingredient) == null) {
+                session.getCandidateIngredients().add(ingredient);
+            }
+        }
+        session.getRecipeSteps().clear();
+        session.getRecipeSteps().addAll(recipe.steps());
+        session.setEditingRecipeStepIndex(null);
+        session.setAmountEditingIngredient(null);
+        session.setReturnToReview(false);
+        session.setImported(true);
     }
 
     void sendAddFoodTimePrompt(long chatId, AddFoodSession session, Lang lang) {
@@ -69,6 +182,10 @@ class AddFoodHandler extends FlowHandler {
     void handleAddFoodPhoto(long chatId, String fileId, Lang lang) {
         AddFoodSession session = addFoodSessions.get(chatId);
         if (session == null) {
+            return;
+        }
+        if (session.getStep() == AddFoodSession.Step.IMPORTING) {
+            send(chatId, Messages.get(lang, "addfood.import_busy"));
             return;
         }
         if (session.getStep() != AddFoodSession.Step.AWAITING_PHOTO) {
@@ -157,6 +274,11 @@ class AddFoodHandler extends FlowHandler {
                 session.setStep(AddFoodSession.Step.AWAITING_PHOTO);
                 sendAddFoodPhotoPrompt(chatId, session, lang);
                 break;
+            case IMPORTING:
+                // Abandons the import (its result is ignored once it arrives) and goes back to the first question.
+                session.setStep(AddFoodSession.Step.AWAITING_NAME);
+                sendAddFoodNamePrompt(chatId, session, lang);
+                break;
             default:
                 break;
         }
@@ -166,6 +288,11 @@ class AddFoodHandler extends FlowHandler {
         AddFoodSession session = addFoodSessions.get(chatId);
         switch (session.getStep()) {
             case AWAITING_NAME:
+                if (canImport(session) && looksLikePastedRecipe(text)) {
+                    // Any language is fine here: the import translates to the user's language.
+                    startImport(chatId, session, lang, known -> ctx.recipeImporter.fromText(text, lang, known));
+                    return;
+                }
                 if (!matchesLanguage(text, lang)) {
                     send(chatId, Messages.get(lang, "lang.wrong_script"));
                     return;
@@ -248,6 +375,10 @@ class AddFoodHandler extends FlowHandler {
 
             case REVIEW:
                 send(chatId, Messages.get(lang, "tap_button_above"));
+                break;
+
+            case IMPORTING:
+                send(chatId, Messages.get(lang, "addfood.import_busy"));
                 break;
         }
     }
@@ -434,7 +565,8 @@ class AddFoodHandler extends FlowHandler {
         String recipeText = session.getRecipeSteps().isEmpty()
                 ? Messages.get(lang, "food.no_recipe")
                 : RecipeSteps.join(session.getRecipeSteps());
-        return Messages.get(lang, "addfood.review_header") + "\n\n"
+        return Messages.get(lang, session.isImported() ? "addfood.import_review_header" : "addfood.review_header")
+                + "\n\n"
                 + "🍽️ " + session.getName() + "\n"
                 + "🏷️ " + categoryLabel(session.getCategory(), lang) + "\n"
                 + "⏱️ " + Messages.get(lang, "food.detail_time", timeText) + "\n"

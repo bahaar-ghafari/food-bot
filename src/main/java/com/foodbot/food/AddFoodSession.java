@@ -10,7 +10,9 @@ import java.util.Set;
 public class AddFoodSession implements IngredientPickerState, RecipeStepEditorState, AmountEditorState {
     public enum Step {
         AWAITING_NAME, AWAITING_PREP_TIME, SELECTING_CATEGORY, SELECTING_INGREDIENTS, AWAITING_AMOUNTS,
-        AWAITING_RECIPE, AWAITING_PHOTO, REVIEW
+        AWAITING_RECIPE, AWAITING_PHOTO, REVIEW,
+        /** Waiting for a pasted recipe or screenshot to be read; other input is held off meanwhile. */
+        IMPORTING
     }
 
     private Step step = Step.AWAITING_NAME;
@@ -22,6 +24,10 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
     private String photoFileId;
     private Integer editingRecipeStepIndex;
     private boolean returnToReview;
+    /** Filled in from a pasted recipe or screenshot rather than typed step by step. */
+    private boolean imported;
+    /** Bumped on every import attempt, so a late result from an abandoned attempt is ignored. */
+    private int importAttempt;
     private final List<String> candidateIngredients = new ArrayList<>();
     private final Set<String> selectedIngredients = new LinkedHashSet<>();
     private final Map<String, String> ingredientAmounts = new LinkedHashMap<>();
@@ -96,6 +102,22 @@ public class AddFoodSession implements IngredientPickerState, RecipeStepEditorSt
 
     public void setReturnToReview(boolean returnToReview) {
         this.returnToReview = returnToReview;
+    }
+
+    public boolean isImported() {
+        return imported;
+    }
+
+    public void setImported(boolean imported) {
+        this.imported = imported;
+    }
+
+    public int getImportAttempt() {
+        return importAttempt;
+    }
+
+    public int nextImportAttempt() {
+        return ++importAttempt;
     }
 
     public List<String> getCandidateIngredients() {

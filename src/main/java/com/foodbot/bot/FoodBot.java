@@ -1,6 +1,7 @@
 package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
+import com.foodbot.ai.ClaudeRecipeImporter;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookSession;
@@ -15,10 +16,12 @@ import com.foodbot.social.FollowRepository;
 import com.foodbot.social.UsernameRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -54,11 +57,21 @@ public class FoodBot extends TelegramLongPollingBot {
             public Message sendPhoto(SendPhoto photo) throws TelegramApiException {
                 return FoodBot.this.execute(photo);
             }
+
+            @Override
+            public byte[] downloadFile(String fileId) throws TelegramApiException {
+                org.telegram.telegrambots.meta.api.objects.File file = FoodBot.this.execute(new GetFile(fileId));
+                try (java.io.InputStream in = FoodBot.this.downloadFileAsStream(file)) {
+                    return in.readAllBytes();
+                } catch (java.io.IOException e) {
+                    throw new TelegramApiException("Could not download " + fileId, e);
+                }
+            }
         }, superAdminChatId, feedbackChatId, seededFoodRepository(),
                 new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
                 new FavoriteRepository(), new ShoppingListRepository(), new PartnerRepository(),
                 new AiSuggestionService(anthropicApiKey),
-                new MealDbSuggestionService());
+                new MealDbSuggestionService(), new ClaudeRecipeImporter(anthropicApiKey));
         this.ctx.botUsername = username;
         startDigestScheduler();
     }
@@ -159,6 +172,10 @@ public class FoodBot extends TelegramLongPollingBot {
         }
         if (update.hasMessage() && update.getMessage().hasPhoto()) {
             handlePhotoMessage(update.getMessage());
+            return;
+        }
+        if (update.hasMessage() && update.getMessage().hasDocument()) {
+            handleDocumentMessage(update.getMessage());
             return;
         }
         if (!update.hasMessage() || !update.getMessage().hasText()) {
@@ -340,10 +357,30 @@ public class FoodBot extends TelegramLongPollingBot {
         List<PhotoSize> sizes = message.getPhoto();
         String fileId = sizes.get(sizes.size() - 1).getFileId();
         if (adding) {
+            // At the first question a picture is a screenshot of a recipe to read; later it's the dish's photo.
+            if (ctx.addFood.handleAddFoodImage(chatId, fileId, "image/jpeg", message.getCaption(), lang)) {
+                return;
+            }
             ctx.addFood.handleAddFoodPhoto(chatId, fileId, lang);
         } else {
             ctx.editFood.handleEditPhoto(chatId, fileId, lang);
         }
+    }
+
+    /** Image types Claude can read; a screenshot sent "as a file" arrives as a document instead of a photo. */
+    private static final java.util.Set<String> IMPORTABLE_IMAGE_TYPES =
+            java.util.Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
+
+    private void handleDocumentMessage(Message message) {
+        long chatId = message.getChatId();
+        Lang lang = ctx.languageRepository.get(chatId);
+        Document document = message.getDocument();
+        if (lang == null || !ctx.addFoodSessions.containsKey(chatId) || document.getMimeType() == null
+                || !IMPORTABLE_IMAGE_TYPES.contains(document.getMimeType())) {
+            return;
+        }
+        ctx.addFood.handleAddFoodImage(chatId, document.getFileId(), document.getMimeType(), message.getCaption(),
+                lang);
     }
 
     private void handleLanguageCallback(CallbackQuery callbackQuery) {

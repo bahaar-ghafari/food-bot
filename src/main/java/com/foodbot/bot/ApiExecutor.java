@@ -15,4 +15,9 @@ interface ApiExecutor {
     default Message sendPhoto(SendPhoto photo) throws TelegramApiException {
         return null;
     }
+
+    /** Downloads a file the user sent (by Telegram {@code file_id}); unsupported unless overridden. */
+    default byte[] downloadFile(String fileId) throws TelegramApiException {
+        throw new TelegramApiException("File download not supported");
+    }
 }
