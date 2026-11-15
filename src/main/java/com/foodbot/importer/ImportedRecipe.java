@@ -78,9 +78,15 @@ public record ImportedRecipe(String name, int prepTimeMinutes, String category, 
         String rest = step;
         while (rest.length() > limit) {
             String window = rest.substring(0, limit + 1);
+            // Prefer the end of a sentence; only split at a comma when there's none in reach.
             int cut = -1;
-            for (String end : List.of(". ", "! ", "? ", "؟ ", "، ", ", ")) {
+            for (String end : List.of(". ", "! ", "? ", "؟ ")) {
                 cut = Math.max(cut, window.lastIndexOf(end));
+            }
+            if (cut <= 0) {
+                for (String end : List.of("، ", ", ")) {
+                    cut = Math.max(cut, window.lastIndexOf(end));
+                }
             }
             if (cut > 0) {
                 cut += 1; // keep the punctuation with the first part

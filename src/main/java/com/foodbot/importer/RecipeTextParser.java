@@ -53,7 +53,7 @@ public final class RecipeTextParser {
             + "|لیوان|پیمانه|عدد|گرم|کیلوگرم|کیلو|میلی\\u200cلیتر|میلی لیتر|میلیلیتر|لیتر|سی سی|حبه|بسته|قوطی|برش"
             + "|ورق|کف دست|مشت|دسته|پیاله|استکان|فنجان|تکه|بوته)";
     private static final String FREE_AMOUNT = "(?:to taste|as needed|as required|for serving|for garnish|optional"
-            + "|به مقدار لازم|به مقدار کافی|به میزان لازم|به میزان کافی|به اندازه لازم|به اندازه کافی|به دلخواه|کمی"
+            + "|به مقدار لازم|به مقدار کافی|به میزان لازم|به میزان کافی|به اندازه لازم|به اندازه کافی|به دلخواه|مقدار کمی|کمی"
             + "|مقداری|مقدار لازم|مقدار کافی|برای تزیین)";
 
     private static final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.UNICODE_CHARACTER_CLASS;
@@ -68,9 +68,10 @@ public final class RecipeTextParser {
     private static final Pattern FREE_AMOUNT_ANYWHERE = Pattern.compile("\\s*[,،\\-–]?\\s*" + FREE_AMOUNT + "\\s*", FLAGS);
     private static final Pattern STARTS_WITH_QTY = Pattern.compile("^(?:" + NUMBER + ")" + AFTER + "|^" + D + "+"
             + UNIT + AFTER, FLAGS);
+    private static final String FA_ORDINAL = "(?:اول|یکم|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم|نهم|دهم|آخر|نهایی)";
     private static final Pattern STEP_NUMBER = Pattern.compile(
-            "^(?:(?:step|مرحله|گام)\\s*)?" + D + "{1,2}\\s*[.):\\-–]\\s*|^(?:step|مرحله|گام)\\s*" + D + "{1,2}\\s*",
-            FLAGS);
+            "^(?:(?:step|مرحله|گام)\\s*)?" + D + "{1,2}\\s*[.):\\-–]\\s*|^(?:step|مرحله|گام)\\s*(?:" + D + "{1,2}|"
+                    + FA_ORDINAL + ")\\s*[.:\\-–)]?\\s*", FLAGS);
     private static final Pattern BULLET = Pattern.compile("^[\\-–—•·*▢☐□◦○●▪✓✔➤>]+\\s*");
     private static final Pattern LEADING_SYMBOLS = Pattern.compile("^[^\\p{L}\\p{N}(]+", FLAGS);
     private static final Pattern PARENTHESES = Pattern.compile("\\s*[(\\[][^)\\]]*[)\\]]");
@@ -105,12 +106,23 @@ public final class RecipeTextParser {
         boolean sawHeading = false;
         String headingTitle = null;
         Section section = Section.NONE;
-        for (String raw : clean(text).split("\\R")) {
+        boolean sawSteps = false;
+        for (String raw : resegment(clean(text)).split("\\R")) {
             String line = raw.strip();
             if (line.isEmpty()) {
                 continue;
             }
             Heading heading = heading(line);
+            if (heading == null && section == Section.INGREDIENTS && startsWithStepPhrase(line)) {
+                // "دستور پخت کوکو سبزی" right after the ingredients: the method heading, with the dish name.
+                heading = new Heading(Section.STEPS, "");
+            }
+            if (heading == null && section == Section.SKIP && sawSteps && STEP_NUMBER.matcher(line).find()) {
+                section = Section.STEPS; // the next step after a "نکته:" note
+            }
+            if (heading != null && heading.section() == Section.STEPS) {
+                sawSteps = true;
+            }
             if (heading != null) {
                 sawHeading = sawHeading || heading.section() != Section.SKIP;
                 if (headingTitle == null) {
@@ -133,7 +145,7 @@ public final class RecipeTextParser {
             }
             switch (section) {
                 case NONE -> preamble.add(line);
-                case INGREDIENTS -> ingredientLines.add(line);
+                case INGREDIENTS -> ingredientLines.addAll(splitGluedRows(line));
                 case STEPS -> stepLines.add(line);
                 case SKIP -> {
                 }
@@ -222,6 +234,71 @@ public final class RecipeTextParser {
         List<String> timeLines = preamble.stream().filter(RecipeTextParser::isMetaLine).toList();
         return Optional.of(new ImportedRecipe(name, prepTime(timeLines), CategoryGuesser.guess(name, text),
                 ingredients, parseSteps(stepLines)));
+    }
+
+    private static final String GLUED_HEADING = "(?:مواد لازم|مواد اولیه|دستور پخت|طرز تهیه|روش تهیه|طرز پخت"
+            + "|نکته\\s*:|نکات\\s*:|(?:مرحله|گام)\\s*(?:" + D + "{1,2}|" + FA_ORDINAL + ")"
+            + "|Ingredients|Instructions|Directions|Method\\s*:|Step\\s*\\d)";
+    /** Before a heading or step marker that's stuck to the previous text, or that starts a new sentence. */
+    private static final Pattern GLUED_BREAK = Pattern.compile(
+            "(?<=[^\\s])(?=" + GLUED_HEADING + ")|(?<=[.:!؟]\\s)(?=" + GLUED_HEADING + ")");
+    private static final Pattern TABLE_HEADER = Pattern.compile(
+            "(مواد لازم|مواد اولیه)\\s*(?:مقدار(?:\\s*(?:لازم|مورد نیاز))?|میزان|اندازه)(?=\\S|\\s|$)");
+    private static final String FA_UNITS = "(?:قاشق غذاخوری|قاشق غذا خوری|قاشق چای\\u200cخوری|قاشق چایخوری|قاشق چای خوری"
+            + "|قاشق مرباخوری|قاشق|لیوان|پیمانه|عدد|کیلوگرم|کیلو|گرم|میلی\\u200cلیتر|میلی لیتر|میلیلیتر|لیتر|سی سی|حبه"
+            + "|بسته|قوطی|برش|ورق|کف دست|مشت|دسته|پیاله|استکان|فنجان|تکه|بوته)";
+    private static final String FA_FREE_AMOUNTS = "(?:به مقدار لازم|به مقدار کافی|به میزان لازم|به میزان کافی"
+            + "|به اندازه لازم|به اندازه کافی|به دلخواه|مقدار کمی|مقدار لازم|مقدار کافی|مقداری|کمی)";
+    private static final Pattern GLUED_ROW_AMOUNT = Pattern.compile(
+            "\\s*(" + D + "+(?:[.,/]" + D + "+)?\\s*" + FA_UNITS + "|" + FA_FREE_AMOUNTS + ")");
+    private static final Pattern LETTER_THEN_DIGIT = Pattern.compile("(?<=[\\p{L})])(?=" + D + ")");
+
+    /**
+     * Text copied from a web page often loses its line breaks, gluing headings, table cells and steps
+     * together ("...سبزیمواد لازم برای 4 نفرمواد لازممقدار لازمسبزی..."). Long lines get their breaks back
+     * before each heading/step marker; the ingredient table is split later, in {@link #splitGluedRows}.
+     */
+    static String resegment(String text) {
+        StringBuilder out = new StringBuilder();
+        for (String line : text.split("\\R", -1)) {
+            if (line.length() > 120) {
+                line = GLUED_BREAK.matcher(line).replaceAll("\n");
+                line = TABLE_HEADER.matcher(line).replaceAll("$1\n");
+            }
+            out.append(line).append('\n');
+        }
+        return out.toString();
+    }
+
+    /** "سبزی (…)2 لیوانتخم مرغ4 عددنمکمقدار کمی" -> one row per ingredient, each ending at its amount. */
+    static List<String> splitGluedRows(String line) {
+        Matcher counter = GLUED_ROW_AMOUNT.matcher(line);
+        int amounts = 0;
+        while (counter.find()) {
+            amounts++;
+        }
+        if (amounts < 2 || line.length() < 40) {
+            return List.of(line);
+        }
+        String spaced = LETTER_THEN_DIGIT.matcher(line).replaceAll(" ");
+        String rows = GLUED_ROW_AMOUNT.matcher(spaced).replaceAll(" $1\n");
+        List<String> result = new ArrayList<>();
+        for (String row : rows.split("\n")) {
+            if (!row.isBlank()) {
+                result.add(row.strip());
+            }
+        }
+        return result;
+    }
+
+    private static boolean startsWithStepPhrase(String line) {
+        String key = headingKey(line);
+        for (String phrase : List.of("دستور پخت", "طرز تهیه", "روش تهیه", "طرز پخت", "دستور تهیه", "روش پخت")) {
+            if (key.startsWith(phrase + " ")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static final Pattern LIST_SEPARATOR = Pattern.compile("\\s*[,،؛;]\\s*");
@@ -329,7 +406,8 @@ public final class RecipeTextParser {
     }
 
     private static final Pattern HEADING_TITLE = Pattern.compile(
-            "^(?:ingredients?|مواد لازم|مواد اولیه|مواد مورد نیاز)\\s+(?:for\\s+(?:the\\s+|a\\s+)?|برای\\s+(?:تهیه\\s+|درست کردن\\s+)?)(.+)$");
+            "^(?:ingredients?\\s+for\\s+(?:the\\s+|a\\s+)?|(?:مواد لازم|مواد اولیه|مواد مورد نیاز)\\s+"
+                    + "(?:برای\\s+(?:تهیه\\s+|درست کردن\\s+)?)?)(.+)$");
     private static final Pattern SERVING_WORDS = Pattern.compile(
             "(?:^|\\s)(?:people|persons?|servings?|serves|portions?|نفر|پرس)(?:\\s|$)");
 
@@ -506,6 +584,10 @@ public final class RecipeTextParser {
                     if (name.endsWith(" " + descriptor)) {
                         name = name.substring(0, name.length() - descriptor.length() - 1).strip();
                         changed = true;
+                        // "گردوی خرد شده" -> "گردو": drop the linking ی the descriptor needed.
+                        if (name.endsWith("وی")) {
+                            name = name.substring(0, name.length() - 1);
+                        }
                     }
                 }
             }
@@ -570,7 +652,8 @@ public final class RecipeTextParser {
                     }
                     current = new StringBuilder(l.substring(m.end()));
                 } else if (current == null) {
-                    current = new StringBuilder(l);
+                    // Intro before step 1 ("in the following steps we'll show...") isn't a step.
+                    continue;
                 } else {
                     current.append(' ').append(l);
                 }

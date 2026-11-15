@@ -179,6 +179,31 @@ class RecipeTextParserTest {
     }
 
     @Test
+    void webPageTextThatLostItsLineBreaks() throws Exception {
+        // Copied from a recipe site: headings, the ingredient table and the steps are all glued together.
+        String text = new String(getClass().getResourceAsStream("/recipes/kuku-sabzi-glued.txt").readAllBytes(),
+                java.nio.charset.StandardCharsets.UTF_8);
+        ImportedRecipe r = RecipeTextParser.parse(text, null, KNOWN).orElseThrow().normalized(KNOWN, 150, 30);
+
+        assertEquals("کوکو سبزی", r.name());
+        assertEquals(List.of(ing("سبزی", "2 لیوان"), ing("تخم مرغ", "4 عدد"), ing("گردو", "4 قاشق غذاخوری"),
+                ing("نمک", "مقدار کمی"), ing("فلفل", "به میزان لازم"), ing("زردچوبه", "به میزان لازم"),
+                ing("روغن مایع", "به میزان لازم")), r.ingredients());
+        assertTrue(r.steps().get(0).startsWith("ابتدا سبزی تازه"), "intro sentence before step 1 is dropped");
+        assertTrue(r.steps().stream().anyMatch(st -> st.startsWith("پس از داغ شدن روغن")),
+                "steps after the 'نکته:' note are kept");
+        assertTrue(r.steps().stream().noneMatch(st -> st.contains("نسوختن")), "the note itself is skipped");
+        assertTrue(r.steps().get(r.steps().size() - 1).startsWith("حرارت زیر آن را خاموش"));
+        r.steps().forEach(st -> assertTrue(st.length() <= 150, st));
+    }
+
+    @Test
+    void persianOrdinalStepMarkers() {
+        assertEquals(List.of("سبزی را خرد کنید.", "سرخ کنید."),
+                RecipeTextParser.parseSteps(List.of("مرحله اول سبزی را خرد کنید.", "مرحله آخر: سرخ کنید.")));
+    }
+
+    @Test
     void textWithoutARecipeIsRejected() {
         assertTrue(RecipeTextParser.parse("hey how are you\nsee you tomorrow at 5", null, KNOWN).isEmpty());
         assertTrue(RecipeTextParser.parse("Ingredients\nInstructions\nStir.", null, KNOWN).isEmpty(),
