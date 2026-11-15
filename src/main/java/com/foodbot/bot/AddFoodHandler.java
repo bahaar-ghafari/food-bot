@@ -34,11 +34,11 @@ class AddFoodHandler extends FlowHandler {
     }
 
     void sendAddFoodNamePrompt(long chatId, AddFoodSession session, Lang lang) {
-        sendOrEditAddFood(chatId, session, namePromptText(session, lang), backOnlyMarkup(lang));
+        sendOrEditAddFood(chatId, session, namePromptText(chatId, session, lang), backOnlyMarkup(lang));
     }
 
-    private String namePromptText(AddFoodSession session, Lang lang) {
-        boolean offerImport = ctx.recipeImporter.isEnabled() && !session.isReturnToReview();
+    private String namePromptText(long chatId, AddFoodSession session, Lang lang) {
+        boolean offerImport = importAllowed(chatId) && !session.isReturnToReview();
         return Messages.get(lang, offerImport ? "addfood.ask_name_import" : "addfood.ask_name");
     }
 
@@ -49,8 +49,13 @@ class AddFoodHandler extends FlowHandler {
     }
 
     /** A pasted or screenshotted recipe is only taken in place of the very first answer (the name). */
-    private boolean canImport(AddFoodSession session) {
-        return ctx.recipeImporter.isEnabled() && session.getStep() == AddFoodSession.Step.AWAITING_NAME
+    /** Superadmin-only while the import is being tried out; widen this once it's confirmed to work. */
+    boolean importAllowed(long chatId) {
+        return ctx.recipeImporter.isEnabled() && isSuperAdmin(chatId);
+    }
+
+    private boolean canImport(long chatId, AddFoodSession session) {
+        return importAllowed(chatId) && session.getStep() == AddFoodSession.Step.AWAITING_NAME
                 && !session.isReturnToReview();
     }
 
@@ -62,7 +67,7 @@ class AddFoodHandler extends FlowHandler {
     /** Screenshot sent at the name step: read the recipe from it. Returns false when it isn't the time for one. */
     boolean handleAddFoodImage(long chatId, String fileId, String mediaType, String caption, Lang lang) {
         AddFoodSession session = addFoodSessions.get(chatId);
-        if (session == null || !canImport(session)) {
+        if (session == null || !canImport(chatId, session)) {
             return false;
         }
         startImport(chatId, session, lang, known -> {
@@ -111,10 +116,17 @@ class AddFoodHandler extends FlowHandler {
             if (result.isEmpty()) {
                 session.setStep(AddFoodSession.Step.AWAITING_NAME);
                 sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.import_failed") + "\n\n"
-                        + namePromptText(session, lang), backOnlyMarkup(lang));
+                        + namePromptText(chatId, session, lang), backOnlyMarkup(lang));
                 return;
             }
             applyImport(session, result.get().normalized(known, RECIPE_STEP_CHAR_LIMIT, AMOUNT_CHAR_LIMIT), known);
+            if (session.getName() == null || session.getName().isBlank()) {
+                // The recipe had no title: ask for one, then show the filled-in review.
+                session.setReturnToReview(true);
+                session.setStep(AddFoodSession.Step.AWAITING_NAME);
+                sendOrEditAddFood(chatId, session, Messages.get(lang, "addfood.import_ask_name"), backOnlyMarkup(lang));
+                return;
+            }
             session.setStep(AddFoodSession.Step.REVIEW);
             renderAddFoodReview(chatId, session, lang);
         }
@@ -234,6 +246,14 @@ class AddFoodHandler extends FlowHandler {
             return;
         }
         answerCallback(callbackQuery.getId(), null, false);
+        if (session.isReturnToReview() && (session.getName() == null || session.getName().isBlank())) {
+            // Back from naming an untitled import: there's no valid review to return to, so start over.
+            session.setReturnToReview(false);
+            session.setImported(false);
+            session.setStep(AddFoodSession.Step.AWAITING_NAME);
+            sendAddFoodNamePrompt(chatId, session, lang);
+            return;
+        }
         if (session.isReturnToReview()) {
             session.setReturnToReview(false);
             session.setStep(AddFoodSession.Step.REVIEW);
@@ -288,7 +308,7 @@ class AddFoodHandler extends FlowHandler {
         AddFoodSession session = addFoodSessions.get(chatId);
         switch (session.getStep()) {
             case AWAITING_NAME:
-                if (canImport(session) && looksLikePastedRecipe(text)) {
+                if (canImport(chatId, session) && looksLikePastedRecipe(text)) {
                     // Any language is fine here: the import translates to the user's language.
                     startImport(chatId, session, lang, known -> ctx.recipeImporter.fromText(text, lang, known));
                     return;

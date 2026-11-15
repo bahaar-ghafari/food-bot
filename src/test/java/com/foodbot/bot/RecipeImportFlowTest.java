@@ -37,7 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecipeImportFlowTest {
-    private static final long CHAT = 5L;
+    /** The import is superadmin-only for now, so these tests run as the superadmin. */
+    private static final long CHAT = 1L;
+    private static final long OTHER_USER = 5L;
 
     private final List<BotApiMethod<?>> sent = new ArrayList<>();
     private final List<Runnable> pendingBackgroundWork = new ArrayList<>();
@@ -70,7 +72,7 @@ class RecipeImportFlowTest {
                 return ("bytes-of-" + fileId).getBytes();
             }
         };
-        ctx = new BotContext(recorder, 1L, 99L,
+        ctx = new BotContext(recorder, CHAT, 99L,
                 new FoodRepository(dir.resolve("foods.json")),
                 new LanguageRepository(dir.resolve("languages.json")),
                 new FollowRepository(dir.resolve("follows.json")),
@@ -289,6 +291,53 @@ class RecipeImportFlowTest {
         runBackgroundWork();
 
         assertFalse(ctx.addFoodSessions.containsKey(CHAT));
+    }
+
+    @Test
+    void otherUsersDontGetTheImportYet() {
+        AddFoodSession session = new AddFoodSession();
+        ctx.addFoodSessions.put(OTHER_USER, session);
+        ctx.addFood.sendAddFoodNamePrompt(OTHER_USER, session, Lang.EN);
+        assertEquals(Messages.get(Lang.EN, "addfood.ask_name"), lastScreenText());
+
+        ctx.addFood.handleAddFoodText(OTHER_USER, "Omelette\nwith eggs", Lang.EN);
+        assertFalse(ctx.addFood.handleAddFoodImage(OTHER_USER, "PIC1", "image/jpeg", null, Lang.EN));
+
+        assertTrue(pendingBackgroundWork.isEmpty());
+        assertEquals(AddFoodSession.Step.AWAITING_PREP_TIME, session.getStep());
+    }
+
+    @Test
+    void untitledRecipeAsksForTheNameThenShowsTheReview() {
+        AddFoodSession session = startAddFood();
+        importer.result = Optional.of(new ImportedRecipe("", 20, "Dessert",
+                List.of(new ImportedRecipe.Ingredient("flour", "2 cups")), List.of("Mix.")));
+        ctx.addFood.handleAddFoodText(CHAT, "Ingredients:\n2 cups flour", Lang.EN);
+        runBackgroundWork();
+
+        assertEquals(AddFoodSession.Step.AWAITING_NAME, session.getStep());
+        assertEquals(Messages.get(Lang.EN, "addfood.import_ask_name"), lastScreenText());
+
+        ctx.addFood.handleAddFoodText(CHAT, "Shortbread", Lang.EN);
+
+        assertEquals(AddFoodSession.Step.REVIEW, session.getStep());
+        assertEquals("Shortbread", session.getName());
+        assertEquals(List.of("flour"), new ArrayList<>(session.getSelectedIngredients()));
+    }
+
+    @Test
+    void backWhileNamingAnUntitledImportStartsOver() {
+        AddFoodSession session = startAddFood();
+        importer.result = Optional.of(new ImportedRecipe("", 20, "Dessert",
+                List.of(new ImportedRecipe.Ingredient("flour", "2 cups")), List.of()));
+        ctx.addFood.handleAddFoodText(CHAT, "Ingredients:\n2 cups flour", Lang.EN);
+        runBackgroundWork();
+
+        ctx.addFood.handleAddFoodBackCallback(callback(), CHAT, BotConstants.CB_ADDFOOD_BACK);
+
+        assertEquals(AddFoodSession.Step.AWAITING_NAME, session.getStep());
+        assertFalse(session.isReturnToReview());
+        assertEquals(Messages.get(Lang.EN, "addfood.ask_name_import"), lastScreenText());
     }
 
     @Test

@@ -115,6 +115,32 @@ class RecipeTextParserTest {
     }
 
     @Test
+    void recipeWithoutATitleIsStillImportedWithAnEmptyName() {
+        ImportedRecipe fa = parse("مواد لازم:\nآرد ۲ پیمانه\nشکر ۱ پیمانه\nطرز تهیه:\nمخلوط کنید.");
+        assertEquals("", fa.name());
+        assertEquals(List.of(ing("آرد", "۲ پیمانه"), ing("شکر", "۱ پیمانه")), fa.ingredients());
+
+        ImportedRecipe servings = parse("مواد لازم برای ۴ نفر:\nبرنج ۳ پیمانه\nطرز تهیه:\nبپزید.");
+        assertEquals("", servings.name(), "'for 4 people' isn't a dish name");
+        assertEquals("", parse("Ingredients:\n2 cups flour\n3 eggs\nInstructions:\nBake.").name());
+    }
+
+    @Test
+    void dishNameIsTakenFromTheIngredientsHeading() {
+        assertEquals("کیک اسفنجی", parse("مواد لازم برای تهیه کیک اسفنجی:\nآرد ۲ پیمانه\nطرز تهیه:\nبپزید.").name());
+        assertEquals("chocolate cake", parse("Ingredients for the chocolate cake\n2 cups flour\nMethod\nBake.").name());
+    }
+
+    @Test
+    void arabicFormsOfPersianLettersAreUnderstood() {
+        ImportedRecipe r = parse("کيک اسفنجي\nمواد اوليه:\nآرد ۲ پيمانه\nطرز تهيه:\nمخلوط کنيد.");
+
+        assertEquals("کیک اسفنجی", r.name());
+        assertEquals(List.of(ing("آرد", "۲ پیمانه")), r.ingredients());
+        assertEquals(List.of("مخلوط کنید."), r.steps());
+    }
+
+    @Test
     void textWithoutARecipeIsRejected() {
         assertTrue(RecipeTextParser.parse("hey how are you\nsee you tomorrow at 5", null, KNOWN).isEmpty());
         assertTrue(RecipeTextParser.parse("Ingredients\nInstructions\nStir.", null, KNOWN).isEmpty(),

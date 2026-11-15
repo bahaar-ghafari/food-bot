@@ -16,7 +16,11 @@ import java.util.regex.Pattern;
 public final class RecipeTextParser {
     private enum Section { NONE, INGREDIENTS, STEPS, SKIP }
 
-    private record Heading(Section section, String rest) {
+    /** {@code title}: a dish name inside the heading itself ("مواد لازم برای تهیه کیک اسفنجی"), or null. */
+    private record Heading(Section section, String rest, String title) {
+        Heading(Section section, String rest) {
+            this(section, rest, null);
+        }
     }
 
     // Headings that may be followed by more words ("Ingredients for 4 people").
@@ -99,6 +103,7 @@ public final class RecipeTextParser {
         List<String> ingredientLines = new ArrayList<>();
         List<String> stepLines = new ArrayList<>();
         boolean sawHeading = false;
+        String headingTitle = null;
         Section section = Section.NONE;
         for (String raw : clean(text).split("\\R")) {
             String line = raw.strip();
@@ -108,6 +113,9 @@ public final class RecipeTextParser {
             Heading heading = heading(line);
             if (heading != null) {
                 sawHeading = sawHeading || heading.section() != Section.SKIP;
+                if (headingTitle == null) {
+                    headingTitle = heading.title();
+                }
                 section = heading.section();
                 if (!heading.rest().isEmpty()) {
                     if (section == Section.INGREDIENTS) {
@@ -141,6 +149,9 @@ public final class RecipeTextParser {
         String name = captionName(caption);
         if (name == null && titleIndex >= 0) {
             name = cleanName(preamble.get(titleIndex));
+        }
+        if (name == null) {
+            name = headingTitle;
         }
         boolean fallback = false;
         if (ingredientLines.isEmpty()) {
@@ -180,8 +191,12 @@ public final class RecipeTextParser {
                 ingredients.add(ingredient);
             }
         }
-        if (name == null || ingredients.isEmpty()) {
+        if (ingredients.isEmpty()) {
             return Optional.empty();
+        }
+        // Copied recipes often start straight at "Ingredients": import anyway and let the user name it.
+        if (name == null) {
+            name = "";
         }
         // Without any headings, only trust it if it really reads like an ingredient list.
         if (fallback && (ingredients.size() < 2 || ingredients.stream().allMatch(i -> i.amount().isEmpty()))) {
@@ -194,7 +209,9 @@ public final class RecipeTextParser {
 
     /** Drops invisible direction marks and the like that OCR and copy-paste leave behind (keeps the ZWNJ). */
     static String clean(String text) {
-        return text.replaceAll("[\\u200B\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069\\uFEFF]", "")
+        // Many Persian sites type the Arabic forms of ی and ک, which would otherwise miss every Persian keyword.
+        return text.replace('ي', 'ی').replace('ى', 'ی').replace('ك', 'ک')
+                .replaceAll("[\\u200B\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069\\uFEFF]", "")
                 .replace(' ', ' ').replace('\t', ' ');
     }
 
@@ -207,11 +224,14 @@ public final class RecipeTextParser {
             rest = line.substring(colon + 1).strip();
         }
         String key = headingKey(beforeColon);
-        if (key.isEmpty() || key.length() > 40) {
+        if (key.isEmpty() || key.length() > 60) {
             return null;
         }
         if (EXACT_INGREDIENT_HEADINGS.contains(key) || startsWithAny(key, INGREDIENT_HEADINGS)) {
-            return new Heading(Section.INGREDIENTS, rest);
+            return new Heading(Section.INGREDIENTS, rest, titleInHeading(key));
+        }
+        if (key.length() > 40) {
+            return null;
         }
         if (EXACT_STEP_HEADINGS.contains(key) || startsWithAny(key, STEP_HEADINGS_PREFIX)) {
             return new Heading(Section.STEPS, rest);
@@ -220,6 +240,21 @@ public final class RecipeTextParser {
             return new Heading(Section.SKIP, rest);
         }
         return null;
+    }
+
+    private static final Pattern HEADING_TITLE = Pattern.compile(
+            "^(?:ingredients?|مواد لازم|مواد اولیه|مواد مورد نیاز)\\s+(?:for\\s+(?:the\\s+|a\\s+)?|برای\\s+(?:تهیه\\s+|درست کردن\\s+)?)(.+)$");
+    private static final Pattern SERVING_WORDS = Pattern.compile(
+            "(?:^|\\s)(?:people|persons?|servings?|serves|portions?|نفر|پرس)(?:\\s|$)");
+
+    /** "Ingredients for chocolate cake" / "مواد لازم برای تهیه کیک" -> the dish; not "for 4 people". */
+    static String titleInHeading(String key) {
+        Matcher m = HEADING_TITLE.matcher(key);
+        if (!m.matches()) {
+            return null;
+        }
+        String title = m.group(1).strip();
+        return title.length() >= 3 && !SERVING_WORDS.matcher(title).find() ? title : null;
     }
 
     private static int indexOfColon(String line) {
