@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.Food;
@@ -48,7 +47,7 @@ class InlineQueryHandlerTest {
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
                 new com.foodbot.social.PartnerRepository(dir.resolve("partners.json")),
-                new AiSuggestionService(null), new MealDbSuggestionService());
+                new MealDbSuggestionService());
         ctx.languageRepository.set(5L, Lang.EN);
     }
 

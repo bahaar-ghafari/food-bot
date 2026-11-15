@@ -43,12 +43,6 @@ public class TelegramConfig {
         return value == null ? null : Long.parseLong(value.trim());
     }
 
-    public String getAnthropicApiKey() {
-        String value = firstNonBlank(dotenv.get("ANTHROPIC_API_KEY"), properties.getProperty("anthropic.api.key"),
-                System.getenv("ANTHROPIC_API_KEY"));
-        return value == null ? null : value.trim();
-    }
-
     public Long getFeedbackChatId() {
         String value = firstNonBlank(dotenv.get("FEEDBACK_CHAT_ID"), properties.getProperty("feedback.chat.id"),
                 System.getenv("FEEDBACK_CHAT_ID"));

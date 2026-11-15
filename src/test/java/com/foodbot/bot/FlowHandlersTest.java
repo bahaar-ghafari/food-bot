@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookResultContext;
@@ -69,7 +68,7 @@ class FlowHandlersTest {
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
                 new com.foodbot.social.PartnerRepository(dir.resolve("partners.json")),
-                new AiSuggestionService(null), new MealDbSuggestionService());
+                new MealDbSuggestionService());
     }
 
     private List<SendMessage> sentMessages() {
@@ -702,7 +701,7 @@ class FlowHandlersTest {
         FoodRepository repo = new FoodRepository(file);
         BotContext local = new BotContext(ctx.sender, ADMIN, FEEDBACK_CHAT, repo, ctx.languageRepository,
                 ctx.followRepository, ctx.usernameRepository, ctx.favoriteRepository, ctx.shoppingListRepository,
-                ctx.partnerRepository, ctx.aiSuggestionService, ctx.mealDbSuggestionService);
+                ctx.partnerRepository, ctx.mealDbSuggestionService);
         new FoodRepository(file).add(new Food("f9", "Outside", 10, "Dinner", List.of("rice"), 5L, 5L, null,
                 Lang.EN, null, null, null, null));
         assertTrue(repo.findById("f9").isEmpty());

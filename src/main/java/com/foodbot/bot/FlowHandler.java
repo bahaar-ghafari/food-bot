@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.AmountEditorState;
@@ -106,7 +105,6 @@ class FlowHandler {
     protected final Set<Long> awaitingShoppingItem;
     protected final Set<Long> awaitingSearch;
     protected final Set<Long> awaitingFollowId;
-    protected final AiSuggestionService aiSuggestionService;
     protected final MealDbSuggestionService mealDbSuggestionService;
     protected final Long superAdminChatId;
     protected final Long feedbackChatId;
@@ -130,7 +128,6 @@ class FlowHandler {
         this.awaitingShoppingItem = ctx.awaitingShoppingItem;
         this.awaitingSearch = ctx.awaitingSearch;
         this.awaitingFollowId = ctx.awaitingFollowId;
-        this.aiSuggestionService = ctx.aiSuggestionService;
         this.mealDbSuggestionService = ctx.mealDbSuggestionService;
         this.superAdminChatId = ctx.superAdminChatId;
         this.feedbackChatId = ctx.feedbackChatId;

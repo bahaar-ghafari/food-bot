@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.importer.ImportedRecipe;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.importer.RecipeImporter;
@@ -79,7 +78,7 @@ class RecipeImportFlowTest {
                 new FavoriteRepository(dir.resolve("favorites.json")),
                 new ShoppingListRepository(dir.resolve("shopping.json")),
                 new PartnerRepository(dir.resolve("partners.json")),
-                new AiSuggestionService(null), new MealDbSuggestionService(), importer);
+                new MealDbSuggestionService(), importer);
         // Hold background work so tests can act while an import is "running", then release it.
         ctx.backgroundExecutor = pendingBackgroundWork::add;
         ctx.languageRepository.set(CHAT, Lang.EN);

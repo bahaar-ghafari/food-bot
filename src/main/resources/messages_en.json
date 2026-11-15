@@ -54,7 +54,6 @@
   "category.Other": "Other",
   "category.Snack": "Snack",
   "category.any": "Any",
-  "cook.ai_suggestion": "🤖 Nothing in your recipe list fits, so here's an idea:\n\n%s",
   "cook.ask_category_filter": "Any specific category, or just show everything?",
   "cook.ask_shopping": "Can you pop out to grab missing ingredients? 🛒",
   "cook.ask_time": "How much time have you got? ⏰ Tap an option or type the exact minutes.",

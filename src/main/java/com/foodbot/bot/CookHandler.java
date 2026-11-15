@@ -228,14 +228,14 @@ class CookHandler extends FlowHandler {
     }
 
     /**
-     * Nothing in the food list fits. If shopping is an option, ask the AI for a one-off
+     * Nothing in the food list fits. If shopping is an option, look up a one-off recipe
      * suggestion; otherwise prefer picking a protein/carb the user already has over
-     * suggesting they eat their whole pantry raw, and only fall back to the AI/raw messages
+     * suggesting they eat their whole pantry raw, and only fall back to the lookup/raw messages
      * once that's not possible either.
      */
     void sendNoMatchFallback(long chatId, Lang lang, CookResultContext ctx) {
         if (ctx.isCanShop()) {
-            String message = aiSuggestionMessage(ctx, lang, true)
+            String message = recipeSuggestionMessage(ctx, lang)
                     .orElseGet(() -> Messages.get(lang, "cook.nothing_matches"));
             sendWithMainMenu(chatId, lang, message);
             return;
@@ -262,7 +262,7 @@ class CookHandler extends FlowHandler {
             sendWithMainMenu(chatId, lang, Messages.get(lang, "cook.nothing_matches_no_shop_suggest", label));
             return;
         }
-        String message = aiSuggestionMessage(ctx, lang, false).orElseGet(() -> {
+        String message = recipeSuggestionMessage(ctx, lang).orElseGet(() -> {
             String haveList = ctx.getHaveIngredients().stream()
                     .map(i -> iconPrefix(i) + IngredientTranslations.translate(i, lang))
                     .collect(Collectors.joining(", "));
@@ -271,20 +271,8 @@ class CookHandler extends FlowHandler {
         sendWithMainMenu(chatId, lang, message);
     }
 
-    /**
-     * Tries the Claude-based suggestion first (only does anything if ANTHROPIC_API_KEY is
-     * configured), then falls back to a free, no-signup recipe lookup via TheMealDB so this
-     * fallback always works even without an API key.
-     */
-    Optional<String> aiSuggestionMessage(CookResultContext ctx, Lang lang, boolean canShop) {
-        List<String> localizedHave = ctx.getHaveIngredients().stream()
-                .map(i -> IngredientTranslations.translate(i, lang))
-                .collect(Collectors.toList());
-        Optional<String> aiText = aiSuggestionService.suggest(localizedHave, ctx.getTimeMinutes(), canShop, lang)
-                .map(text -> Messages.get(lang, "cook.ai_suggestion", text));
-        if (aiText.isPresent()) {
-            return aiText;
-        }
+    /** A recipe built around one of the user's ingredients, from TheMealDB's free, no-signup API. */
+    Optional<String> recipeSuggestionMessage(CookResultContext ctx, Lang lang) {
         List<String> englishHave = ctx.getHaveIngredients().stream()
                 .map(i -> IngredientTranslations.translate(i, Lang.EN))
                 .collect(Collectors.toList());

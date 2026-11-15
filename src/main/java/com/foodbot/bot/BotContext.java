@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.importer.RecipeImporter;
 import com.foodbot.food.AddFoodSession;
@@ -61,7 +60,6 @@ class BotContext {
     final Map<Long, List<String>> pendingPartnerNotice = new ConcurrentHashMap<>();
     final Set<Long> awaitingSearch = ConcurrentHashMap.newKeySet();
     final Set<Long> awaitingFollowId = ConcurrentHashMap.newKeySet();
-    final AiSuggestionService aiSuggestionService;
     final MealDbSuggestionService mealDbSuggestionService;
     final RecipeImporter recipeImporter;
     /** Runs slow work (like a recipe import) off the update thread so other chats aren't kept waiting. */
@@ -87,17 +85,17 @@ class BotContext {
                LanguageRepository languageRepository, FollowRepository followRepository,
                UsernameRepository usernameRepository, FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
                PartnerRepository partnerRepository,
-               AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService) {
+               MealDbSuggestionService mealDbSuggestionService) {
         this(sender, superAdminChatId, feedbackChatId, foodRepository, languageRepository, followRepository,
                 usernameRepository, favoriteRepository, shoppingListRepository, partnerRepository,
-                aiSuggestionService, mealDbSuggestionService, RecipeImporter.DISABLED);
+                mealDbSuggestionService, RecipeImporter.DISABLED);
     }
 
     BotContext(ApiExecutor sender, Long superAdminChatId, Long feedbackChatId, FoodRepository foodRepository,
                LanguageRepository languageRepository, FollowRepository followRepository,
                UsernameRepository usernameRepository, FavoriteRepository favoriteRepository, ShoppingListRepository shoppingListRepository,
                PartnerRepository partnerRepository,
-               AiSuggestionService aiSuggestionService, MealDbSuggestionService mealDbSuggestionService,
+               MealDbSuggestionService mealDbSuggestionService,
                RecipeImporter recipeImporter) {
         this.sender = sender;
         this.superAdminChatId = superAdminChatId;
@@ -109,7 +107,6 @@ class BotContext {
         this.favoriteRepository = favoriteRepository;
         this.shoppingListRepository = shoppingListRepository;
         this.partnerRepository = partnerRepository;
-        this.aiSuggestionService = aiSuggestionService;
         this.mealDbSuggestionService = mealDbSuggestionService;
         this.recipeImporter = recipeImporter;
         this.ui = new FlowHandler(this);

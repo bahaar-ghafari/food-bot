@@ -1,6 +1,5 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.importer.LocalRecipeImporter;
@@ -41,10 +40,6 @@ public class FoodBot extends TelegramLongPollingBot {
     private final BotContext ctx;
 
     public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId) {
-        this(token, username, superAdminChatId, feedbackChatId, null);
-    }
-
-    public FoodBot(String token, String username, Long superAdminChatId, Long feedbackChatId, String anthropicApiKey) {
         this.token = token;
         this.username = username;
         this.ctx = new BotContext(new ApiExecutor() {
@@ -71,7 +66,6 @@ public class FoodBot extends TelegramLongPollingBot {
         }, superAdminChatId, feedbackChatId, seededFoodRepository(),
                 new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
                 new FavoriteRepository(), new ShoppingListRepository(), new PartnerRepository(),
-                new AiSuggestionService(anthropicApiKey),
                 new MealDbSuggestionService(), new LocalRecipeImporter(new TesseractOcr()));
         this.ctx.botUsername = username;
         startDigestScheduler();
@@ -368,7 +362,7 @@ public class FoodBot extends TelegramLongPollingBot {
         }
     }
 
-    /** Image types Claude can read; a screenshot sent "as a file" arrives as a document instead of a photo. */
+    /** Image types Tesseract can read; a screenshot sent "as a file" arrives as a document instead of a photo. */
     private static final java.util.Set<String> IMPORTABLE_IMAGE_TYPES =
             java.util.Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
