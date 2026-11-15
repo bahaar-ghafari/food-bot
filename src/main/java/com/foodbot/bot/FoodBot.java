@@ -1,9 +1,10 @@
 package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
-import com.foodbot.ai.ClaudeRecipeImporter;
 import com.foodbot.ai.MealDbSuggestionService;
 import com.foodbot.food.AddFoodSession;
+import com.foodbot.importer.LocalRecipeImporter;
+import com.foodbot.importer.TesseractOcr;
 import com.foodbot.food.CookSession;
 import com.foodbot.food.FavoriteRepository;
 import com.foodbot.food.FoodRepository;
@@ -71,7 +72,7 @@ public class FoodBot extends TelegramLongPollingBot {
                 new LanguageRepository(), new FollowRepository(), new UsernameRepository(),
                 new FavoriteRepository(), new ShoppingListRepository(), new PartnerRepository(),
                 new AiSuggestionService(anthropicApiKey),
-                new MealDbSuggestionService(), new ClaudeRecipeImporter(anthropicApiKey));
+                new MealDbSuggestionService(), new LocalRecipeImporter(new TesseractOcr()));
         this.ctx.botUsername = username;
         startDigestScheduler();
     }

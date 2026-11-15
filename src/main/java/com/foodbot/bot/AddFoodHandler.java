@@ -1,6 +1,6 @@
 package com.foodbot.bot;
 
-import com.foodbot.ai.ImportedRecipe;
+import com.foodbot.importer.ImportedRecipe;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.Food;
 import com.foodbot.food.FoodCategories;

@@ -2,7 +2,7 @@ package com.foodbot.bot;
 
 import com.foodbot.ai.AiSuggestionService;
 import com.foodbot.ai.MealDbSuggestionService;
-import com.foodbot.ai.RecipeImporter;
+import com.foodbot.importer.RecipeImporter;
 import com.foodbot.food.AddFoodSession;
 import com.foodbot.food.CookResultContext;
 import com.foodbot.food.CookSession;

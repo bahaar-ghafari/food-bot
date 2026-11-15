@@ -1,4 +1,4 @@
-package com.foodbot.ai;
+package com.foodbot.importer;
 
 import com.foodbot.food.FoodCategories;
 

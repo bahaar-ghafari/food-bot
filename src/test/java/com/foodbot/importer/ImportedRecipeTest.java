@@ -1,4 +1,4 @@
-package com.foodbot.ai;
+package com.foodbot.importer;
 
 import org.junit.jupiter.api.Test;
 
