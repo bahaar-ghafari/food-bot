@@ -141,6 +141,44 @@ class RecipeTextParserTest {
     }
 
     @Test
+    void shortPasteWithACommaSeparatedIngredientLine() {
+        ImportedRecipe withAmounts = parse("قورمه سبزی\nسبزی قورمه ۵۰۰ گرم، گوشت ۳۰۰ گرم، لوبیا قرمز ۱ پیمانه، پیاز ۱ عدد");
+        assertEquals("قورمه سبزی", withAmounts.name());
+        assertEquals(List.of(ing("سبزی قورمه", "۵۰۰ گرم"), ing("گوشت", "۳۰۰ گرم"), ing("لوبیا قرمز", "۱ پیمانه"),
+                ing("پیاز", "۱ عدد")), withAmounts.ingredients());
+
+        ImportedRecipe noAmounts = parse("قورمه سبزی\nسبزی، گوشت، لوبیا قرمز، لیمو عمانی و پیاز");
+        assertEquals(List.of(ing("سبزی", ""), ing("گوشت", ""), ing("لوبیا قرمز", ""), ing("لیمو عمانی و پیاز", "")),
+                noAmounts.ingredients(), "only commas split items");
+    }
+
+    @Test
+    void listAndMethodOnOneLine() {
+        ImportedRecipe r = parse("Omelette\n3 eggs, a little butter, salt. Beat the eggs, cook in butter for 3 minutes.");
+
+        assertEquals(List.of(ing("egg", "3"), ing("butter", "a little"), ing("salt", "")), r.ingredients());
+        assertEquals(List.of("Beat the eggs, cook in butter for 3 minutes."), r.steps());
+    }
+
+    @Test
+    void nameAndListOnOneLineSeparatedByAColon() {
+        ImportedRecipe r = parse("کوکو سبزی: سبزی کوکو، تخم مرغ ۴ عدد، گردو، نمک\nهمه را مخلوط کنید و سرخ کنید.");
+
+        assertEquals("کوکو سبزی", r.name());
+        assertEquals(List.of(ing("سبزی کوکو", ""), ing("تخم مرغ", "۴ عدد"), ing("گردو", ""), ing("نمک", "")),
+                r.ingredients());
+        assertEquals(List.of("همه را مخلوط کنید و سرخ کنید."), r.steps());
+    }
+
+    @Test
+    void methodSentencesWithCommasArentTakenForAList() {
+        assertNull(RecipeTextParser.commaListItems("Beat the eggs, cook in butter"));
+        assertNull(RecipeTextParser.commaListItems("پیاز را خرد کنید، سرخ کنید"));
+        assertNull(RecipeTextParser.commaListItems("just one item"));
+        assertEquals(List.of("salt", "pepper"), RecipeTextParser.commaListItems("salt, and pepper."));
+    }
+
+    @Test
     void textWithoutARecipeIsRejected() {
         assertTrue(RecipeTextParser.parse("hey how are you\nsee you tomorrow at 5", null, KNOWN).isEmpty());
         assertTrue(RecipeTextParser.parse("Ingredients\nInstructions\nStir.", null, KNOWN).isEmpty(),

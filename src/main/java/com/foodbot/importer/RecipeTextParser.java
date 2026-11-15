@@ -42,7 +42,7 @@ public final class RecipeTextParser {
     private static final String FRACTION = "[½¼¾⅓⅔⅛⅜⅝⅞]";
     private static final String NUMBER = "(?:" + D + "+\\s+" + D + "+/" + D + "+|" + D + "+(?:[.,/٫]" + D + "+)?\\s*"
             + FRACTION + "?|" + FRACTION + ")";
-    private static final String WORD_NUMBER = "(?:a few|a couple of|an|a|one|two|three|four|five|six|seven|eight|nine"
+    private static final String WORD_NUMBER = "(?:a little|a bit of|a few|a couple of|some|کمی|مقداری|an|a|one|two|three|four|five|six|seven|eight|nine"
             + "|ten|twelve|half|یک|دو|سه|چهار|پنج|شش|هفت|هشت|نه|ده|نیم|نصف|چند)";
     private static final String QTY = "(?:" + NUMBER + "(?:\\s*(?:-|–|to|تا)\\s*" + NUMBER + ")?|" + WORD_NUMBER + AFTER + ")";
     private static final String UNIT = "(?:tablespoons?|tbsps?|tbs|tbl|teaspoons?|tsps?|cups?|grams?|gr|g|kilograms?"
@@ -140,6 +140,7 @@ public final class RecipeTextParser {
             }
         }
 
+        preamble = splitTitleAndList(preamble);
         // The title line is never an ingredient, even when the caption supplies the name.
         int titleIndex = titleLineIndex(preamble);
         List<String> body = new ArrayList<>(preamble);
@@ -154,6 +155,7 @@ public final class RecipeTextParser {
             name = headingTitle;
         }
         boolean fallback = false;
+        boolean fromCommaList = false;
         if (ingredientLines.isEmpty()) {
             // No ingredient heading: take the list-like lines before the method starts.
             fallback = !sawHeading;
@@ -162,6 +164,20 @@ public final class RecipeTextParser {
             for (String line : body) {
                 if (isMetaLine(line)) {
                     continue;
+                }
+                if (!inMethod) {
+                    // "3 eggs, butter, salt. Beat the eggs..." - a comma list, maybe followed by the method.
+                    String[] listAndRest = splitAtFirstSentence(line);
+                    List<String> items = commaListItems(listAndRest[0]);
+                    if (items != null) {
+                        ingredientLines.addAll(items);
+                        fromCommaList = true;
+                        if (!listAndRest[1].isEmpty()) {
+                            inMethod = true;
+                            rest.add(listAndRest[1]);
+                        }
+                        continue;
+                    }
                 }
                 if (!inMethod && looksLikeIngredientLine(line)) {
                     ingredientLines.add(line);
@@ -199,12 +215,82 @@ public final class RecipeTextParser {
             name = "";
         }
         // Without any headings, only trust it if it really reads like an ingredient list.
-        if (fallback && (ingredients.size() < 2 || ingredients.stream().allMatch(i -> i.amount().isEmpty()))) {
+        if (fallback && (ingredients.size() < 2
+                || (!fromCommaList && ingredients.stream().allMatch(i -> i.amount().isEmpty())))) {
             return Optional.empty();
         }
         List<String> timeLines = preamble.stream().filter(RecipeTextParser::isMetaLine).toList();
         return Optional.of(new ImportedRecipe(name, prepTime(timeLines), CategoryGuesser.guess(name, text),
                 ingredients, parseSteps(stepLines)));
+    }
+
+    private static final Pattern LIST_SEPARATOR = Pattern.compile("\\s*[,،؛;]\\s*");
+    private static final java.util.Set<String> EN_METHOD_VERBS = java.util.Set.of("beat", "mix", "cook", "add",
+            "stir", "bake", "fry", "boil", "heat", "pour", "whisk", "combine", "put", "place", "serve", "chop",
+            "cut", "simmer", "preheat", "melt", "blend", "season", "roast", "grill", "remove", "let", "leave",
+            "cover", "drain", "transfer", "sprinkle", "spread", "fold", "knead", "roll", "wash", "peel", "then");
+    private static final Pattern FA_METHOD_VERB = Pattern.compile(
+            "(?:^|\\s)(?:\\S+ید|\\S+یم|کرده|می\\S+|بگذارید|سپس|بعد)(?:\\s|$)", FLAGS);
+
+    /**
+     * Items of a comma-separated ingredient list ("سبزی، گوشت، لوبیا" / "3 eggs, butter, salt"), or null when
+     * the text isn't one: fewer than two items, an item too long to be an ingredient, or one that reads like an
+     * instruction ("beat the eggs", "سرخ کنید").
+     */
+    static List<String> commaListItems(String text) {
+        String t = text.strip().replaceAll("[.。]+$", "");
+        if (t.isEmpty()) {
+            return null;
+        }
+        List<String> items = new ArrayList<>();
+        // "salt and pepper" stays one item; a final "and"/"و" before the last item is dropped.
+        for (String part : LIST_SEPARATOR.split(t)) {
+            String item = part.strip().replaceFirst("(?i)^(?:and|و)\\s+", "").strip();
+            if (!item.isEmpty()) {
+                items.add(item);
+            }
+        }
+        if (items.size() < 2) {
+            return null;
+        }
+        for (String item : items) {
+            String[] words = item.split("\\s+");
+            if (item.length() > 40 || words.length > 6
+                    || EN_METHOD_VERBS.contains(words[0].toLowerCase(Locale.ROOT))
+                    || FA_METHOD_VERB.matcher(item).find()) {
+                return null;
+            }
+        }
+        return items;
+    }
+
+    /** {first sentence, the rest}; the rest is "" when there's only one sentence. */
+    static String[] splitAtFirstSentence(String line) {
+        Matcher m = SENTENCE_END.matcher(line);
+        if (m.find()) {
+            return new String[] {line.substring(0, m.start()).strip(), line.substring(m.end()).strip()};
+        }
+        return new String[] {line.strip(), ""};
+    }
+
+    /** "کوکو سبزی: سبزی، تخم مرغ، گردو" -> a title line and a list line. */
+    private static List<String> splitTitleAndList(List<String> lines) {
+        List<String> result = new ArrayList<>();
+        for (String line : lines) {
+            int colon = indexOfColon(line);
+            if (colon > 0 && colon <= 40) {
+                String before = line.substring(0, colon).strip();
+                String after = line.substring(colon + 1).strip();
+                if (!before.isEmpty() && !isMetaLine(line)
+                        && commaListItems(splitAtFirstSentence(after)[0]) != null) {
+                    result.add(before);
+                    result.add(after);
+                    continue;
+                }
+            }
+            result.add(line);
+        }
+        return result;
     }
 
     /** Drops invisible direction marks and the like that OCR and copy-paste leave behind (keeps the ZWNJ). */
